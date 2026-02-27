@@ -38,8 +38,9 @@ export default function ColectasPage() {
                 const { data: donData } = await supabase.from("crowdfund_donations").select("*").eq("donor_public_key", publicKey);
                 setDonations(donData || []);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error fetching", err);
+            console.error("Error details:", JSON.stringify(err));
         } finally {
             setLoading(false);
         }
