@@ -262,12 +262,22 @@ export default function ColectasPage() {
 
                         return (
                             <div key={camp.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col md:flex-row shadow-lg">
-                                <div className="w-full md:w-32 xl:w-40 bg-neutral-900/40 md:border-r border-white/5 flex flex-col items-center justify-center py-6 px-4 flex-shrink-0 relative overflow-hidden">
+                                <div className="w-full md:w-48 xl:w-64 min-h-[200px] bg-neutral-900/40 md:border-r border-white/5 flex-shrink-0 relative overflow-hidden group/img">
                                     {isGoalMet && <div className="absolute inset-0 bg-accent-teal/5 z-0"></div>}
-                                    <div className="text-5xl group-hover:scale-110 transition-transform duration-500 mb-4 z-10">{camp.image}</div>
-                                    <div className="flex flex-col items-center justify-center gap-2 z-10 w-full">
+
+                                    <div className="absolute inset-0 z-10 transition-transform duration-700 group-hover/img:scale-110">
+                                        {camp.image && camp.image.startsWith('http') ? (
+                                            <img src={camp.image} alt={camp.title} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-6xl">{camp.image || '🎁'}</div>
+                                        )}
+                                        {/* Gradient to ensure text readability */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/10 to-transparent"></div>
+                                    </div>
+
+                                    <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2 z-20">
                                         {camp.tags?.map((tag: string) => (
-                                            <span key={tag} className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 bg-black/80 px-2 py-0.5 rounded-md border border-white/10 text-center w-full truncate" title={tag}>{tag}</span>
+                                            <span key={tag} className="text-[10px] uppercase font-bold tracking-wider text-white bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/20" title={tag}>{tag}</span>
                                         ))}
                                     </div>
                                 </div>
