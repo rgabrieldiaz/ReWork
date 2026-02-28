@@ -46,24 +46,30 @@ export default function Home() {
   const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
   const [bidAmount, setBidAmount] = useState("");
   const [loadingBid, setLoadingBid] = useState(false);
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAuctions = async () => {
-      const now = new Date().toISOString();
-      let query = supabase
+      const { data, error } = await supabase
         .from("auctions")
         .select("*")
-        .eq("status", "active")
-        .gt("end_time", now)
         .order("end_time", { ascending: true });
 
-      if (conditionFilter !== "TODOS") {
-        query = query.eq("condition", conditionFilter.toLowerCase());
+      if (error) {
+        console.error("Error fetching home auctions:", error);
+        return;
       }
 
-      const { data, error } = await query.limit(2);
-      if (data) setAuctions(data);
-      if (error) console.error("Error fetching home auctions:", error);
+      if (data) {
+        const now = new Date().getTime();
+        let filtered = data.filter(a => a.status === 'active' && a.end_time && new Date(a.end_time).getTime() > now);
+
+        if (conditionFilter !== "TODOS") {
+          filtered = filtered.filter(a => (a.condition || "nuevo") === conditionFilter.toLowerCase());
+        }
+
+        setAuctions(filtered.slice(0, 2));
+      }
     };
 
     fetchAuctions();
@@ -213,20 +219,20 @@ export default function Home() {
                 </div>
                 <h2 className="text-xs font-bold text-accent-teal uppercase tracking-widest">Colecta Principal</h2>
               </div>
-              <span className="text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">STATUS: IN PROGRESS • ENDS OCT 31</span>
+              <span className="text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">ESTADO: EN PROCESO • ENDS OCT 31</span>
             </div>
 
             <div className="mb-6 sm:mb-10">
-              <h3 className="text-2xl sm:text-4xl font-bold mb-2">Expansión Regional Q4</h3>
-              <p className="text-sm sm:text-base text-slate-400 max-w-lg">Ayudanos a financiar la apertura de nuestras nuevas oficinas en Córdoba y Rosario para el equipo comercial y desarrollo.</p>
+              <h3 className="text-2xl sm:text-4xl font-bold mb-2">Asado de equipo</h3>
+              <p className="text-sm sm:text-base text-slate-400 max-w-lg">Ayudanos a financiar el evento de integración de fin de mes para celebrar los objetivos alcanzados de todo el equipo de ReWork.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 mb-8">
               <div className="bg-deep-navy/30 p-4 rounded-xl border border-white/5 md:bg-transparent md:p-0 md:border-none">
                 <p className="text-slate-400 text-xs sm:text-sm mb-1">Objetivo de Recaudación</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">50,000</span>
-                  <span className="text-accent-teal font-bold text-sm sm:text-base">XLM</span>
+                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">150</span>
+                  <span className="text-accent-teal font-bold text-sm sm:text-base">USDC</span>
                 </div>
                 <div className="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div className="bg-accent-teal h-full w-[85%] glow-teal"></div>
@@ -239,28 +245,24 @@ export default function Home() {
               <div className="md:border-l md:border-border-glass md:pl-12 flex flex-col justify-center bg-deep-navy/30 p-4 rounded-xl border border-white/5 md:bg-transparent md:p-0 md:border-none">
                 <p className="text-slate-400 text-xs sm:text-sm mb-1">Tu Aporte Estimado</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">450</span>
-                  <span className="text-accent-teal font-bold text-sm sm:text-base">XLM</span>
+                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">15</span>
+                  <span className="text-accent-teal font-bold text-sm sm:text-base">USDC</span>
                 </div>
-                <p className="text-[10px] sm:text-xs text-slate-500 mt-2">Ranking #12 de 240 contribuidores</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-2">Ranking #12 de 24 contribuidores</p>
               </div>
             </div>
 
-            {/* Smart Contract Preview (Mini) */}
-            <div className="bg-[#050c14] rounded-2xl p-6 border border-border-glass font-mono text-xs hidden sm:block">
-              <div className="flex items-center justify-between mb-4 border-b border-border-glass pb-4">
-                <span className="text-slate-500">stellar_escrow_contract.rs</span>
-                <span className="text-accent-teal bg-accent-teal/5 px-2 py-0.5 rounded">VERIFIED</span>
-              </div>
-              <div className="space-y-1">
-                <p><span className="text-purple-400">pub fn</span> <span className="text-yellow-300">release_funds</span>(env: Env) {'{'}</p>
-                <p className="pl-4 text-slate-500">// Release conditions check</p>
-                <p className="pl-4"><span className="text-pink-400">if</span> (target_reached &gt;= <span className="text-orange-400">50000</span>) &amp;&amp;</p>
-                <p className="pl-4">(community_votes &gt; <span className="text-orange-400">90%</span>) {'{'}</p>
-                <p className="pl-8"><span className="text-cyan-400">unlock_escrow_bounty</span>(&env);</p>
-                <p className="pl-4">{'}'}</p>
-                <p>{'}'}</p>
-              </div>
+            {/* Smart Contract Info */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsContractModalOpen(true)}
+                className="flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-accent-teal transition-colors bg-[#050c14] border border-border-glass px-4 py-2 rounded-xl group"
+              >
+                <span>stellar_escrow_contract.rs</span>
+                <span className="text-accent-teal border border-accent-teal/20 bg-accent-teal/10 px-2 py-0.5 rounded flex items-center gap-1 group-hover:bg-accent-teal/20 transition-colors">
+                  <ShieldCheck className="w-3 h-3" /> VERIFICADO
+                </span>
+              </button>
             </div>
           </section>
 
@@ -585,6 +587,50 @@ export default function Home() {
                     : selectedAuction.is_direct_buy ? `Comprar por ${selectedAuction.base_price} ${selectedAuction.currency}` : "Realizar Oferta"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Modal for Smart Contract Verification */}
+      {isContractModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-[#050c14] border border-white/10 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-4 border-b border-white/5 bg-black/40">
+              <h3 className="text-sm font-mono font-bold text-slate-300 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-accent-teal" />
+                stellar_escrow_contract.rs
+              </h3>
+              <button onClick={() => setIsContractModalOpen(false)} className="text-neutral-400 hover:text-white bg-white/5 p-1 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto font-mono text-sm leading-relaxed space-y-2 bg-[#050c14]">
+              <p><span className="text-purple-400">#![no_std]</span></p>
+              <p><span className="text-purple-400">use</span> <span className="text-cyan-300">soroban_sdk</span>::{'{'}<span className="text-cyan-300">contract</span>, <span className="text-cyan-300">contractimpl</span>, <span className="text-cyan-300">Env</span>, <span className="text-cyan-300">Address</span>, <span className="text-cyan-300">Symbol</span>{'}'};</p>
+              <br />
+              <p><span className="text-slate-500">/// Contrato inteligente de colecta descentralizada</span></p>
+              <p><span className="text-purple-400">pub struct</span> <span className="text-yellow-300">CrowdfundEscrow</span>;</p>
+              <br />
+              <p><span className="text-blue-400">#[contractimpl]</span></p>
+              <p><span className="text-purple-400">impl</span> <span className="text-yellow-300">CrowdfundEscrow</span> {'{'}</p>
+              <p className="pl-4"><span className="text-purple-400">pub fn</span> <span className="text-yellow-300">release_funds</span>(env: Env, target_reached: <span className="text-cyan-300">u64</span>, community_votes: <span className="text-cyan-300">u32</span>) {'{'}</p>
+              <p className="pl-8 text-slate-500">// Validación criptográfica de hitos (Trustless Work)</p>
+              <p className="pl-8"><span className="text-pink-400">if</span> (target_reached &gt;= <span className="text-orange-400">150</span>) &amp;&amp;</p>
+              <p className="pl-8">(community_votes &gt; <span className="text-orange-400">90</span>) {'{'}</p>
+              <p className="pl-12 text-slate-500">// Transfiriendo USDC a la cuenta destino</p>
+              <p className="pl-12"><span className="text-cyan-400">unlock_escrow_funds</span>(&env);</p>
+              <p className="pl-8">{'}'} <span className="text-pink-400">else</span> {'{'}</p>
+              <p className="pl-12"><span className="text-cyan-400">panic!</span>(<span className="text-green-300">"Condiciones de colecta no cumplidas"</span>);</p>
+              <p className="pl-8">{'}'}</p>
+              <p className="pl-4">{'}'}</p>
+              <p>{'}'}</p>
+            </div>
+            <div className="p-4 bg-accent-teal/5 border-t border-accent-teal/10 flex items-center justify-between">
+              <span className="text-xs text-accent-teal/70">Red Starlight - Escrow Verificado</span>
+              <a href="https://docs.trustlesswork.com/" target="_blank" rel="noreferrer" className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
+                Verificar Auditoría
+              </a>
             </div>
           </div>
         </div>
