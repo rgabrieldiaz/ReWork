@@ -17,6 +17,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [birthDate, setBirthDate] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -29,6 +30,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         if (profile) {
             setFirstName(profile.first_name || "");
             setLastName(profile.last_name || "");
+            setBirthDate(profile.birth_date || "");
             setAvatarUrl(profile.avatar_url || null);
         }
     }, [profile]);
@@ -41,6 +43,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         const { error } = await updateProfile({
             first_name: firstName,
             last_name: lastName,
+            birth_date: birthDate,
             avatar_url: avatarUrl
         });
         setIsSaving(false);
@@ -170,6 +173,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             placeholder="Tu apellido"
                         />
                     </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Fecha de Nacimiento</label>
+                        <input
+                            type="date"
+                            value={birthDate}
+                            onChange={(e) => setBirthDate(e.target.value)}
+                            className="w-full bg-deep-navy/50 border border-border-glass rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                        />
+                    </div>
+
 
                     <button
                         type="submit"

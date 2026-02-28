@@ -297,8 +297,10 @@ export default function Home() {
                   {/* Dynamic background array for fallbacks */}
                   <div className={`absolute inset-0 -z-10 ${index % 2 === 0 ? 'bg-gradient-to-br from-emerald-900 to-deep-navy' : 'bg-gradient-to-br from-orange-900 to-deep-navy'}`}></div>
 
-                  {item.image.length > 5 && (
+                  {item.image.length > 5 ? (
                     <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover -z-10" />
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center text-7xl -z-10 group-hover:scale-110 transition-transform duration-500">{item.image}</span>
                   )}
 
                   <div className="absolute bottom-0 left-0 p-6 z-20 w-full">

@@ -11,6 +11,7 @@ export interface UserProfile {
     last_name: string | null;
     avatar_url: string | null;
     role: string | null;
+    birth_date: string | null;
     points: number;
     updated_at: string;
 }
