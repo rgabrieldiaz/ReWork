@@ -23,33 +23,33 @@ export default function Home() {
               <span className="text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">STATUS: IN PROGRESS • ENDS OCT 31</span>
             </div>
 
-            <div className="mb-10">
-              <h3 className="text-4xl font-bold mb-2">Expansión Regional Q4</h3>
-              <p className="text-slate-400 max-w-lg">Ayudanos a financiar la apertura de nuestras nuevas oficinas en Córdoba y Rosario para el equipo comercial y desarrollo.</p>
+            <div className="mb-6 sm:mb-10">
+              <h3 className="text-2xl sm:text-4xl font-bold mb-2">Expansión Regional Q4</h3>
+              <p className="text-sm sm:text-base text-slate-400 max-w-lg">Ayudanos a financiar la apertura de nuestras nuevas oficinas en Córdoba y Rosario para el equipo comercial y desarrollo.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-8">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Objetivo de Recaudación</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 mb-8">
+              <div className="bg-deep-navy/30 p-4 rounded-xl border border-white/5 md:bg-transparent md:p-0 md:border-none">
+                <p className="text-slate-400 text-xs sm:text-sm mb-1">Objetivo de Recaudación</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-mono font-bold tracking-tighter">50,000</span>
-                  <span className="text-accent-teal font-bold">XLM</span>
+                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">50,000</span>
+                  <span className="text-accent-teal font-bold text-sm sm:text-base">XLM</span>
                 </div>
                 <div className="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div className="bg-accent-teal h-full w-[85%] glow-teal"></div>
                 </div>
-                <div className="flex justify-between mt-2 text-xs font-mono">
+                <div className="flex flex-col sm:flex-row justify-between mt-2 text-[10px] sm:text-xs font-mono gap-1">
                   <span className="text-slate-500">85% Completado</span>
                   <span className="text-accent-teal">+12% esta semana</span>
                 </div>
               </div>
-              <div className="md:border-l md:border-border-glass md:pl-12 flex flex-col justify-center">
-                <p className="text-slate-400 text-sm mb-1">Tu Aporte Estimado</p>
+              <div className="md:border-l md:border-border-glass md:pl-12 flex flex-col justify-center bg-deep-navy/30 p-4 rounded-xl border border-white/5 md:bg-transparent md:p-0 md:border-none">
+                <p className="text-slate-400 text-xs sm:text-sm mb-1">Tu Aporte Estimado</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-mono font-bold tracking-tighter">450</span>
-                  <span className="text-accent-teal font-bold">XLM</span>
+                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">450</span>
+                  <span className="text-accent-teal font-bold text-sm sm:text-base">XLM</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Ranking #12 de 240 contribuidores</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-2">Ranking #12 de 240 contribuidores</p>
               </div>
             </div>
 
@@ -73,12 +73,12 @@ export default function Home() {
 
           {/* BEGIN: Market Highlights */}
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Subastas Exclusivas</h2>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-accent-teal text-deep-navy font-bold rounded-xl text-xs hover:bg-white transition-colors">TODO</button>
-                <button className="px-4 py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-xs hover:text-white transition-colors">MERCH</button>
-                <button className="px-4 py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-xs hover:text-white transition-colors">NFTS</button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-lg sm:text-xl font-bold">Subastas Exclusivas</h2>
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-accent-teal text-deep-navy font-bold rounded-xl text-[10px] sm:text-xs hover:bg-white transition-colors whitespace-nowrap">TODO</button>
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-[10px] sm:text-xs hover:text-white transition-colors whitespace-nowrap">MERCH</button>
+                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-[10px] sm:text-xs hover:text-white transition-colors whitespace-nowrap">NFTS</button>
               </div>
             </div>
 

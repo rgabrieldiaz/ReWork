@@ -6,6 +6,8 @@ import { Header } from "@/components/Header";
 import { TWProvider } from "@/components/TWProvider";
 import { FreighterProvider } from "@/hooks/useFreighter";
 import { ProfileProvider } from "@/hooks/useProfile";
+import { MainLayout } from "@/components/MainLayout";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -26,18 +28,20 @@ export default function RootLayout({
         <FreighterProvider>
           <ProfileProvider>
             <TWProvider>
-              <div className="flex h-screen overflow-hidden">
-                <Sidebar />
-                <main className="flex-1 ml-64 overflow-y-auto bg-deep-navy custom-scrollbar">
-                  <Header />
-                  <div className="p-8">
-                    {children}
-                  </div>
-                </main>
-              </div>
+              <MainLayout>
+                {children}
+              </MainLayout>
             </TWProvider>
           </ProfileProvider>
         </FreighterProvider>
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          toastOptions={{
+            duration: 4000,
+            className: "bg-deep-navy border border-white/10 text-white font-sans",
+          }}
+        />
       </body>
     </html>
   );

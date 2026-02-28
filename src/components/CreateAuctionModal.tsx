@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
+import { useProfile } from "@/hooks/useProfile";
 
 interface CreateAuctionModalProps {
     isOpen: boolean;
@@ -13,6 +14,7 @@ interface CreateAuctionModalProps {
 
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
     const { connected, address } = useFreighter();
+    const { addPoints } = useProfile();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
@@ -57,6 +59,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
             if (error) throw error;
 
+            await addPoints(50, "Subasta publicada");
             onCreated();
             onClose();
         } catch (err: any) {
@@ -83,7 +86,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Lentes VR Oculus Quest 3" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-1">Precio Inicial</label>
                             <div className="flex bg-black border border-white/10 rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
@@ -112,11 +115,11 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
                     </div>
 
-                    <div className="pt-4 flex justify-end gap-3 mt-6">
-                        <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors">
+                    <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                        <button type="button" onClick={onClose} className="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors order-2 sm:order-1 border border-white/5 bg-white/5 sm:border-transparent sm:bg-transparent rounded-xl">
                             Cancelar
                         </button>
-                        <button type="submit" disabled={loading} className="px-6 py-2.5 text-sm font-bold bg-accent-teal text-black hover:bg-accent-teal/80 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50">
+                        <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold bg-accent-teal text-black hover:bg-accent-teal/80 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50 order-1 sm:order-2">
                             {loading ? "Publicando..." : "Publicar Subasta"}
                         </button>
                     </div>

@@ -7,6 +7,7 @@ import { useFreighter } from "@/hooks/useFreighter";
 import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
 import { UserBadge } from "@/components/UserBadge";
+import { useProfile } from "@/hooks/useProfile";
 
 // Dummy addresses for demo purposes
 const DUMMY_PLATFORM_ADDRESS = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
@@ -85,6 +86,7 @@ export default function MarketplacePage() {
     const [bids, setBids] = useState<Record<number, string>>({});
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
     const { connected, address } = useFreighter();
+    const { addPoints } = useProfile();
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -247,7 +249,7 @@ export default function MarketplacePage() {
             } : a));
             setBids(prev => ({ ...prev, [auction.id]: "" }));
             alert(`¡Puja exitosa! Fondos asegurados en el Smart Contract.`);
-
+            await addPoints(10, "¡Nueva puja realizada!");
         } catch (error: any) {
             console.error(error);
             alert(`Error creando oferta: ${error.message}`);
@@ -298,7 +300,7 @@ export default function MarketplacePage() {
                         <h1 className="text-2xl font-bold tracking-tight text-white m-0">Marketplace</h1>
                     </div>
 
-                    <div className="relative flex-1 max-w-sm">
+                    <div className="relative flex-1 w-full sm:max-w-sm">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
                         <input
                             type="text"
@@ -321,30 +323,33 @@ export default function MarketplacePage() {
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
                     </div>
 
-                    <div className="flex items-center gap-3 ml-auto">
-                        <label className="flex items-center gap-2 text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-4 py-2 rounded-xl">
+                    <div className="flex items-center gap-2 sm:gap-3 lg:ml-auto w-full lg:w-auto justify-between lg:justify-end overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                        <label className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap">
                             <input
                                 type="checkbox"
-                                className="w-4 h-4 rounded border-white/10 bg-black text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
+                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-white/10 bg-black text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
                                 checked={hideFinished}
                                 onChange={(e) => setHideFinished(e.target.checked)}
                             />
                             Ocultar finalizadas
                         </label>
-                        <button
-                            onClick={() => setIsInfoModalOpen(true)}
-                            className="w-9 h-9 flex items-center justify-center text-neutral-400 hover:text-accent-teal hover:bg-accent-teal/10 border border-white/10 rounded-xl transition-colors shrink-0"
-                            title="Acerca del Marketplace"
-                        >
-                            <Info className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="flex justify-center items-center gap-1.5 px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0"
-                        >
-                            <Plus className="w-4 h-4 text-black" />
-                            Crear Subasta
-                        </button>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <button
+                                onClick={() => setIsInfoModalOpen(true)}
+                                className="w-9 h-9 flex items-center justify-center text-neutral-400 hover:text-accent-teal hover:bg-accent-teal/10 border border-white/10 rounded-xl transition-colors shrink-0"
+                                title="Acerca del Marketplace"
+                            >
+                                <Info className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="flex justify-center items-center gap-1.5 px-3 sm:px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
+                            >
+                                <Plus className="w-4 h-4 text-black" />
+                                <span className="hidden sm:inline">Crear Subasta</span>
+                                <span className="sm:hidden">Crear</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useFreighter } from '@/hooks/useFreighter';
+import { useGamification } from '@/hooks/useGamification';
 
 export interface UserProfile {
     wallet_address: string;
@@ -18,12 +19,14 @@ interface ProfileContextType {
     profile: UserProfile | null;
     loading: boolean;
     updateProfile: (updates: Partial<UserProfile>) => Promise<{ data?: UserProfile, error?: any }>;
+    addPoints: (amount: number, reason: string) => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
     const { address: walletAddress } = useFreighter();
+    const { notifyPointsEarned } = useGamification();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -94,11 +97,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return { data: data as UserProfile };
     };
 
+    const addPoints = async (amount: number, reason: string = "¡Puntos extra!") => {
+        if (!walletAddress || !profile) return;
+        const newPoints = (profile.points || 0) + amount;
+
+        const { data, error } = await supabase
+            .from('users')
+            .update({ points: newPoints, updated_at: new Date().toISOString() })
+            .eq('wallet_address', walletAddress)
+            .select()
+            .single();
+
+        if (!error && data) {
+            setProfile(data as UserProfile);
+            notifyPointsEarned(amount, reason);
+        } else {
+            console.error("Error adding points:", error);
+        }
+    };
+
     return (
-        <ProfileContext.Provider value= {{ profile, loading, updateProfile }
-}>
-    { children }
-    </ProfileContext.Provider>
+        <ProfileContext.Provider value={{ profile, loading, updateProfile, addPoints }}>
+            {children}
+        </ProfileContext.Provider>
     );
 }
 
