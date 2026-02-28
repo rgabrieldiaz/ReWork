@@ -284,13 +284,13 @@ export default function ColectasPage() {
                                             <Share2 className="w-4 h-4" />
                                         </button>
                                     </div>
-                                    <p className="text-sm text-neutral-400 mb-6 flex-1">{camp.description || "Apoya esta colecta con tus XLM."}</p>
+                                    <p className="text-sm text-neutral-400 mb-6 flex-1">{camp.description || `Apoya esta colecta con tus ${camp.goal_amount === 150 ? 'USDC' : 'XLM'}.`}</p>
 
                                     <div className="mt-auto space-y-5">
                                         {/* Barra de Progreso */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-sm">
-                                                <span className="font-bold text-white tracking-wide">{camp.current_amount.toLocaleString()} <span className="text-neutral-500 font-normal">/ {camp.goal_amount.toLocaleString()} XLM</span></span>
+                                                <span className="font-bold text-white tracking-wide">{camp.current_amount.toLocaleString()} <span className="text-neutral-500 font-normal">/ {camp.goal_amount.toLocaleString()} {camp.goal_amount === 150 ? 'USDC' : 'XLM'}</span></span>
                                                 <span className="font-medium flex items-center gap-1.5" style={{ color: isGoalMet ? '#00f2ff' : '#fff' }}>
                                                     {isGoalMet && <CheckCircle className="w-3.5 h-3.5" />} {progress}%
                                                 </span>
@@ -337,7 +337,7 @@ export default function ColectasPage() {
                                                                 min="1"
                                                                 value={donationAmounts[camp.id] || ""}
                                                                 onChange={(e) => setDonationAmounts(prev => ({ ...prev, [camp.id]: e.target.value }))}
-                                                                placeholder="Ej. 100 XLM"
+                                                                placeholder={`Ej. 100 ${camp.goal_amount === 150 ? 'USDC' : 'XLM'}`}
                                                                 className="w-1/3 min-w-[100px] bg-black border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-accent-teal transition-colors"
                                                                 disabled={isProcessing}
                                                             />
