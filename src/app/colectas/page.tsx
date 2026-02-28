@@ -173,7 +173,7 @@ export default function ColectasPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-16">
             <div className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-6 md:p-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent-teal/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="max-w-2xl">
                         <h1 className="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
@@ -182,7 +182,7 @@ export default function ColectasPage() {
                         <p className="text-neutral-300 leading-relaxed mb-4">
                             Fomentá la colaboración y logren objetivos juntos. Cada aporte se gestiona mediante escrows no custodiales de Trustless Work, garantizando seguridad y transparencia total.
                         </p>
-                        <a href="https://docs.trustlesswork.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-[#13ec5b] hover:text-[#11cc4e] transition-colors border border-[#13ec5b] px-4 py-2 rounded-lg">
+                        <a href="https://docs.trustlesswork.com/trustless-work/es" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-accent-teal hover:text-accent-teal/80 transition-colors border border-accent-teal px-4 py-2 rounded-lg">
                             Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
                         </a>
                     </div>
@@ -205,7 +205,7 @@ export default function ColectasPage() {
                             placeholder="Buscar colecta u organizador..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white focus:outline-none focus:border-[#13ec5b]/50 transition-colors"
+                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white focus:outline-none focus:border-accent-teal/50 transition-colors"
                         />
                     </div>
                     <div className="w-full md:w-56 shrink-0 relative">
@@ -213,7 +213,7 @@ export default function ColectasPage() {
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white appearance-none focus:outline-none focus:border-[#13ec5b]/50 transition-colors cursor-pointer"
+                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white appearance-none focus:outline-none focus:border-accent-teal/50 transition-colors cursor-pointer"
                         >
                             <option value="progreso">Más cerca de la meta</option>
                             <option value="nuevas">Nuevas</option>
@@ -233,7 +233,7 @@ export default function ColectasPage() {
                         <button
                             key={tag}
                             onClick={() => setSelectedTag(tag)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap snap-start border transition-all ${selectedTag === tag ? 'bg-[#13ec5b]/10 text-[#13ec5b] border-[#13ec5b]/30' : 'bg-[#0a0a0a] text-neutral-400 border-white/10 hover:border-white/30'}`}
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap snap-start border transition-all ${selectedTag === tag ? 'bg-accent-teal/10 text-accent-teal border-accent-teal/30' : 'bg-[#0a0a0a] text-neutral-400 border-white/10 hover:border-white/30'}`}
                         >
                             {tag}
                         </button>
@@ -261,9 +261,9 @@ export default function ColectasPage() {
                         const hasDonated = donations.some(d => d.crowdfund_id === camp.id);
 
                         return (
-                            <div key={camp.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden group hover:border-[#13ec5b]/30 transition-all flex flex-col md:flex-row shadow-lg">
+                            <div key={camp.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col md:flex-row shadow-lg">
                                 <div className="w-full md:w-32 xl:w-40 bg-neutral-900/40 md:border-r border-white/5 flex flex-col items-center justify-center py-6 px-4 flex-shrink-0 relative overflow-hidden">
-                                    {isGoalMet && <div className="absolute inset-0 bg-[#13ec5b]/5 z-0"></div>}
+                                    {isGoalMet && <div className="absolute inset-0 bg-accent-teal/5 z-0"></div>}
                                     <div className="text-5xl group-hover:scale-110 transition-transform duration-500 mb-4 z-10">{camp.image}</div>
                                     <div className="flex flex-col items-center justify-center gap-2 z-10 w-full">
                                         {camp.tags?.map((tag: string) => (
@@ -275,7 +275,7 @@ export default function ColectasPage() {
                                 <div className="p-6 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
-                                            <h3 className="font-semibold text-xl leading-tight text-white mb-1 group-hover:text-[#13ec5b] transition-colors">{camp.title}</h3>
+                                            <h3 className="font-semibold text-xl leading-tight text-white mb-1 group-hover:text-accent-teal transition-colors">{camp.title}</h3>
                                             <p className="text-xs text-neutral-500 flex items-center gap-1">
                                                 <Clock className="w-3 h-3" /> Termina el {new Date(camp.deadline).toLocaleDateString()}
                                             </p>
@@ -291,13 +291,13 @@ export default function ColectasPage() {
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-sm">
                                                 <span className="font-bold text-white tracking-wide">{camp.current_amount.toLocaleString()} <span className="text-neutral-500 font-normal">/ {camp.goal_amount.toLocaleString()} XLM</span></span>
-                                                <span className="font-medium flex items-center gap-1.5" style={{ color: isGoalMet ? '#13ec5b' : '#fff' }}>
+                                                <span className="font-medium flex items-center gap-1.5" style={{ color: isGoalMet ? '#00f2ff' : '#fff' }}>
                                                     {isGoalMet && <CheckCircle className="w-3.5 h-3.5" />} {progress}%
                                                 </span>
                                             </div>
                                             <div className="w-full bg-neutral-900 rounded-full h-3 overflow-hidden shadow-inner border border-white/5">
                                                 <div
-                                                    className={`h-full rounded-full relative transition-all duration-1000 ${isGoalMet ? 'bg-[#13ec5b] shadow-[0_0_15px_#13ec5b40]' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-[#13ec5b]'}`}
+                                                    className={`h-full rounded-full relative transition-all duration-1000 ${isGoalMet ? 'bg-accent-teal shadow-[0_0_15px_#00f2ff40]' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-accent-teal'}`}
                                                     style={{ width: `${progress}%` }}
                                                 >
                                                     <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-white/20 to-transparent"></div>
@@ -317,7 +317,7 @@ export default function ColectasPage() {
                                                         <button
                                                             disabled={isProcessing}
                                                             onClick={() => handleAction(camp, 'release')}
-                                                            className="w-full bg-[#13ec5b] hover:bg-[#11cc4e] text-black font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2"
+                                                            className="w-full bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2"
                                                         >
                                                             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
                                                             Liberar Fondos Recaudados
@@ -338,7 +338,7 @@ export default function ColectasPage() {
                                                                 value={donationAmounts[camp.id] || ""}
                                                                 onChange={(e) => setDonationAmounts(prev => ({ ...prev, [camp.id]: e.target.value }))}
                                                                 placeholder="Ej. 100 XLM"
-                                                                className="w-1/3 min-w-[100px] bg-black border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                                                                className="w-1/3 min-w-[100px] bg-black border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-accent-teal transition-colors"
                                                                 disabled={isProcessing}
                                                             />
                                                             <button
@@ -362,12 +362,12 @@ export default function ColectasPage() {
                                                     )}
 
                                                     {isGoalMet && !hasDonated && (
-                                                        <div className="text-center text-sm font-medium text-[#13ec5b] bg-[#13ec5b]/5 py-2 rounded-xl border border-[#13ec5b]/10">
+                                                        <div className="text-center text-sm font-medium text-accent-teal bg-accent-teal/5 py-2 rounded-xl border border-accent-teal/10">
                                                             🎉 ¡Meta alcanzada exitosamente!
                                                         </div>
                                                     )}
                                                     {isGoalMet && hasDonated && (
-                                                        <div className="text-center text-sm font-medium text-[#13ec5b] bg-[#13ec5b]/5 py-2 rounded-xl border border-[#13ec5b]/10">
+                                                        <div className="text-center text-sm font-medium text-accent-teal bg-accent-teal/5 py-2 rounded-xl border border-accent-teal/10">
                                                             🎉 ¡Meta alcanzada! Gracias por aportar.
                                                         </div>
                                                     )}

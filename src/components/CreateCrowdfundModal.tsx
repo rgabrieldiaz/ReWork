@@ -99,7 +99,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="Ej. Servidor Anual"
                             required
                         />
@@ -110,7 +110,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors resize-none h-20"
+                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors resize-none h-20"
                             placeholder="¿Para qué son los fondos?"
                         />
                     </div>
@@ -122,7 +122,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                                 type="number"
                                 value={goalAmount}
                                 onChange={(e) => setGoalAmount(e.target.value)}
-                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
                                 placeholder="Ej. 5000"
                                 required
                                 min="1"
@@ -134,7 +134,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                                 type="number"
                                 value={durationDays}
                                 onChange={(e) => setDurationDays(e.target.value)}
-                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
                                 placeholder="30"
                                 required
                                 min="1"
@@ -148,7 +148,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             type="text"
                             value={destinationAccount}
                             onChange={(e) => setDestinationAccount(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors text-sm"
+                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors text-sm"
                             placeholder="G..."
                             required
                         />
@@ -160,7 +160,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             type="text"
                             value={tagsInput}
                             onChange={(e) => setTagsInput(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="Ej. Servidores, Comunidad"
                         />
                     </div>
@@ -171,7 +171,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             type="text"
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#13ec5b] transition-colors"
+                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="💻"
                         />
                     </div>
@@ -188,7 +188,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                         <button
                             type="submit"
                             disabled={loading || !title || !goalAmount || !destinationAccount}
-                            className="bg-[#13ec5b] hover:bg-[#11cc4e] text-black font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold px-6 py-2.5 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Crear Colecta

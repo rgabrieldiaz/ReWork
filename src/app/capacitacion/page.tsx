@@ -20,8 +20,8 @@ export default function CapacitacionPage() {
             duration: "1h 20m",
             modules: 5,
             icon: ZapIcon,
-            color: "text-[#13ec5b]",
-            bgWrapper: "bg-[#13ec5b]/10",
+            color: "text-accent-teal",
+            bgWrapper: "bg-accent-teal/10",
             progress: 60,
         },
         {
@@ -63,7 +63,7 @@ export default function CapacitacionPage() {
                                 <course.icon size={28} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-semibold mb-2 group-hover:text-[#13ec5b] transition-colors">{course.title}</h3>
+                                <h3 className="text-xl font-semibold mb-2 group-hover:text-accent-teal transition-colors">{course.title}</h3>
                                 <p className="text-sm text-neutral-400 leading-relaxed">{course.description}</p>
                             </div>
                         </div>
@@ -76,7 +76,7 @@ export default function CapacitacionPage() {
 
                             <div className="w-full bg-neutral-900 rounded-full h-1.5 mb-4 overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full ${course.progress === 100 ? 'bg-blue-500' : 'bg-[#13ec5b]'}`}
+                                    className={`h-full rounded-full ${course.progress === 100 ? 'bg-blue-500' : 'bg-accent-teal'}`}
                                     style={{ width: `${course.progress}%` }}
                                 ></div>
                             </div>

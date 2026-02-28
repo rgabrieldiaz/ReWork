@@ -19,6 +19,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
         image: "📦",
         basePrice: "",
         durationHours: "24",
+        currency: "USDC",
     });
 
     if (!isOpen) return null;
@@ -50,7 +51,8 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 bid_count: 0,
                 status: 'active',
                 end_time: endTime,
-                is_direct_buy: false
+                is_direct_buy: false,
+                currency: formData.currency
             });
 
             if (error) throw error;
@@ -78,30 +80,43 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
                     <div>
                         <label className="block text-sm font-medium text-neutral-400 mb-1">Título del Producto</label>
-                        <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#13ec5b]" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Lentes VR Oculus Quest 3" />
+                        <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Lentes VR Oculus Quest 3" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-neutral-400 mb-1">Precio Inicial (XLM)</label>
-                            <input required type="number" min="1" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#13ec5b]" value={formData.basePrice} onChange={e => setFormData({ ...formData, basePrice: e.target.value })} placeholder="Ej. 1000" />
+                            <label className="block text-sm font-medium text-neutral-400 mb-1">Precio Inicial</label>
+                            <div className="flex bg-black border border-white/10 rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
+                                <input required type="number" min="1" className="w-full bg-transparent px-4 py-2.5 text-sm focus:outline-none" value={formData.basePrice} onChange={e => setFormData({ ...formData, basePrice: e.target.value })} placeholder="Ej. 1000" />
+                                <div className="border-l border-white/10 flex items-center">
+                                    <select
+                                        value={formData.currency}
+                                        onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                                        className="bg-transparent pl-3 pr-8 py-2.5 text-sm focus:outline-none appearance-none cursor-pointer text-accent-teal font-bold focus:ring-0"
+                                        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300f2ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+                                    >
+                                        <option value="USDC" className="bg-[#0a0a0a]">USDC</option>
+                                        <option value="XLM" className="bg-[#0a0a0a]">XLM</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-neutral-400 mb-1">Duración (Horas)</label>
-                            <input required type="number" min="1" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#13ec5b]" value={formData.durationHours} onChange={e => setFormData({ ...formData, durationHours: e.target.value })} placeholder="Ej. 48" />
+                            <input required type="number" min="1" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.durationHours} onChange={e => setFormData({ ...formData, durationHours: e.target.value })} placeholder="Ej. 48" />
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-neutral-400 mb-1">Imagen (URL o Emoji)</label>
-                        <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#13ec5b]" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
+                        <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3 mt-6">
                         <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors">
                             Cancelar
                         </button>
-                        <button type="submit" disabled={loading} className="px-6 py-2.5 text-sm font-bold bg-[#13ec5b] text-black hover:bg-[#11cc4e] rounded-xl transition-all shadow-[0_0_15px_rgba(19,236,91,0.15)] disabled:opacity-50">
+                        <button type="submit" disabled={loading} className="px-6 py-2.5 text-sm font-bold bg-accent-teal text-black hover:bg-accent-teal/80 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50">
                             {loading ? "Publicando..." : "Publicar Subasta"}
                         </button>
                     </div>

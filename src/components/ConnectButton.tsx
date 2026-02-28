@@ -24,15 +24,18 @@ export function ConnectButton() {
 
     if (connected && address) {
         return (
-            <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-[#13ec5b] bg-[#13ec5b]/10 px-4 py-2 rounded-full border border-[#13ec5b]/20">
+            <div className="flex items-center gap-4">
+                <span className="text-sm font-mono font-bold text-accent-teal bg-accent-teal/10 px-4 py-2 rounded-full border border-accent-teal/20 shadow-[0_0_10px_rgba(0,242,255,0.1)]">
                     {address.slice(0, 4)}...{address.slice(-4)}
                 </span>
                 <button
                     onClick={disconnect}
-                    className="text-sm text-red-400 hover:text-red-300 transition-colors font-medium px-2"
+                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-glass-white border border-border-glass text-slate-400 hover:text-red-400 hover:border-red-400/50 transition-colors"
+                    title="Desconectar"
                 >
-                    Desconectar
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
                 </button>
             </div>
         );
@@ -41,7 +44,7 @@ export function ConnectButton() {
     return (
         <button
             onClick={connect}
-            className="px-6 py-2.5 bg-[#13ec5b] text-black font-semibold rounded-full hover:bg-[#11cc4e] transition-colors shadow-[0_0_15px_rgba(19,236,91,0.2)] hover:shadow-[0_0_20px_rgba(19,236,91,0.4)]"
+            className="px-6 py-2.5 bg-accent-teal text-deep-navy font-bold rounded-full hover:bg-white transition-colors glow-teal text-sm tracking-wide uppercase"
         >
             Conectar Billetera
         </button>

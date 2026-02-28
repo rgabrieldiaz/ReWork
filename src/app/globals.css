@@ -1,12 +1,61 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #13ec5b;
+  /* Colors */
+  --color-deep-navy: #050c14;
+  --color-card-bg: #0d1624;
+  --color-accent-teal: #00f2ff;
+  --color-glass-white: rgba(255, 255, 255, 0.05);
+  --color-border-glass: rgba(255, 255, 255, 0.1);
+  /* Typography */
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 @layer base {
   body {
-    background-color: #000000;
+    background-color: var(--color-deep-navy);
     color: #ffffff;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(13, 22, 36, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+  }
+  
+  .glow-teal {
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+  }
+
+  .active-nav-border {
+    position: relative;
+  }
+  .active-nav-border::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 24px;
+    width: 4px;
+    background: #00f2ff;
+    border-radius: 4px 0 0 4px;
+    box-shadow: -2px 0 10px rgba(0, 242, 255, 0.5);
   }
 }

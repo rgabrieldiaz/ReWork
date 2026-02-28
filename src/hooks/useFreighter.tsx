@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
 import {
     isConnected,
     isAllowed,
@@ -10,7 +10,18 @@ import {
     getNetworkDetails,
 } from "@stellar/freighter-api";
 
-export function useFreighter() {
+interface FreighterContextType {
+    connected: boolean;
+    address: string | null;
+    network: string | null;
+    connect: () => Promise<string>;
+    disconnect: () => void;
+    sign: (xdr: string, networkPassphrase: string) => Promise<{ signedTxXdr: string; signerAddress: string; }>;
+}
+
+const FreighterContext = createContext<FreighterContextType | undefined>(undefined);
+
+export function FreighterProvider({ children }: { children: ReactNode }) {
     const [connected, setConnected] = useState(false);
     const [address, setAddress] = useState<string | null>(null);
     const [network, setNetwork] = useState<string | null>(null);
@@ -69,5 +80,18 @@ export function useFreighter() {
         [connected]
     );
 
-    return { connected, address, network, connect, disconnect, sign };
+    return (
+        <FreighterContext.Provider value={{ connected, address, network, connect, disconnect, sign }
+        }>
+            {children}
+        </FreighterContext.Provider>
+    );
+}
+
+export function useFreighter() {
+    const context = useContext(FreighterContext);
+    if (context === undefined) {
+        throw new Error("useFreighter must be used within a FreighterProvider");
+    }
+    return context;
 }
