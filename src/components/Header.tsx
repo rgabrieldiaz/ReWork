@@ -60,55 +60,55 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         <p className="text-xl font-bold">ReWork</p>
                     </div>
                 )}
+            </div>
 
-                <div className="flex items-center gap-6">
-                    {connected && (
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-4 text-xs font-mono mr-4 hidden sm:flex">
-                                <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
-                                    <span className="w-2 h-2 rounded-full bg-accent-teal glow-teal"></span>
-                                    <span className="text-slate-400">{profile?.points || 0} <span className="text-white font-bold">PTS</span></span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span className="text-slate-400">
-                                        {balanceLoading ? (
-                                            <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
-                                        ) : (
-                                            <span className="text-white">{usdcBalance !== null ? usdcBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</span>
-                                        )}
-                                        <span className="text-emerald-400 font-bold ml-1">USDC</span>
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
-                                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                    <span className="text-slate-400">
-                                        {balanceLoading ? (
-                                            <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
-                                        ) : (
-                                            <a
-                                                href={`https://stellar.expert/explorer/testnet/account/${address}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="hover:text-indigo-400 transition-colors uppercase tracking-wider text-white"
-                                                title="Ver transacciones en Stellar Expert"
-                                            >
-                                                {xlmBalance !== null ? xlmBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
-                                            </a>
-                                        )}
-                                        <span className="text-indigo-400 font-bold ml-1">XLM</span>
-                                    </span>
-                                </div>
+            <div className="flex items-center gap-6">
+                {connected && (
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 text-xs font-mono mr-4 hidden sm:flex">
+                            <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
+                                <span className="w-2 h-2 rounded-full bg-accent-teal glow-teal"></span>
+                                <span className="text-slate-400">{profile?.points || 0} <span className="text-white font-bold">PTS</span></span>
                             </div>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-glass-white border border-border-glass text-slate-400 hover:text-white transition-colors relative">
-                                <Bell className="w-5 h-5" />
-                                {/* Simulate notification dot for now */}
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-deep-navy"></span>
-                            </button>
+                            <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span className="text-slate-400">
+                                    {balanceLoading ? (
+                                        <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
+                                    ) : (
+                                        <span className="text-white">{usdcBalance !== null ? usdcBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</span>
+                                    )}
+                                    <span className="text-emerald-400 font-bold ml-1">USDC</span>
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
+                                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                <span className="text-slate-400">
+                                    {balanceLoading ? (
+                                        <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
+                                    ) : (
+                                        <a
+                                            href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-indigo-400 transition-colors uppercase tracking-wider text-white"
+                                            title="Ver transacciones en Stellar Expert"
+                                        >
+                                            {xlmBalance !== null ? xlmBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                                        </a>
+                                    )}
+                                    <span className="text-indigo-400 font-bold ml-1">XLM</span>
+                                </span>
+                            </div>
                         </div>
-                    )}
-                    <ConnectButton />
-                </div>
+                        <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-glass-white border border-border-glass text-slate-400 hover:text-white transition-colors relative">
+                            <Bell className="w-5 h-5" />
+                            {/* Simulate notification dot for now */}
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-deep-navy"></span>
+                        </button>
+                    </div>
+                )}
+                <ConnectButton />
             </div>
         </header>
     );

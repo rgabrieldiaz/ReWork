@@ -6,23 +6,163 @@ import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useGamification } from "@/hooks/useGamification";
-import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
+import { X, Clock, ShieldCheck } from "lucide-react";
+
+interface Auction {
+  id: number;
+  title: string;
+  seller: string;
+  base_price: number;
+  current_bid: number;
+  bid_count: number;
+  status: string;
+  current_winner_address: string | null;
+  escrow_contract_id: string | null;
+  end_time: string | null;
+  image: string;
+  is_direct_buy: boolean;
+  currency: string;
+  condition?: 'nuevo' | 'usado';
+}
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { connected, address } = useFreighter();
-  const { profile } = useProfile();
+  const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance } = useBalances(address);
   const { notifyPointsEarned } = useGamification();
 
   // Swap Widget State
-  const [fromToken, setFromToken] = useState<"PTS" | "USDC" | "XLM">("USDC");
-  const [toToken, setToToken] = useState<"PTS" | "USDC" | "XLM">("XLM");
+  const [fromToken, setFromToken] = useState<"USDC" | "XLM">("USDC");
+  const [toToken, setToToken] = useState<"USDC" | "XLM">("XLM");
   const [swapAmount, setSwapAmount] = useState<string>("100");
   const [isSwapping, setIsSwapping] = useState(false);
 
+  // Home Marketplace State
+  const [auctions, setAuctions] = useState<Auction[]>([]);
+  const [conditionFilter, setConditionFilter] = useState("TODOS");
+  const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
+  const [bidAmount, setBidAmount] = useState("");
+  const [loadingBid, setLoadingBid] = useState(false);
+
+  useEffect(() => {
+    const fetchAuctions = async () => {
+      const now = new Date().toISOString();
+      let query = supabase
+        .from("auctions")
+        .select("*")
+        .eq("status", "active")
+        .gt("end_time", now)
+        .order("end_time", { ascending: true });
+
+      if (conditionFilter !== "TODOS") {
+        query = query.eq("condition", conditionFilter.toLowerCase());
+      }
+
+      const { data, error } = await query.limit(2);
+      if (data) setAuctions(data);
+      if (error) console.error("Error fetching home auctions:", error);
+    };
+
+    fetchAuctions();
+  }, [conditionFilter]);
+
+  const handleBid = async () => {
+    if (!selectedAuction) return;
+    if (!connected || !address) {
+      alert("Por favor, conecta tu billetera Freighter primero.");
+      return;
+    }
+
+    const amount = Number(bidAmount);
+    if (amount <= selectedAuction.current_bid || Math.floor(amount) < Math.floor(selectedAuction.base_price)) {
+      alert("Tu oferta debe ser mayor a la actual y al menos igual al precio inicial.");
+      return;
+    }
+
+    setLoadingBid(true);
+    try {
+      const assetSymbol = selectedAuction.currency || "USDC";
+      const dummyPlatform = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
+      const testnetContract = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+
+      const payload: any = {
+        signer: address,
+        engagementId: `rework-auction-${selectedAuction.id}-${Date.now()}`,
+        title: `Puja para ${selectedAuction.title}`,
+        description: `Bloqueando fondos para oferta en Marketplace ReWork.`,
+        roles: {
+          approver: address,
+          serviceProvider: selectedAuction.seller.length > 20 ? selectedAuction.seller : dummyPlatform,
+          platformAddress: dummyPlatform,
+          releaseSigner: address,
+          disputeResolver: dummyPlatform,
+          receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : dummyPlatform,
+        },
+        amount: amount,
+        platformFee: 0.5,
+        milestones: [{ description: "Aprobación y entrega" }],
+        trustline: { address: testnetContract, symbol: assetSymbol }
+      };
+
+      const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const deployData = await deployRes.json();
+      if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow.");
+
+      const { unsignedTransaction } = deployData;
+      const net = await getNetworkDetails();
+      const signedResult = await signTransaction(unsignedTransaction, {
+        networkPassphrase: net.networkPassphrase || "Test SDF Network ; September 2015"
+      });
+      const signedXdr = typeof signedResult === "string" ? signedResult : (signedResult as any)?.signedTxXdr || (signedResult as any)?.signedXdr || (signedResult as any)?.xdr || signedResult;
+      if (!signedXdr) throw new Error("Firma fallida.");
+
+      const response = await fetch('/api/trustless-work/send-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xdr: signedXdr })
+      });
+
+      const textResponse = await response.text();
+      let result = {};
+      try { result = JSON.parse(textResponse); } catch (e) { }
+      if (!response.ok) throw new Error((result as any).error || "Error enviando la transacción a la red.");
+
+      const newEscrowId = (result as any).contractId || (result as any).id || `escrow-mock-${Date.now()}`;
+
+      const { error: sbError } = await supabase
+        .from("auctions")
+        .update({
+          current_bid: amount,
+          current_winner_address: address,
+          escrow_contract_id: newEscrowId,
+          bid_count: selectedAuction.bid_count + 1
+        })
+        .eq("id", selectedAuction.id);
+
+      if (sbError) throw sbError;
+
+      setSelectedAuction(prev => prev ? { ...prev, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: prev.bid_count + 1 } : null);
+      setAuctions(prev => prev.map(a => a.id === selectedAuction.id ? { ...a, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: a.bid_count + 1 } : a));
+      setBidAmount("");
+      alert(`¡Puja exitosa! Fondos asegurados en Escrow.`);
+      await addPoints(10, "¡Nueva puja realizada!");
+    } catch (error: any) {
+      console.error(error);
+      alert("Error al procesar: " + (error.message || "Desconocido"));
+    } finally {
+      setLoadingBid(false);
+    }
+  };
+
   const getBalanceDisplay = (token: string) => {
     if (!connected) return "0.00";
-    if (token === "PTS") return profile?.points?.toLocaleString() || "0";
     if (token === "USDC") return (usdcBalance || 0).toLocaleString();
     if (token === "XLM") return (xlmBalance || 0).toLocaleString();
     return "0.00";
@@ -32,8 +172,6 @@ export default function Home() {
     // Mock exchange rates
     if (fromToken === "USDC" && toToken === "XLM") return 3.8;
     if (fromToken === "XLM" && toToken === "USDC") return 0.26;
-    if (fromToken === "PTS") return 0.05; // 1 PTS = 0.05 of destination
-    if (toToken === "PTS") return 20;    // 1 Source = 20 PTS
     return 1;
   };
 
@@ -129,54 +267,68 @@ export default function Home() {
           {/* BEGIN: Market Highlights */}
           <section>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg sm:text-xl font-bold">Subastas Exclusivas</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Marketplace</h2>
               <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-accent-teal text-deep-navy font-bold rounded-xl text-[10px] sm:text-xs hover:bg-white transition-colors whitespace-nowrap">TODO</button>
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-[10px] sm:text-xs hover:text-white transition-colors whitespace-nowrap">MERCH</button>
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-glass-white border border-border-glass text-slate-400 font-bold rounded-xl text-[10px] sm:text-xs hover:text-white transition-colors whitespace-nowrap">NFTS</button>
+                {['TODOS', 'NUEVO', 'USADO'].map(filter => (
+                  <button
+                    key={filter}
+                    onClick={() => setConditionFilter(filter)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 font-bold rounded-xl text-[10px] sm:text-xs transition-colors whitespace-nowrap ${conditionFilter === filter
+                      ? 'bg-accent-teal text-deep-navy border-transparent hover:bg-white'
+                      : 'bg-glass-white border border-border-glass text-slate-400 hover:text-white'
+                      }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Item 1 */}
-              <div className="glass-card group cursor-pointer overflow-hidden border-none relative h-72">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
-                {/* Fallback pattern gradient if image doesn't load */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 to-deep-navy -z-10"></div>
-                <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                  <span className="text-[10px] font-bold text-accent-teal bg-accent-teal/20 px-2 py-0.5 rounded tracking-widest uppercase mb-2 inline-block">Edición Limitada</span>
-                  <h4 className="text-lg font-bold mb-4">Silla Gamer Ergonómica #04</h4>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-slate-400 uppercase">Oferta Actual</span>
-                      <span className="font-mono text-accent-teal font-bold">2,400 PTS</span>
-                    </div>
-                    <button className="w-10 h-10 bg-white/10 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-accent-teal group-hover:text-deep-navy transition-all">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {auctions.map((item, index) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedAuction(item)}
+                  className="glass-card group cursor-pointer overflow-hidden border-none relative h-72"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
+                  {/* Dynamic background array for fallbacks */}
+                  <div className={`absolute inset-0 -z-10 ${index % 2 === 0 ? 'bg-gradient-to-br from-emerald-900 to-deep-navy' : 'bg-gradient-to-br from-orange-900 to-deep-navy'}`}></div>
 
-              {/* Item 2 */}
-              <div className="glass-card group cursor-pointer overflow-hidden border-none relative h-72">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
-                {/* Fallback pattern gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-900 to-deep-navy -z-10"></div>
-                <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                  <span className="text-[10px] font-bold text-indigo-400 bg-indigo-400/20 px-2 py-0.5 rounded tracking-widest uppercase mb-2 inline-block">Oficina Premium</span>
-                  <h4 className="text-lg font-bold mb-4">Auriculares Noise Cancelling</h4>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-slate-400 uppercase">Comprar Ahora</span>
-                      <span className="font-mono text-accent-teal font-bold">1,200 PTS</span>
+                  {item.image.length > 5 && (
+                    <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover -z-10" />
+                  )}
+
+                  <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase mb-2 inline-block ${item.condition === 'nuevo'
+                      ? 'text-accent-teal bg-accent-teal/20'
+                      : 'text-orange-400 bg-orange-400/20'
+                      }`}>
+                      {item.condition || 'nuevo'}
+                    </span>
+                    <h4 className="text-lg font-bold mb-4 line-clamp-2">{item.title}</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-slate-400 uppercase">
+                          {item.is_direct_buy ? 'Comprar Ahora' : 'Oferta Actual'}
+                        </span>
+                        <span className="font-mono text-accent-teal font-bold">
+                          {item.current_bid > 0 ? item.current_bid : item.base_price} {item.currency}
+                        </span>
+                      </div>
+                      <button className="w-10 h-10 bg-white/10 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-accent-teal group-hover:text-deep-navy transition-all shrink-0 ml-4">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                      </button>
                     </div>
-                    <button className="w-10 h-10 bg-white/10 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-accent-teal group-hover:text-deep-navy transition-all">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </button>
                   </div>
                 </div>
-              </div>
+              ))}
+
+              {auctions.length === 0 && (
+                <div className="col-span-12 sm:col-span-2 text-center py-12 border border-white/5 border-dashed rounded-2xl bg-black/20">
+                  <p className="text-slate-400 text-sm">No hay productos activos para esta categoría.</p>
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -210,12 +362,15 @@ export default function Home() {
                   />
                   <select
                     value={fromToken}
-                    onChange={(e) => setFromToken(e.target.value as any)}
+                    onChange={(e) => {
+                      const val = e.target.value as "USDC" | "XLM";
+                      setFromToken(val);
+                      if (val === toToken) setToToken(fromToken);
+                    }}
                     className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
                   >
                     <option value="USDC">USDC</option>
                     <option value="XLM">XLM</option>
-                    <option value="PTS">Puntos</option>
                   </select>
                 </div>
               </div>
@@ -240,12 +395,15 @@ export default function Home() {
                   <span className="text-3xl font-mono font-bold text-accent-teal">{receivedAmount}</span>
                   <select
                     value={toToken}
-                    onChange={(e) => setToToken(e.target.value as any)}
+                    onChange={(e) => {
+                      const val = e.target.value as "USDC" | "XLM";
+                      setToToken(val);
+                      if (val === fromToken) setFromToken(toToken);
+                    }}
                     className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
                   >
                     <option value="XLM">XLM</option>
                     <option value="USDC">USDC</option>
-                    <option value="PTS">Puntos</option>
                   </select>
                 </div>
               </div>
@@ -332,6 +490,106 @@ export default function Home() {
 
         </div>
       </div>
+
+      {/* Lightbox / Modal for Marketplace Interaction */}
+      {selectedAuction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh]">
+
+            {/* Left side: Image */}
+            <div className="w-full md:w-1/2 bg-black relative flex items-center justify-center min-h-[250px] md:min-h-[400px]">
+              {selectedAuction.image.length > 5 ? (
+                <img src={selectedAuction.image} alt={selectedAuction.title} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-8xl">{selectedAuction.image}</span>
+              )}
+              <div className="absolute top-4 left-4">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg tracking-widest uppercase backdrop-blur-md border ${selectedAuction.condition === 'nuevo'
+                  ? 'text-accent-teal bg-accent-teal/10 border-accent-teal/20'
+                  : 'text-orange-400 bg-orange-400/10 border-orange-400/20'
+                  }`}>
+                  {selectedAuction.condition || 'nuevo'}
+                </span>
+              </div>
+            </div>
+
+            {/* Right side: Details and Actions */}
+            <div className="w-full md:w-1/2 p-6 flex flex-col relative overflow-y-auto">
+              <button onClick={() => setSelectedAuction(null)} className="absolute top-4 right-4 text-neutral-400 hover:text-white bg-black/50 p-1 rounded-full transition-colors z-10">
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-xl font-bold mb-2 pr-8">{selectedAuction.title}</h3>
+
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-xs text-neutral-400 bg-white/5 px-2 py-1 rounded">
+                  {selectedAuction.is_direct_buy ? "Venta Directa" : "Subasta"}
+                </span>
+                <span className="text-xs text-neutral-400 bg-white/5 px-2 py-1 rounded flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> Terminando pronto
+                </span>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-xs text-neutral-400 uppercase tracking-widest mb-1">
+                      {selectedAuction.is_direct_buy ? 'Precio' : 'Oferta Actual'}
+                    </p>
+                    <p className="text-2xl font-mono font-bold text-accent-teal flex items-baseline gap-1">
+                      {selectedAuction.current_bid > 0 ? selectedAuction.current_bid : selectedAuction.base_price}
+                      <span className="text-sm font-sans">{selectedAuction.currency}</span>
+                    </p>
+                  </div>
+                  {!selectedAuction.is_direct_buy && (
+                    <div className="text-right">
+                      <p className="text-[10px] text-neutral-500 uppercase">Base</p>
+                      <p className="text-sm font-mono text-neutral-300">{selectedAuction.base_price} {selectedAuction.currency}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-accent-teal/5 border border-accent-teal/10 rounded-xl p-3 mb-6 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-accent-teal shrink-0 mt-0.5" />
+                <p className="text-xs text-neutral-300 leading-relaxed">
+                  Interacción protegida por Trustless Work Escrow. Los fondos se bloquean en un Smart Contract de Stellar hasta que recibas el producto.
+                </p>
+              </div>
+
+              <div className="mt-auto space-y-3">
+                <div className="relative">
+                  <input
+                    type="number"
+                    placeholder={selectedAuction.is_direct_buy ? "Cantidad" : "Tu oferta..."}
+                    value={bidAmount}
+                    onChange={e => setBidAmount(e.target.value)}
+                    min={selectedAuction.is_direct_buy ? selectedAuction.base_price : (selectedAuction.current_bid > 0 ? selectedAuction.current_bid + 1 : selectedAuction.base_price)}
+                    className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-teal transition-colors"
+                    disabled={selectedAuction.is_direct_buy}
+                  />
+                  {selectedAuction.is_direct_buy && (
+                    <div className="absolute inset-0 bg-black/60 z-10 rounded-xl flex items-center justify-center">
+                      <span className="text-xs font-bold text-accent-teal">Precio Fijo</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={selectedAuction.is_direct_buy ? () => { setBidAmount(selectedAuction.base_price.toString()); handleBid(); } : handleBid}
+                  disabled={loadingBid || (!selectedAuction.is_direct_buy && !bidAmount)}
+                  className="w-full px-6 py-3 font-bold bg-accent-teal text-black hover:bg-white rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingBid
+                    ? "Procesando Escrow..."
+                    : selectedAuction.is_direct_buy ? `Comprar por ${selectedAuction.base_price} ${selectedAuction.currency}` : "Realizar Oferta"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

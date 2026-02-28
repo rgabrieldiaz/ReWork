@@ -27,6 +27,7 @@ interface Auction {
     image: string;
     is_direct_buy: boolean;
     currency: string;
+    condition?: 'nuevo' | 'usado';
 }
 
 // Custom hook to calculate time left
@@ -91,6 +92,7 @@ export default function MarketplacePage() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [sortBy, setSortBy] = useState("time-asc");
+    const [conditionFilter, setConditionFilter] = useState("ambas");
     const [hideFinished, setHideFinished] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -111,6 +113,10 @@ export default function MarketplacePage() {
 
         if (debouncedSearchQuery) {
             filtered = filtered.filter(a => a.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
+        }
+
+        if (conditionFilter !== "ambas") {
+            filtered = filtered.filter(a => (a.condition || "nuevo") === conditionFilter);
         }
 
         if (hideFinished) {
@@ -141,7 +147,7 @@ export default function MarketplacePage() {
         });
 
         return filtered;
-    }, [auctions, debouncedSearchQuery, sortBy, hideFinished]);
+    }, [auctions, debouncedSearchQuery, sortBy, hideFinished, conditionFilter]);
 
     const handleBid = async (auction: Auction) => {
         if (!connected || !address) {
@@ -324,7 +330,19 @@ export default function MarketplacePage() {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3 lg:ml-auto w-full lg:w-auto justify-between lg:justify-end overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-                        <label className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap">
+                        <div className="relative shrink-0">
+                            <select
+                                value={conditionFilter}
+                                onChange={e => setConditionFilter(e.target.value)}
+                                className="pl-4 pr-10 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-white h-full"
+                            >
+                                <option value="ambas">Ambas Cond.</option>
+                                <option value="nuevo">Nuevos</option>
+                                <option value="usado">Usados</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0">
                             <input
                                 type="checkbox"
                                 className="w-3 h-3 sm:w-4 sm:h-4 rounded border-white/10 bg-black text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
@@ -467,8 +485,13 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                             Finalizado
                         </div>
                     ) : item.end_time ? (
-                        <div className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(0,242,255,0.1)]">
-                            <Clock className="w-3.5 h-3.5" /> {timeLeftStr}
+                        <div className="flex flex-col items-end gap-1">
+                            <div className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(0,242,255,0.1)]">
+                                <Clock className="w-3.5 h-3.5" /> {timeLeftStr}
+                            </div>
+                            <div className="bg-white/10 text-white border border-white/20 px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-md backdrop-blur-md">
+                                {(item.condition || "nuevo")}
+                            </div>
                         </div>
                     ) : null}
                 </div>

@@ -22,6 +22,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
         basePrice: "",
         durationHours: "24",
         currency: "USDC",
+        condition: "nuevo",
     });
 
     if (!isOpen) return null;
@@ -54,7 +55,8 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 status: 'active',
                 end_time: endTime,
                 is_direct_buy: false,
-                currency: formData.currency
+                currency: formData.currency,
+                condition: formData.condition
             });
 
             if (error) throw error;
@@ -112,7 +114,20 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
                     <div>
                         <label className="block text-sm font-medium text-neutral-400 mb-1">Imagen (URL o Emoji)</label>
-                        <input required type="text" className="w-full bg-black border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
+                        <div className="flex bg-black border border-white/10 rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
+                            <input required type="text" className="w-full bg-transparent px-4 py-2.5 text-sm focus:outline-none" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
+                            <div className="border-l border-white/10 flex items-center shrink-0">
+                                <select
+                                    value={formData.condition}
+                                    onChange={e => setFormData({ ...formData, condition: e.target.value })}
+                                    className="bg-transparent pl-3 pr-8 py-2.5 text-sm focus:outline-none appearance-none cursor-pointer text-accent-teal font-bold focus:ring-0"
+                                    style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300f2ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+                                >
+                                    <option value="nuevo" className="bg-[#0a0a0a]">Nuevo</option>
+                                    <option value="usado" className="bg-[#0a0a0a]">Usado</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 mt-6">
