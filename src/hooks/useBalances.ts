@@ -38,8 +38,9 @@ export function useBalances(address: string | null) {
                     if (usdcBalanceAsset) setUsdcBalance(parseFloat(usdcBalanceAsset.balance));
                     else setUsdcBalance(0); // If no trustline or 0 balance
                 }
-            } catch (err: any) {
-                if (err?.response?.status === 404) {
+            } catch (err) {
+                const error = err as { response?: { status?: number } };
+                if (error?.response?.status === 404) {
                     // Account not funded on the network yet
                     if (isMounted) {
                         setXlmBalance(0);

@@ -1,6 +1,61 @@
+"use client";
+
 import Image from "next/image";
+import { Copy, Wallet, ChevronRight, TrendingUp, Sparkles, LogOut, ArrowRightLeft } from "lucide-react";
+import { useFreighter } from "@/hooks/useFreighter";
+import { useProfile } from "@/hooks/useProfile";
+import { useBalances } from "@/hooks/useBalances";
+import { useGamification } from "@/hooks/useGamification";
+import { useState } from "react";
 
 export default function Home() {
+  const { connected, address } = useFreighter();
+  const { profile } = useProfile();
+  const { xlmBalance, usdcBalance } = useBalances(address);
+  const { notifyPointsEarned } = useGamification();
+
+  // Swap Widget State
+  const [fromToken, setFromToken] = useState<"PTS" | "USDC" | "XLM">("USDC");
+  const [toToken, setToToken] = useState<"PTS" | "USDC" | "XLM">("XLM");
+  const [swapAmount, setSwapAmount] = useState<string>("100");
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  const getBalanceDisplay = (token: string) => {
+    if (!connected) return "0.00";
+    if (token === "PTS") return profile?.points?.toLocaleString() || "0";
+    if (token === "USDC") return (usdcBalance || 0).toLocaleString();
+    if (token === "XLM") return (xlmBalance || 0).toLocaleString();
+    return "0.00";
+  };
+
+  const getExchangeRate = () => {
+    // Mock exchange rates
+    if (fromToken === "USDC" && toToken === "XLM") return 3.8;
+    if (fromToken === "XLM" && toToken === "USDC") return 0.26;
+    if (fromToken === "PTS") return 0.05; // 1 PTS = 0.05 of destination
+    if (toToken === "PTS") return 20;    // 1 Source = 20 PTS
+    return 1;
+  };
+
+  const receivedAmount = (Number(swapAmount || 0) * getExchangeRate()).toFixed(2);
+
+  const handleSwapTokens = () => {
+    setFromToken(toToken);
+    setToToken(fromToken);
+  };
+
+  const executeSwap = () => {
+    if (!connected || Number(swapAmount) <= 0) return;
+    setIsSwapping(true);
+
+    // Simulate network delay
+    setTimeout(() => {
+      setIsSwapping(false);
+      setSwapAmount("");
+      notifyPointsEarned(0, `¡Intercambio de ${swapAmount} ${fromToken} a ${receivedAmount} ${toToken} exitoso!`);
+    }, 1500);
+  };
+
   return (
     <div className="animate-in fade-in duration-500">
       <div className="grid grid-cols-12 gap-8 custom-scrollbar">
@@ -140,24 +195,38 @@ export default function Home() {
 
             <div className="space-y-4 relative">
               {/* Pay Section */}
-              <div className="bg-deep-navy/50 p-5 rounded-2xl border border-border-glass">
+              <div className="bg-deep-navy/50 p-5 rounded-2xl border border-border-glass focus-within:border-accent-teal/50 transition-colors">
                 <div className="flex justify-between items-center mb-4 text-xs font-semibold text-slate-500">
                   <span>ENTREGAS</span>
-                  <span>BALANCE: 1,250 PTS</span>
+                  <span>BALANCE: {getBalanceDisplay(fromToken)} {fromToken}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <input className="bg-transparent outline-none border-none p-0 text-3xl font-mono font-bold focus:ring-0 w-1/2 text-white" type="text" defaultValue="500" />
-                  <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-700">
-                    <div className="w-5 h-5 bg-accent-teal rounded-full flex items-center justify-center text-[10px] text-deep-navy font-bold">P</div>
-                    <span className="font-bold text-sm">Puntos</span>
-                  </div>
+                  <input
+                    className="bg-transparent outline-none border-none p-0 text-3xl font-mono font-bold focus:ring-0 w-1/2 text-white placeholder:text-white/20"
+                    type="number"
+                    value={swapAmount}
+                    onChange={(e) => setSwapAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <select
+                    value={fromToken}
+                    onChange={(e) => setFromToken(e.target.value as any)}
+                    className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
+                  >
+                    <option value="USDC">USDC</option>
+                    <option value="XLM">XLM</option>
+                    <option value="PTS">Puntos</option>
+                  </select>
                 </div>
               </div>
 
               {/* Swap Arrow */}
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pt-1">
-                <button className="w-10 h-10 bg-slate-800 border-4 border-deep-navy rounded-full flex items-center justify-center text-accent-teal hover:rotate-180 transition-transform duration-500 shadow-xl">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                <button
+                  onClick={handleSwapTokens}
+                  className="w-10 h-10 bg-slate-800 border-4 border-deep-navy rounded-full flex items-center justify-center text-slate-400 hover:text-accent-teal hover:rotate-180 transition-all duration-300 shadow-xl"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
                 </button>
               </div>
 
@@ -165,14 +234,19 @@ export default function Home() {
               <div className="bg-deep-navy/50 p-5 rounded-2xl border border-border-glass">
                 <div className="flex justify-between items-center mb-4 text-xs font-semibold text-slate-500">
                   <span>RECIBÍS</span>
-                  <span className="text-accent-teal">100 Pts ≈ 5.208 XLM ↗</span>
+                  <span className="text-accent-teal font-mono">1 {fromToken} ≈ {getExchangeRate()} {toToken} ↗</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-mono font-bold text-accent-teal">26.04</span>
-                  <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-700">
-                    <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-[10px] text-white">★</div>
-                    <span className="font-bold text-sm tracking-widest">XLM</span>
-                  </div>
+                  <span className="text-3xl font-mono font-bold text-accent-teal">{receivedAmount}</span>
+                  <select
+                    value={toToken}
+                    onChange={(e) => setToToken(e.target.value as any)}
+                    className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
+                  >
+                    <option value="XLM">XLM</option>
+                    <option value="USDC">USDC</option>
+                    <option value="PTS">Puntos</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -184,11 +258,16 @@ export default function Home() {
               </div>
             </div>
 
-            <button className="w-full mt-8 py-4 bg-gradient-to-r from-accent-teal/20 to-accent-teal/40 border border-accent-teal/30 rounded-2xl font-bold flex items-center justify-center gap-4 group relative overflow-hidden">
-              <div className="absolute left-0 top-0 h-full w-20 bg-accent-teal flex items-center justify-center transition-transform duration-500 translate-x-0 group-hover:translate-x-full">
-                <svg className="w-6 h-6 text-deep-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+            <button
+              onClick={executeSwap}
+              disabled={!connected || Number(swapAmount) <= 0 || isSwapping}
+              className="w-full mt-8 py-4 bg-gradient-to-r from-accent-teal/20 to-accent-teal/40 border border-accent-teal/30 hover:border-accent-teal/60 rounded-2xl font-bold flex items-center justify-center gap-4 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <div className={`absolute left-0 top-0 h-full w-full bg-accent-teal/10 flex items-center justify-center transition-transform duration-500 -translate-x-full ${!(!connected || Number(swapAmount) <= 0 || isSwapping) ? 'group-hover:translate-x-0' : ''}`}>
               </div>
-              <span className="uppercase tracking-[0.2em] text-accent-teal group-hover:text-white transition-colors">Confirmar Swap</span>
+              <span className="uppercase tracking-[0.2em] text-accent-teal group-hover:text-white transition-colors z-10">
+                {isSwapping ? 'Procesando...' : (!connected ? 'Conecta Billetera' : 'Confirmar Swap')}
+              </span>
             </button>
           </section>
 
