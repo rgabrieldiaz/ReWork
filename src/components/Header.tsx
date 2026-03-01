@@ -7,7 +7,7 @@ import { ConnectButton } from "@/components/ConnectButton";
 import { Bell } from "lucide-react";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-    const { connected, address } = useFreighter();
+    const { connected, address, network } = useFreighter();
     const { profile, loading: profileLoading } = useProfile();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useBalances(address || null);
 
@@ -106,6 +106,20 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             {/* Simulate notification dot for now */}
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-deep-navy"></span>
                         </button>
+
+                        {/* Network Indicator */}
+                        <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
+                                ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                : network === 'PUBLIC'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                    : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${network === 'TESTNET' ? 'bg-indigo-400 animate-pulse'
+                                    : network === 'PUBLIC' ? 'bg-emerald-400'
+                                        : 'bg-slate-400'
+                                }`}></span>
+                            {network === 'PUBLIC' ? 'MAINNET' : network || 'OFFLINE'}
+                        </div>
                     </div>
                 )}
                 <ConnectButton />
