@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy } from "lucide-react";
+import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useState } from "react";
@@ -22,10 +22,11 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
     const navItems = [
         { name: "Inicio", href: "/", icon: Home },
-        { name: "Capacitación", href: "/capacitacion", icon: Lightbulb },
+        { name: "Squad Goals", href: "/squad-goals", icon: Target },
         { name: "Colectas", href: "/colectas", icon: TrendingUp },
         { name: "Marketplace", href: "/marketplace", icon: ShoppingBag },
         { name: "Colaboradores", href: "/colaboradores", icon: Users },
+        { name: "Capacitación", href: "/capacitacion", icon: Lightbulb },
         { name: "Help Desk", href: "/helpdesk", icon: LifeBuoy },
     ];
 
