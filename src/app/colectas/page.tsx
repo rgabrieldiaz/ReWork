@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Heart, Activity, Gift, Share2, ArrowUpRight, Search, Filter, AlertCircle, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { Heart, Activity, Gift, Share2, ArrowUpRight, Search, Filter, AlertCircle, Clock, CheckCircle, Loader2, ChevronDown, Info, Plus, X, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
@@ -22,7 +22,9 @@ export default function ColectasPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("progreso");
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [selectedTag, setSelectedTag] = useState<string>("todas");
+    const [hideFinished, setHideFinished] = useState(true);
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [donationAmounts, setDonationAmounts] = useState<Record<number, string>>({});
     const [processingId, setProcessingId] = useState<number | null>(null);
 
@@ -60,7 +62,11 @@ export default function ColectasPage() {
     const filteredCampaigns = useMemo(() => {
         let filtered = campaigns.filter(c => {
             const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.organizer.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesTag = selectedTag ? c.tags?.includes(selectedTag) : true;
+            const matchesTag = selectedTag && selectedTag !== "todas" ? c.tags?.includes(selectedTag) : true;
+
+            const isFinished = new Date(c.deadline).getTime() < Date.now() || c.current_amount >= c.goal_amount;
+            if (hideFinished && isFinished) return false;
+
             return matchesSearch && matchesTag;
         });
 
@@ -78,7 +84,7 @@ export default function ColectasPage() {
         });
 
         return filtered;
-    }, [campaigns, searchQuery, sortBy, selectedTag]);
+    }, [campaigns, searchQuery, sortBy, selectedTag, hideFinished]);
 
     // Actions
     const handleDonate = async (camp: any) => {
@@ -172,72 +178,80 @@ export default function ColectasPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-16">
-            <div className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-6 md:p-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-accent-teal/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div className="max-w-2xl">
-                        <h1 className="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
-                            Colectas <Heart className="text-red-500" fill="currentColor" />
-                        </h1>
-                        <p className="text-neutral-300 leading-relaxed mb-4">
-                            Fomentá la colaboración y logren objetivos juntos. Cada aporte se gestiona mediante escrows no custodiales de Trustless Work, garantizando seguridad y transparencia total.
-                        </p>
-                        <a href="https://docs.trustlesswork.com/trustless-work/es" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-accent-teal hover:text-accent-teal/80 transition-colors border border-accent-teal px-4 py-2 rounded-lg">
-                            Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
-                        </a>
+            {/* Filtros y Controles Principales */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-white/5">
+                <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 flex-1 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
+                    <div className="flex items-center gap-2 mr-2 shrink-0">
+                        <h1 className="text-2xl font-bold tracking-tight text-white m-0">Colectas</h1>
                     </div>
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="px-6 py-3 bg-white text-black hover:bg-neutral-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-white/5 whitespace-nowrap"
-                    >
-                        <Gift className="w-5 h-5" /> Crear Colecta
-                    </button>
-                </div>
-            </div>
 
-            {/* Búsqueda, Filtros y Tags */}
-            <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
+                    <div className="relative flex-1 w-full min-w-[200px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Buscar colecta u organizador..."
+                            className="pl-11 pr-4 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white focus:outline-none focus:border-accent-teal/50 transition-colors"
                         />
                     </div>
-                    <div className="w-full md:w-56 shrink-0 relative">
-                        <Filter className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-2xl pl-12 pr-4 py-3.5 text-white appearance-none focus:outline-none focus:border-accent-teal/50 transition-colors cursor-pointer"
-                        >
-                            <option value="progreso">Más cerca de la meta</option>
-                            <option value="nuevas">Nuevas</option>
-                            <option value="populares">Populares</option>
-                        </select>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                        <div className="relative">
+                            <select
+                                value={sortBy}
+                                onChange={e => setSortBy(e.target.value)}
+                                className="pl-4 pr-10 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer w-full whitespace-nowrap text-white h-full inline-block"
+                            >
+                                <option value="progreso">⌚ Más cerca</option>
+                                <option value="populares">🔥 Populares</option>
+                                <option value="nuevas">✨ Recientes</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                        </div>
+
+                        <div className="relative shrink-0">
+                            <select
+                                value={selectedTag}
+                                onChange={e => setSelectedTag(e.target.value)}
+                                className="pl-4 pr-10 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-white h-full inline-block"
+                            >
+                                <option value="todas">Todas las cat.</option>
+                                {allTags.map(tag => (
+                                    <option key={tag} value={tag}>{tag}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                        </div>
+
+                        <label className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0 h-full">
+                            <input
+                                type="checkbox"
+                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-white/10 bg-black text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
+                                checked={hideFinished}
+                                onChange={(e) => setHideFinished(e.target.checked)}
+                            />
+                            Ocultar finalizadas
+                        </label>
                     </div>
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0 justify-start xl:justify-end">
                     <button
-                        onClick={() => setSelectedTag(null)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap snap-start border transition-all ${selectedTag === null ? 'bg-white text-black border-white' : 'bg-[#0a0a0a] text-neutral-400 border-white/10 hover:border-white/30'}`}
+                        onClick={() => setIsInfoModalOpen(true)}
+                        className="w-9 h-9 flex items-center justify-center text-neutral-400 hover:text-accent-teal hover:bg-accent-teal/10 border border-white/10 rounded-xl transition-colors shrink-0"
+                        title="Acerca de Colectas"
                     >
-                        Todas
+                        <Info className="w-4 h-4" />
                     </button>
-                    {allTags.map(tag => (
-                        <button
-                            key={tag}
-                            onClick={() => setSelectedTag(tag)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap snap-start border transition-all ${selectedTag === tag ? 'bg-accent-teal/10 text-accent-teal border-accent-teal/30' : 'bg-[#0a0a0a] text-neutral-400 border-white/10 hover:border-white/30'}`}
-                        >
-                            {tag}
-                        </button>
-                    ))}
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex justify-center items-center gap-1.5 px-3 sm:px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
+                    >
+                        <Plus className="w-4 h-4 text-black" />
+                        <span className="hidden sm:inline">Crear Colecta</span>
+                        <span className="sm:hidden">Crear</span>
+                    </button>
                 </div>
             </div>
 
@@ -397,6 +411,49 @@ export default function ColectasPage() {
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={fetchCampaigns}
             />
+
+            {/* Info Modal */}
+            {
+                isInfoModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
+                            <div className="absolute top-0 right-0 w-full h-32 bg-accent-teal/5 blur-[50px] pointer-events-none" />
+
+                            <div className="flex justify-between items-center p-6 border-b border-white/5 relative z-10">
+                                <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                                    <Heart className="w-5 h-5 text-red-500" fill="currentColor" /> Colectas ReWork
+                                </h2>
+                                <button onClick={() => setIsInfoModalOpen(false)} className="text-neutral-400 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 relative z-10">
+                                <p className="text-neutral-300 leading-relaxed mb-6">
+                                    Fomentá la colaboración y logren objetivos juntos. Cada aporte se gestiona mediante escrows no custodiales de Trustless Work, garantizando seguridad y transparencia total.
+                                </p>
+
+                                <div className="bg-black/50 border border-accent-teal/20 rounded-xl p-4 mb-6">
+                                    <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4 text-accent-teal" /> Escrow Seguro
+                                    </h3>
+                                    <p className="text-sm text-neutral-400">
+                                        Todos los aportes quedan retenidos de manera segura en un contrato sin custodia y son liberados por código, asegurando la transparencia total del dinero.
+                                    </p>
+                                </div>
+                                <a
+                                    href="https://docs.trustlesswork.com/trustless-work/es"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors gap-2"
+                                >
+                                    Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </div>
     );
 }
