@@ -77,11 +77,11 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-                <div className="flex justify-between items-center p-6 border-b border-white/5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-card border border-border-subtle rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                <div className="flex justify-between items-center p-6 border-b border-border-subtle">
                     <h2 className="text-xl font-bold">Crear Nueva Colecta</h2>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors">
+                    <button onClick={onClose} className="text-muted hover:text-foreground transition-colors">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -94,47 +94,47 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                     )}
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Título de la Colecta *</label>
+                        <label className="text-sm font-medium text-muted">Título de la Colecta *</label>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
+                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="Ej. Servidor Anual"
                             required
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Descripción</label>
+                        <label className="text-sm font-medium text-muted">Descripción</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors resize-none h-20"
+                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors resize-none h-20"
                             placeholder="¿Para qué son los fondos?"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-neutral-400">Meta (XLM) *</label>
+                            <label className="text-sm font-medium text-muted">Meta (XLM) *</label>
                             <input
                                 type="number"
                                 value={goalAmount}
                                 onChange={(e) => setGoalAmount(e.target.value)}
-                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
+                                className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
                                 placeholder="Ej. 5000"
                                 required
                                 min="1"
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-neutral-400">Duración (Días) *</label>
+                            <label className="text-sm font-medium text-muted">Duración (Días) *</label>
                             <input
                                 type="number"
                                 value={durationDays}
                                 onChange={(e) => setDurationDays(e.target.value)}
-                                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
+                                className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
                                 placeholder="30"
                                 required
                                 min="1"
@@ -143,35 +143,35 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Cuenta Destino *</label>
+                        <label className="text-sm font-medium text-muted">Cuenta Destino *</label>
                         <input
                             type="text"
                             value={destinationAccount}
                             onChange={(e) => setDestinationAccount(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors text-sm"
+                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors text-sm"
                             placeholder="G..."
                             required
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Tags (Separados por coma)</label>
+                        <label className="text-sm font-medium text-muted">Tags (Separados por coma)</label>
                         <input
                             type="text"
                             value={tagsInput}
                             onChange={(e) => setTagsInput(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
+                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="Ej. Servidores, Comunidad"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Imagen (URL o Emoji)</label>
+                        <label className="text-sm font-medium text-muted">Imagen (URL o Emoji)</label>
                         <input
                             type="text"
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal transition-colors"
+                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
                             placeholder="💻"
                         />
                     </div>
@@ -180,7 +180,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-neutral-400 hover:text-white transition-colors"
+                            className="px-5 py-2.5 text-muted hover:text-foreground transition-colors"
                             disabled={loading}
                         >
                             Cancelar

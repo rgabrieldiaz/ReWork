@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { TWProvider } from "@/components/TWProvider";
 import { FreighterProvider } from "@/hooks/useFreighter";
 import { ProfileProvider } from "@/hooks/useProfile";
+import { SettingsProvider } from "@/hooks/useSettings";
 import { MainLayout } from "@/components/MainLayout";
 import { Toaster } from "sonner";
 
@@ -23,23 +24,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-deep-navy text-white antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`}>
-        <FreighterProvider>
-          <ProfileProvider>
-            <TWProvider>
-              <MainLayout>
-                {children}
-              </MainLayout>
-            </TWProvider>
-          </ProfileProvider>
-        </FreighterProvider>
+    <html lang="es">
+      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`}>
+        <SettingsProvider>
+          <FreighterProvider>
+            <ProfileProvider>
+              <TWProvider>
+                <MainLayout>
+                  {children}
+                </MainLayout>
+              </TWProvider>
+            </ProfileProvider>
+          </FreighterProvider>
+        </SettingsProvider>
         <Toaster
           theme="dark"
           position="bottom-right"
           toastOptions={{
             duration: 4000,
-            className: "bg-deep-navy border border-white/10 text-white font-sans",
+            className: "bg-background border border-border-subtle text-foreground font-sans",
           }}
         />
       </body>

@@ -8,6 +8,7 @@ import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
 import { UserBadge } from "@/components/UserBadge";
 import { useProfile } from "@/hooks/useProfile";
+import { useSettings } from "@/hooks/useSettings";
 
 // Dummy addresses for demo purposes
 const DUMMY_PLATFORM_ADDRESS = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
@@ -88,6 +89,7 @@ export default function MarketplacePage() {
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
+    const { t } = useSettings();
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -254,11 +256,11 @@ export default function MarketplacePage() {
                 ...a, current_bid: bidAmount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: auction.bid_count + 1
             } : a));
             setBids(prev => ({ ...prev, [auction.id]: "" }));
-            alert(`¡Puja exitosa! Fondos asegurados en el Smart Contract.`);
-            await addPoints(10, "¡Nueva puja realizada!");
+            alert(t.alerts.bidSuccess);
+            await addPoints(10, t.alerts.newBidMilestone);
         } catch (error: any) {
             console.error(error);
-            alert(`Error creando oferta: ${error.message}`);
+            alert(`${t.alerts.processError} ${error.message}`);
         } finally {
             setLoadingIds(prev => ({ ...prev, [auction.id]: false }));
         }
@@ -299,18 +301,18 @@ export default function MarketplacePage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
             {/* Filtros y Controles Principales */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-white/5">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-border-subtle">
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 flex-1 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
                     <div className="flex items-center gap-2 mr-2 shrink-0">
-                        <h1 className="text-2xl font-bold tracking-tight text-white m-0">Marketplace</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground m-0">{t.marketplace.title}</h1>
                     </div>
 
                     <div className="relative flex-1 w-full min-w-[200px]">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted w-4 h-4" />
                         <input
                             type="text"
-                            placeholder="Buscar en el marketplace..."
-                            className="pl-11 pr-4 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full"
+                            placeholder={t.marketplace.searchPlaceholder}
+                            className="pl-11 pr-4 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -321,36 +323,36 @@ export default function MarketplacePage() {
                             <select
                                 value={sortBy}
                                 onChange={e => setSortBy(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer w-full whitespace-nowrap text-white h-full inline-block"
+                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer w-full whitespace-nowrap text-foreground h-full inline-block"
                             >
-                                <option value="time-asc">⌚ Terminan Pronto</option>
-                                <option value="popularity">🔥 Más Populares</option>
-                                <option value="date-desc">✨ Recientes</option>
+                                <option value="time-asc">{t.marketplace.sortEndingSoon}</option>
+                                <option value="popularity">{t.marketplace.sortPopular}</option>
+                                <option value="date-desc">{t.marketplace.sortRecent}</option>
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
                         </div>
 
                         <div className="relative shrink-0">
                             <select
                                 value={conditionFilter}
                                 onChange={e => setConditionFilter(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-white h-full inline-block"
+                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-foreground h-full inline-block"
                             >
-                                <option value="ambas">Ambas Cond.</option>
-                                <option value="nuevo">Nuevos</option>
-                                <option value="usado">Usados</option>
+                                <option value="ambas">{t.marketplace.filterBoth}</option>
+                                <option value="nuevo">{t.marketplace.new}</option>
+                                <option value="usado">{t.marketplace.used}</option>
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
                         </div>
 
-                        <label className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 cursor-pointer hover:text-white transition-colors bg-[#0a0a0a] border border-white/10 px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0 h-full">
+                        <label className="flex items-center gap-2 text-xs sm:text-sm text-muted cursor-pointer hover:text-foreground transition-colors bg-card border border-border-subtle px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0 h-full">
                             <input
                                 type="checkbox"
-                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-white/10 bg-black text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
+                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-border-subtle bg-card text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
                                 checked={hideFinished}
                                 onChange={(e) => setHideFinished(e.target.checked)}
                             />
-                            Ocultar finalizadas
+                            {t.marketplace.hideFinished}
                         </label>
                     </div>
                 </div>
@@ -358,7 +360,7 @@ export default function MarketplacePage() {
                 <div className="flex items-center gap-2 sm:gap-3 shrink-0 justify-start xl:justify-end">
                     <button
                         onClick={() => setIsInfoModalOpen(true)}
-                        className="w-9 h-9 flex items-center justify-center text-neutral-400 hover:text-accent-teal hover:bg-accent-teal/10 border border-white/10 rounded-xl transition-colors shrink-0"
+                        className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent-teal hover:bg-accent-teal/10 border border-border-subtle rounded-xl transition-colors shrink-0"
                         title="Acerca del Marketplace"
                     >
                         <Info className="w-4 h-4" />
@@ -368,16 +370,16 @@ export default function MarketplacePage() {
                         className="flex justify-center items-center gap-1.5 px-3 sm:px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
                     >
                         <Plus className="w-4 h-4 text-black" />
-                        <span className="hidden sm:inline">Crear Subasta</span>
-                        <span className="sm:hidden">Crear</span>
+                        <span className="hidden sm:inline">{t.marketplace.createAuction}</span>
+                        <span className="sm:hidden"><Plus className="w-4 h-4 mr-1 hidden" />{t.marketplace.createAuction.split(' ')[0]}</span>
                     </button>
                 </div>
             </div>
             {displayedAuctions.length === 0 ? (
-                <div className="text-center py-20 border border-white/5 border-dashed rounded-2xl bg-[#0a0a0a]">
+                <div className="text-center py-20 border border-border-subtle border-dashed rounded-2xl bg-card">
                     <Search className="w-12 h-12 text-neutral-700 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-1">No hay subastas</h3>
-                    <p className="text-neutral-500 text-sm">No encontramos artículos para tu búsqueda.</p>
+                    <h3 className="text-lg font-medium text-foreground mb-1">{t.marketplace.noAuctionsTitle}</h3>
+                    <p className="text-muted text-sm">{t.marketplace.noAuctionsSelected}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -392,6 +394,7 @@ export default function MarketplacePage() {
                             currentAddress={address}
                             onCancel={() => handleCancelAuction(item)}
                             onClaim={() => handleClaimBack(item.id)}
+                            t={t}
                         />
                     ))}
                 </div>
@@ -407,30 +410,30 @@ export default function MarketplacePage() {
             {/* Info Modal */}
             {
                 isInfoModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-card/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="bg-card border border-border-subtle rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
                             <div className="absolute top-0 right-0 w-full h-32 bg-accent-teal/5 blur-[50px] pointer-events-none" />
 
-                            <div className="flex justify-between items-center p-6 border-b border-white/5 relative z-10">
+                            <div className="flex justify-between items-center p-6 border-b border-border-subtle relative z-10">
                                 <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                                    <Gavel className="w-5 h-5 text-accent-teal" /> Marketplace ReWork
+                                    <Gavel className="w-5 h-5 text-accent-teal" /> {t.marketplace.aboutTitle}
                                 </h2>
-                                <button onClick={() => setIsInfoModalOpen(false)} className="text-neutral-400 hover:text-white transition-colors">
+                                <button onClick={() => setIsInfoModalOpen(false)} className="text-muted hover:text-foreground transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             <div className="p-6 relative z-10">
-                                <p className="text-neutral-300 leading-relaxed mb-6">
-                                    Este es un mercado Peer-to-Peer interno. Todas las operaciones publicadas aquí están protegidas por Smart Contracts interactuando sobre la blockchain de Stellar.
+                                <p className="text-muted leading-relaxed mb-6">
+                                    {t.marketplace.aboutDescription}
                                 </p>
 
-                                <div className="bg-black/50 border border-accent-teal/20 rounded-xl p-4 mb-6">
-                                    <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
-                                        <ShieldCheck className="w-4 h-4 text-accent-teal" /> Escrow Seguro
+                                <div className="bg-foreground/5 border border-accent-teal/20 rounded-xl p-4 mb-6">
+                                    <h3 className="text-foreground font-semibold mb-2 flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4 text-accent-teal" /> {t.marketplace.secureEscrow}
                                     </h3>
-                                    <p className="text-sm text-neutral-400">
-                                        Tus fondos permanecen en un contrato cripto seguro hasta que se valida el intercambio, garantizando confianza sin necesidad de intermediarios humanos.
+                                    <p className="text-sm text-muted">
+                                        {t.marketplace.secureEscrowDesc}
                                     </p>
                                 </div>
                                 <a
@@ -439,7 +442,7 @@ export default function MarketplacePage() {
                                     rel="noreferrer"
                                     className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors"
                                 >
-                                    Leer Documentación Oficial
+                                    {t.marketplace.readDocs}
                                 </a>
                             </div>
                         </div>
@@ -451,7 +454,7 @@ export default function MarketplacePage() {
 }
 
 // Subcomponent para manejar la tarjeta y el countdown local
-function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddress, onCancel, onClaim }: any) {
+function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddress, onCancel, onClaim, t }: any) {
     const { str: timeLeftStr, isEnded } = useCountdown(item.end_time);
 
     const isOwner = currentAddress === item.seller;
@@ -467,8 +470,8 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
     }, [isEnded, item.status, item.id]);
 
     return (
-        <div className={`bg-[#0a0a0a] rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-70' : 'border-white/5 hover:border-accent-teal/30'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
-            <div className={`h-48 ${isFinished || isCancelled ? 'bg-neutral-900/50' : 'bg-neutral-900'} border-b border-white/5 flex items-center relative justify-center text-7xl flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500`}>
+        <div className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-70' : 'border-border-subtle hover:border-accent-teal/30'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
+            <div className={`h-48 ${isFinished || isCancelled ? 'bg-neutral-900/50' : 'bg-neutral-900'} border-b border-border-subtle flex items-center relative justify-center text-7xl flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500`}>
                 {item.image.length < 5 ? item.image : (
                     <img src={item.image} alt="Auction Image" className="w-full h-full object-cover" />
                 )}
@@ -477,19 +480,19 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                     <div className="flex-1" />
                     {isCancelled ? (
                         <div className="bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-                            <XCircle className="w-3.5 h-3.5" /> Cancelado
+                            <XCircle className="w-3.5 h-3.5" /> {t.marketplace.cancelled}
                         </div>
                     ) : isFinished ? (
-                        <div className="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
-                            Finalizado
+                        <div className="bg-neutral-500/10 text-muted border border-neutral-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
+                            {t.marketplace.finished}
                         </div>
                     ) : item.end_time ? (
                         <div className="flex flex-col items-end gap-1">
                             <div className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(0,242,255,0.1)]">
                                 <Clock className="w-3.5 h-3.5" /> {timeLeftStr}
                             </div>
-                            <div className="bg-white/10 text-white border border-white/20 px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-md backdrop-blur-md">
-                                {(item.condition || "nuevo")}
+                            <div className="bg-foreground/10 text-foreground border border-border-subtle px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-md backdrop-blur-md">
+                                {(item.condition === 'nuevo' ? t.marketplace.new : item.condition === 'usado' ? t.marketplace.used : item.condition || t.marketplace.new)}
                             </div>
                         </div>
                     ) : null}
@@ -500,30 +503,30 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                 <div className="flex justify-between items-start mb-1.5">
                     <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-accent-teal transition-colors">{item.title}</h3>
                 </div>
-                <div className="text-xs text-neutral-500 mb-3 flex justify-between items-center bg-white/5 py-1.5 px-2.5 rounded-lg border border-white/5">
+                <div className="text-xs text-muted mb-3 flex justify-between items-center bg-foreground/5 py-1.5 px-2.5 rounded-lg border border-border-subtle">
                     <span className="truncate mr-2 flex items-center gap-1.5">
                         <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-purple-500 to-accent-teal shrink-0" />
                         {truncateAddress(item.seller)}
                     </span>
-                    <span className="text-neutral-400 font-medium font-mono whitespace-nowrap bg-black px-2 py-0.5 rounded-md border border-white/5">{item.bid_count} pujas</span>
+                    <span className="text-muted font-medium font-mono whitespace-nowrap bg-card px-2 py-0.5 rounded-md border border-border-subtle">{item.bid_count} {t.marketplace.bidsCount}</span>
                 </div>
 
-                <div className="text-sm text-neutral-400 font-medium mb-4 flex items-center justify-between">
-                    <span>Precio Base</span>
-                    <span className="text-white font-mono">{item.base_price} {currency}</span>
+                <div className="text-sm text-muted font-medium mb-4 flex items-center justify-between">
+                    <span>{t.marketplace.basePrice}</span>
+                    <span className="text-foreground font-mono">{item.base_price} {currency}</span>
                 </div>
 
                 <div className="mt-auto space-y-4">
-                    <div className="flex justify-between items-end bg-[#050505] p-3 rounded-xl border border-white/5">
+                    <div className="flex justify-between items-end bg-[#050505] p-3 rounded-xl border border-border-subtle">
                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500 mb-1">{item.is_direct_buy ? 'Precio Fijo' : 'Ganador Actual'}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1">{item.is_direct_buy ? t.marketplace.fixedPrice : t.marketplace.currentWinner}</span>
                             {item.current_winner_address ? (
                                 <UserBadge address={item.current_winner_address} />
                             ) : (
-                                <span className="text-xs text-neutral-600 font-mono mt-1">Nadie aún</span>
+                                <span className="text-xs text-neutral-600 font-mono mt-1">{t.marketplace.noOneYet}</span>
                             )}
                         </div>
-                        <span className={`text-xl font-mono font-bold tracking-tight ${isFinished ? 'text-neutral-400' : 'text-accent-teal'}`}>
+                        <span className={`text-xl font-mono font-bold tracking-tight ${isFinished ? 'text-muted' : 'text-accent-teal'}`}>
                             {item.current_bid.toLocaleString()} {currency}
                         </span>
                     </div>
@@ -543,18 +546,18 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
 
                         return (
                             <div className="flex gap-2.5 pt-1">
-                                <div className="flex flex-1 bg-black border border-white/10 rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
+                                <div className="flex flex-1 bg-card border border-border-subtle rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
                                     <button
                                         onClick={() => handleStep(-1)}
                                         disabled={currentVal <= minBid || loadingIds[item.id]}
-                                        className="px-4 text-neutral-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors border-r border-white/10 text-xl flex items-center justify-center"
+                                        className="px-4 text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 transition-colors border-r border-border-subtle text-xl flex items-center justify-center"
                                         style={{ paddingBottom: '2px' }}
                                     >-</button>
                                     <div className="flex-1 relative flex items-center justify-center">
-                                        <span className="text-neutral-500 text-sm font-bold mr-1">$</span>
+                                        <span className="text-muted text-sm font-bold mr-1">$</span>
                                         <input
                                             type="number"
-                                            className="w-full bg-transparent text-center text-sm font-mono focus:outline-none transition-colors appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-white"
+                                            className="w-full bg-transparent text-center text-sm font-mono focus:outline-none transition-colors appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-foreground"
                                             value={bids[item.id] !== undefined ? bids[item.id] : minBid}
                                             onChange={(e) => setBids({ ...bids, [item.id]: e.target.value })}
                                             onBlur={() => {
@@ -566,7 +569,7 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                                     <button
                                         onClick={() => handleStep(1)}
                                         disabled={loadingIds[item.id]}
-                                        className="px-4 text-neutral-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors border-l border-white/10 text-xl flex items-center justify-center"
+                                        className="px-4 text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 transition-colors border-l border-border-subtle text-xl flex items-center justify-center"
                                         style={{ paddingBottom: '2px' }}
                                     >+</button>
                                 </div>
@@ -594,10 +597,10 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                             <button
                                 onClick={onCancel}
                                 disabled={item.bid_count > 0}
-                                className="w-full py-2.5 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-40 disabled:hover:bg-red-500/5 disabled:hover:text-red-500 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                                className="w-full py-2.5 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-foreground disabled:opacity-40 disabled:hover:bg-red-500/5 disabled:hover:text-red-500 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                             >
                                 <XCircle className="w-4 h-4" />
-                                {item.bid_count > 0 ? "Bloqueado (Pujas activas)" : "Eliminar Subasta"}
+                                {item.bid_count > 0 ? t.marketplace.lockedBids : t.marketplace.deleteAuction}
                             </button>
                         </div>
                     )}
@@ -605,8 +608,8 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                     {/* VISTA PARA OWNER - Retirar activos si no se vendió */}
                     {(isFinished || isCancelled) && item.bid_count === 0 && isOwner && (
                         <div className="pt-1">
-                            <button onClick={onClaim} className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 hover:bg-white hover:text-black text-white rounded-xl text-sm font-bold transition-all shadow-lg">
-                                <HandCoins className="w-4 h-4" /> Reclamar Activo Puesto
+                            <button onClick={onClaim} className="w-full flex items-center justify-center gap-2 py-2.5 bg-foreground/5 border border-border-subtle hover:bg-foreground hover:text-black text-foreground rounded-xl text-sm font-bold transition-all shadow-lg">
+                                <HandCoins className="w-4 h-4" /> {t.marketplace.claimAsset}
                             </button>
                         </div>
                     )}

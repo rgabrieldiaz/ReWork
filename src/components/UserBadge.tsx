@@ -42,13 +42,13 @@ export function UserBadge({ address }: UserBadgeProps) {
     }, [address]);
 
     if (loading) {
-        return <div className="animate-pulse bg-white/10 rounded w-24 h-4"></div>;
+        return <div className="animate-pulse bg-foreground/10 rounded w-24 h-4"></div>;
     }
 
     if (!profile || (!profile.first_name && !profile.last_name)) {
         // Fallback to truncated address if no full profile exists
         const truncated = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Anónimo";
-        return <span className="text-xs text-neutral-400 font-mono truncate max-w-[100px]">{truncated}</span>;
+        return <span className="text-xs text-muted font-mono truncate max-w-[100px]">{truncated}</span>;
     }
 
     const { first_name, last_name, avatar_url } = profile;
@@ -56,14 +56,14 @@ export function UserBadge({ address }: UserBadgeProps) {
 
     return (
         <div className="flex items-center gap-2 mt-1">
-            <div className="w-5 h-5 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-5 h-5 rounded-full bg-muted/10 border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
                 {avatar_url ? (
                     <img src={avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                     <span className="text-[10px] font-bold text-accent-teal">{initial}</span>
                 )}
             </div>
-            <span className="text-xs text-neutral-300 font-medium truncate max-w-[100px]" title={`${first_name || ""} ${last_name || ""}`}>
+            <span className="text-xs text-muted font-medium truncate max-w-[100px]" title={`${first_name || ""} ${last_name || ""}`}>
                 {first_name} {last_name ? last_name.charAt(0) + "." : ""}
             </span>
         </div>

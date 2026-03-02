@@ -30,7 +30,7 @@ export function ConnectButton() {
                 </span>
                 <button
                     onClick={disconnect}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-glass-white border border-border-glass text-slate-400 hover:text-red-400 hover:border-red-400/50 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/5 border border-border-subtle text-muted hover:text-red-400 hover:border-red-400/50 transition-colors"
                     title="Desconectar"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@ export function ConnectButton() {
     return (
         <button
             onClick={connect}
-            className="px-6 py-2.5 bg-accent-teal text-deep-navy font-bold rounded-full hover:bg-white transition-colors glow-teal text-sm tracking-wide uppercase"
+            className="px-6 py-2.5 bg-accent-teal text-background font-bold rounded-full hover:bg-foreground transition-colors glow-teal text-sm tracking-wide uppercase"
         >
             Conectar Billetera
         </button>

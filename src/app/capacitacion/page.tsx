@@ -1,6 +1,10 @@
+"use client";
+
 import { PlayCircle, Award, BookOpen, Lock } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
 export default function CapacitacionPage() {
+    const { t } = useSettings();
     const courses = [
         {
             id: 1,
@@ -51,26 +55,26 @@ export default function CapacitacionPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight mb-2">Capacitación Profesional</h1>
-                <p className="text-neutral-400">Completa módulos interactivos para ganar XLM y mejorar tu ranking.</p>
+                <h1 className="text-3xl font-bold tracking-tight mb-2">{t.capacitacion.title}</h1>
+                <p className="text-muted">{t.capacitacion.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                 {courses.map((course) => (
-                    <div key={course.id} className="p-6 bg-[#0a0a0a] rounded-2xl border border-white/5 hover:border-white/10 transition-all group flex flex-col h-full">
+                    <div key={course.id} className="p-6 bg-card rounded-2xl border border-border-subtle hover:border-border-subtle transition-all group flex flex-col h-full">
                         <div className="flex gap-5 mb-6">
                             <div className={`p-4 rounded-xl shrink-0 h-min ${course.bgWrapper} ${course.color}`}>
                                 <course.icon size={28} />
                             </div>
                             <div>
                                 <h3 className="text-xl font-semibold mb-2 group-hover:text-accent-teal transition-colors">{course.title}</h3>
-                                <p className="text-sm text-neutral-400 leading-relaxed">{course.description}</p>
+                                <p className="text-sm text-muted leading-relaxed">{course.description}</p>
                             </div>
                         </div>
 
                         <div className="mt-auto">
-                            <div className="flex items-center justify-between text-xs text-neutral-500 mb-3 font-medium">
-                                <span className="flex items-center gap-1.5"><PlayCircle size={14} /> {course.modules} Lecciones</span>
+                            <div className="flex items-center justify-between text-xs text-muted mb-3 font-medium">
+                                <span className="flex items-center gap-1.5"><PlayCircle size={14} /> {course.modules} {t.capacitacion.modules}</span>
                                 <span>{course.duration}</span>
                             </div>
 
@@ -81,8 +85,8 @@ export default function CapacitacionPage() {
                                 ></div>
                             </div>
 
-                            <button className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${course.progress === 100 ? 'bg-white/5 text-neutral-400 cursor-default' : 'bg-white/10 hover:bg-white/15 text-white'}`}>
-                                {course.progress === 100 ? 'Completado' : course.progress > 0 ? 'Continuar Curso' : 'Iniciar Curso'}
+                            <button className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${course.progress === 100 ? 'bg-foreground/5 text-muted cursor-default' : 'bg-foreground/10 hover:bg-foreground/15 text-foreground'}`}>
+                                {course.progress === 100 ? t.capacitacion.completed : course.progress > 0 ? t.capacitacion.continue : t.capacitacion.start}
                             </button>
                         </div>
                     </div>

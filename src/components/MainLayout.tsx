@@ -10,7 +10,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex h-screen overflow-hidden">
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-            <main className="flex-1 lg:ml-64 overflow-y-auto bg-deep-navy custom-scrollbar w-full relative">
+            <main className="flex-1 lg:ml-64 overflow-y-auto bg-background custom-scrollbar w-full relative">
                 <Header onMenuClick={() => setIsSidebarOpen(true)} />
                 <div className="p-4 sm:p-8">
                     {children}

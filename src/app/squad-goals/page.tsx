@@ -7,8 +7,10 @@ import { useFreighter } from "@/hooks/useFreighter";
 import CreateSquadGoalModal from "@/components/CreateSquadGoalModal";
 import { useInitializeEscrow, useSendTransaction, useReleaseFunds } from "@trustless-work/escrow/hooks";
 import { InitializeMultiReleaseEscrowPayload, MultiReleaseReleaseFundsPayload } from "@trustless-work/escrow/types";
+import { useSettings } from "@/hooks/useSettings";
 
 export default function SquadGoalsPage() {
+    const { t } = useSettings();
     const { connected, address: publicKey, sign } = useFreighter();
     const [activeTab, setActiveTab] = useState<"activas" | "propuestas">("propuestas");
 
@@ -58,7 +60,7 @@ export default function SquadGoalsPage() {
     const hasVoted = (goalId: string) => votes.some(v => v.goal_id === goalId && v.wallet_address === publicKey);
 
     const handleVote = async (goalId: string) => {
-        if (!publicKey) return alert("Conecta tu billetera primero.");
+        if (!publicKey) return alert(t.alerts.connectWalletFirst);
         if (hasVoted(goalId)) return;
 
         setProcessingId(goalId);
@@ -70,18 +72,18 @@ export default function SquadGoalsPage() {
             await fetchAllData();
         } catch (e) {
             console.error(e);
-            alert("Error al votar");
+            alert(t.squadGoals.errorVoting);
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleFundMission = async (goal: any) => {
-        if (!publicKey) return alert("Conéctate como Empresa (Funder) para fondear.");
+        if (!publicKey) return alert(t.alerts.connectWalletFirst);
         if (!process.env.NEXT_PUBLIC_TW_API_KEY) return alert("Trustless Work API key missing");
 
         const memberWallets = squadMembers.filter(m => m.wallet_address).map(m => m.wallet_address);
-        if (memberWallets.length === 0) return alert("No hay miembros en el squad con billetera.");
+        if (memberWallets.length === 0) return alert(t.squadGoals.errorFunding + " No wallets");
 
         const amountPerMember = Number((goal.amount / memberWallets.length).toFixed(7));
 
@@ -128,22 +130,22 @@ export default function SquadGoalsPage() {
                     trustless_contract_id: data.contractId
                 }).eq("id", goal.id);
 
-                alert("Misión fondeada correctamente.");
+                alert(t.squadGoals.fundSuccess);
                 fetchAllData();
             } else {
-                alert(`Error: ${data.message}`);
+                alert(`${t.squadGoals.errorFunding} ${data.message}`);
             }
 
         } catch (e: any) {
             console.error("Funding error", e);
-            alert(`Error fondeando: ${e.message}`);
+            alert(`${t.squadGoals.errorFunding} ${e.message}`);
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleReleaseMission = async (goal: any) => {
-        if (!publicKey) return alert("Requieres billetera conectada.");
+        if (!publicKey) return alert(t.alerts.connectWalletFirst);
         if (!goal.trustless_contract_id) return alert("No contract ID found.");
 
         const memberWallets = squadMembers.filter(m => m.wallet_address).map(m => m.wallet_address);
@@ -171,12 +173,12 @@ export default function SquadGoalsPage() {
             }
 
             await supabase.from("squad_goals").update({ status: "completed" }).eq("id", goal.id);
-            alert("Fondos liberados y Misión completada!");
+            alert(t.squadGoals.releaseSuccess);
             fetchAllData();
 
         } catch (e: any) {
             console.error("Release error", e);
-            alert("Error al liberar fondos");
+            alert(t.squadGoals.errorFunding);
         } finally {
             setProcessingId(null);
         }
@@ -185,42 +187,41 @@ export default function SquadGoalsPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-16">
             {/* Header */}
-            <div className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-6 md:p-8 relative overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border-subtle p-6 md:p-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-accent-teal/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="max-w-2xl">
                         <h1 className="text-3xl font-bold tracking-tight mb-3 flex items-center gap-3">
-                            Squad Goals <Target className="text-accent-teal" />
+                            {t.squadGoals.title} <Target className="text-accent-teal" />
                         </h1>
-                        <p className="text-neutral-300 leading-relaxed">
-                            Proponé objetivos de equipo. Cuando alcanzan un 70% de aprobación, la empresa los fondea vía <strong className="text-white">Trustless Work</strong> y el pago se divide automáticamente entre todos los miembros al completarse.
+                        <p className="text-muted leading-relaxed" dangerouslySetInnerHTML={{ __html: t.squadGoals.subtitle }}>
                         </p>
                     </div>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="bg-accent-teal text-[#050c14] font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)] transition-all flex items-center gap-2 whitespace-nowrap"
                     >
-                        Proponer Misión
+                        {t.squadGoals.propose}
                     </button>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-4 border-b border-white/5 pb-1">
+            <div className="flex gap-4 border-b border-border-subtle pb-1">
                 <button
                     onClick={() => setActiveTab("propuestas")}
-                    className={`pb-3 px-2 font-medium transition-colors text-lg relative ${activeTab === 'propuestas' ? 'text-accent-teal' : 'text-neutral-500 hover:text-white'}`}
+                    className={`pb-3 px-2 font-medium transition-colors text-lg relative ${activeTab === 'propuestas' ? 'text-accent-teal' : 'text-muted hover:text-foreground'}`}
                 >
-                    Propuestas en Votación
+                    {t.squadGoals.tabProposed}
                     {activeTab === 'propuestas' && (
                         <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.8)] rounded-t-full" />
                     )}
                 </button>
                 <button
                     onClick={() => setActiveTab("activas")}
-                    className={`pb-3 px-2 font-medium transition-colors text-lg relative ${activeTab === 'activas' ? 'text-accent-teal' : 'text-neutral-500 hover:text-white'}`}
+                    className={`pb-3 px-2 font-medium transition-colors text-lg relative ${activeTab === 'activas' ? 'text-accent-teal' : 'text-muted hover:text-foreground'}`}
                 >
-                    Misiones Activas
+                    {t.squadGoals.tabActive}
                     {activeTab === 'activas' && (
                         <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.8)] rounded-t-full" />
                     )}
@@ -228,8 +229,8 @@ export default function SquadGoalsPage() {
             </div>
 
             {loading ? (
-                <div className="py-20 flex justify-center items-center gap-3 text-neutral-500">
-                    <Loader2 className="w-6 h-6 animate-spin text-accent-teal" /> Cargando Misiones...
+                <div className="py-20 flex justify-center items-center gap-3 text-muted">
+                    <Loader2 className="w-6 h-6 animate-spin text-accent-teal" /> {t.squadGoals.loading}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -241,17 +242,17 @@ export default function SquadGoalsPage() {
                         const readyToFund = goalVotes.length >= requiredVotes;
 
                         return (
-                            <div key={goal.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col shadow-lg p-6 relative">
-                                <span className="absolute top-4 right-4 text-xs font-bold px-3 py-1 bg-white/5 rounded-full text-slate-300">
+                            <div key={goal.id} className="bg-card rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col shadow-lg p-6 relative">
+                                <span className="absolute top-4 right-4 text-xs font-bold px-3 py-1 bg-foreground/5 rounded-full text-muted">
                                     {goal.amount} USDC
                                 </span>
 
-                                <h3 className="font-semibold text-xl text-white mb-2 pr-16">{goal.title}</h3>
-                                <p className="text-sm text-neutral-400 mb-6 flex-1">{goal.description}</p>
+                                <h3 className="font-semibold text-xl text-foreground mb-2 pr-16">{goal.title}</h3>
+                                <p className="text-sm text-muted mb-6 flex-1">{goal.description}</p>
 
                                 <div className="space-y-3 mb-6">
-                                    <div className="flex justify-between text-xs text-neutral-400">
-                                        <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {goalVotes.length} / {requiredVotes} Requeridos</span>
+                                    <div className="flex justify-between text-xs text-muted">
+                                        <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {goalVotes.length} / {requiredVotes} {t.squadGoals.requiredVotes}</span>
                                         <span className="text-accent-teal font-mono">{Math.round(progress)}%</span>
                                     </div>
                                     <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden">
@@ -266,21 +267,21 @@ export default function SquadGoalsPage() {
                                     <button
                                         onClick={() => handleFundMission(goal)}
                                         disabled={isProcessing}
-                                        className="w-full py-3 bg-white text-[#0a0a0a] font-bold rounded-xl hover:bg-neutral-200 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                        className="w-full py-3 bg-foreground text-[#0a0a0a] font-bold rounded-xl hover:bg-neutral-200 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
                                     >
-                                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> Fondeando...</> : "Aprobar y Fondear (Empresa)"}
+                                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.squadGoals.funding}</> : t.squadGoals.fundMission}
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => handleVote(goal.id)}
                                         disabled={userVoted || isProcessing || !connected}
                                         className={`w-full py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${userVoted
-                                            ? "bg-white/5 text-accent-teal border border-accent-teal/20"
-                                            : "bg-white/10 hover:bg-white/15 text-white"
+                                            ? "bg-foreground/5 text-accent-teal border border-accent-teal/20"
+                                            : "bg-foreground/10 hover:bg-foreground/15 text-foreground"
                                             } disabled:opacity-50`}
                                     >
                                         {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                        {userVoted ? <><CheckCircle className="w-4 h-4" /> Votado</> : "Firmar Propuesta"}
+                                        {userVoted ? <><CheckCircle className="w-4 h-4" /> {t.squadGoals.voted}</> : t.squadGoals.signProposal}
                                     </button>
                                 )}
                             </div>
@@ -288,9 +289,9 @@ export default function SquadGoalsPage() {
                     })}
 
                     {activeTab === "propuestas" && proposedGoals.length === 0 && (
-                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-neutral-500 border border-white/5 rounded-2xl bg-[#0a0a0a]/50 border-dashed">
+                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                             <Target className="w-12 h-12 mb-4 text-neutral-600" />
-                            <p>No hay propuestas activas en el Squad.</p>
+                            <p>{t.squadGoals.noProposals}</p>
                         </div>
                     )}
 
@@ -298,32 +299,32 @@ export default function SquadGoalsPage() {
                         const isProcessing = processingId === `release-${goal.id}`;
 
                         return (
-                            <div key={goal.id} className="bg-[#0a0a0a] rounded-2xl border border-accent-teal/20 overflow-hidden flex flex-col shadow-[0_0_15px_rgba(0,242,255,0.05)] p-6 relative">
+                            <div key={goal.id} className="bg-card rounded-2xl border border-accent-teal/20 overflow-hidden flex flex-col shadow-[0_0_15px_rgba(0,242,255,0.05)] p-6 relative">
                                 <div className="flex items-center gap-2 mb-4">
                                     <span className="flex items-center gap-1.5 px-3 py-1 bg-accent-teal/10 text-accent-teal text-xs font-bold rounded-full border border-accent-teal/20">
-                                        <Clock className="w-3.5 h-3.5" /> FONDEADO
+                                        <Clock className="w-3.5 h-3.5" /> {t.squadGoals.funded}
                                     </span>
                                 </div>
 
-                                <h3 className="font-semibold text-xl text-white mb-2">{goal.title}</h3>
-                                <p className="text-sm text-neutral-400 mb-6 flex-1">{goal.description}</p>
+                                <h3 className="font-semibold text-xl text-foreground mb-2">{goal.title}</h3>
+                                <p className="text-sm text-muted mb-6 flex-1">{goal.description}</p>
 
-                                <div className="p-4 bg-deep-navy border border-white/5 rounded-xl mb-6 flex items-center justify-between">
-                                    <div className="text-xs text-neutral-500 font-medium">Recompensa Trustless</div>
+                                <div className="p-4 bg-background border border-border-subtle rounded-xl mb-6 flex items-center justify-between">
+                                    <div className="text-xs text-muted font-medium">{t.squadGoals.trustlessReward}</div>
                                     <div className="font-bold text-accent-teal text-lg">{goal.amount} USDC</div>
                                 </div>
 
                                 {goal.status === "completed" ? (
                                     <div className="w-full py-3 bg-accent-teal/10 text-accent-teal font-bold rounded-xl border border-accent-teal/20 flex justify-center items-center gap-2">
-                                        <CheckCircle className="w-5 h-5" /> Misión Completada
+                                        <CheckCircle className="w-5 h-5" /> {t.squadGoals.missionCompleted}
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => handleReleaseMission(goal)}
                                         disabled={isProcessing}
-                                        className="w-full py-3 bg-white text-[#0a0a0a] font-bold rounded-xl hover:bg-neutral-200 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                                        className="w-full py-3 bg-foreground text-[#0a0a0a] font-bold rounded-xl hover:bg-neutral-200 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
                                     >
-                                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> Liberando Pago Split...</> : "Misión Cumpilda (Liberar Pagos)"}
+                                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.squadGoals.releasing}</> : t.squadGoals.releaseSplit}
                                     </button>
                                 )}
                             </div>

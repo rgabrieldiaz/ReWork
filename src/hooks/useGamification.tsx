@@ -5,7 +5,7 @@ export function useGamification() {
     const notifyPointsEarned = (points: number, message: string = "¡Has ganado puntos!") => {
         // Fire confetti
         const end = Date.now() + 1.5 * 1000;
-        const colors = ['#00f2ff', '#ffffff']; // Accent Teal and White
+        const colors = ['var(--accent-teal)', '#ffffff']; // Accent Teal and White
 
         (function frame() {
             confetti({
@@ -32,10 +32,10 @@ export function useGamification() {
         toast.success(
             <div className="flex flex-col gap-1">
                 <span className="font-bold text-accent-teal">+{points} PTS</span>
-                <span className="text-sm text-neutral-300">{message}</span>
+                <span className="text-sm text-muted">{message}</span>
             </div>,
             {
-                className: "bg-deep-navy border border-accent-teal/30 shadow-[0_0_20px_rgba(0,242,255,0.15)]",
+                className: "bg-background border border-accent-teal/30 shadow-[0_0_20px_rgba(0,242,255,0.15)]",
                 duration: 4000,
             }
         );

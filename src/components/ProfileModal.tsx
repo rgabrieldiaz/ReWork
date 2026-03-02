@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useFreighter } from "@/hooks/useFreighter";
-import { X, Check, Upload, Loader2 } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
+import { X, Check, Upload, Loader2, Globe, Moon, Sun, Monitor } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileModalProps {
@@ -14,14 +15,13 @@ interface ProfileModalProps {
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { address } = useFreighter();
     const { profile, updateProfile, loading } = useProfile();
+    const { language, setLanguage, theme, setTheme, t } = useSettings();
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [birthDate, setBirthDate] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,24 +37,13 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     if (!isOpen) return null;
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        const { error } = await updateProfile({
-            first_name: firstName,
-            last_name: lastName,
-            birth_date: birthDate,
-            avatar_url: avatarUrl
+    const handleAutoSave = async (field: string, value: string | null) => {
+        await updateProfile({
+            first_name: field === 'first_name' ? value : firstName,
+            last_name: field === 'last_name' ? value : lastName,
+            birth_date: field === 'birth_date' ? value : birthDate,
+            avatar_url: field === 'avatar_url' ? value : avatarUrl
         });
-        setIsSaving(false);
-
-        if (!error) {
-            setShowSuccess(true);
-            setTimeout(() => {
-                setShowSuccess(false);
-                onClose();
-            }, 1500);
-        }
     };
 
     const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,20 +71,21 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 .getPublicUrl(filePath);
 
             setAvatarUrl(publicUrl);
+            await handleAutoSave('avatar_url', publicUrl);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert("Hubo un error al subir la imagen.");
+            alert(t.profile.uploadError);
         } finally {
             setIsUploading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-deep-navy/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="glass-card w-full max-w-md p-6 relative shadow-2xl border-white/10 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-card/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-card w-full max-w-md p-6 relative shadow-2xl border border-border-subtle rounded-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                    className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors"
                 >
                     <X className="w-5 h-5" />
                 </button>
@@ -113,7 +103,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center border-2 border-accent-teal shadow-[0_0_15px_rgba(0,242,255,0.3)] mb-3 relative group overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-deep-navy focus:ring-accent-teal transition-all disabled:opacity-50"
+                            className="w-24 h-24 rounded-full bg-muted/10 flex items-center justify-center border-2 border-accent-teal shadow-[0_0_15px_rgba(0,242,255,0.3)] mb-3 relative group overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-deep-navy focus:ring-accent-teal transition-all disabled:opacity-50"
                             title="Cambiar foto de perfil"
                         >
                             {isUploading ? (
@@ -121,8 +111,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             ) : avatarUrl ? (
                                 <>
                                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Upload className="w-6 h-6 text-white" />
+                                    <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Upload className="w-6 h-6 text-foreground" />
                                     </div>
                                 </>
                             ) : (
@@ -130,8 +120,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <span className="font-bold text-accent-teal text-xl group-hover:opacity-0 transition-opacity">
                                         {firstName ? firstName.charAt(0).toUpperCase() : "U"}
                                     </span>
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Upload className="w-6 h-6 text-white" />
+                                    <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Upload className="w-6 h-6 text-foreground" />
                                     </div>
                                 </>
                             )}
@@ -139,67 +129,111 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className="text-xs font-semibold text-accent-teal hover:text-white transition-colors flex items-center gap-1"
+                            className="text-xs font-semibold text-accent-teal hover:text-foreground transition-colors flex items-center gap-1"
                         >
-                            <Upload className="w-3 h-3" /> Cambiar foto
+                            <Upload className="w-3 h-3" /> {t.profile.photoChange}
                         </button>
                     </div>
-                    <h2 className="text-xl font-bold text-white mt-2">Tu Perfil</h2>
-                    <p className="text-sm text-slate-400 font-mono mt-1">{address ? `${address.slice(0, 4)}...${address.slice(-4)}` : ""}</p>
+                    <h2 className="text-xl font-bold text-foreground mt-2">{t.profile.editProfile}</h2>
+                    <p className="text-sm text-muted font-mono mt-1">{address ? `${address.slice(0, 4)}...${address.slice(-4)}` : ""}</p>
                     <span className="inline-block mt-2 text-[10px] font-bold text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded tracking-widest uppercase border border-indigo-400/20">
-                        {profile?.role || "Colaborador"}
+                        {profile?.role || t.profile.role}
                     </span>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-4">
+                <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nombre</label>
+                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.firstName}</label>
                         <input
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            className="w-full bg-deep-navy/50 border border-border-glass rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                            placeholder="Tu nombre"
+                            onBlur={(e) => handleAutoSave('first_name', e.target.value)}
+                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
+                            placeholder={t.profile.firstNamePlaceholder}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Apellido</label>
+                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.lastName}</label>
                         <input
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            className="w-full bg-deep-navy/50 border border-border-glass rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                            placeholder="Tu apellido"
+                            onBlur={(e) => handleAutoSave('last_name', e.target.value)}
+                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
+                            placeholder={t.profile.lastNamePlaceholder}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Fecha de Nacimiento</label>
+                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.birthDate}</label>
                         <input
                             type="date"
                             value={birthDate}
                             onChange={(e) => setBirthDate(e.target.value)}
-                            className="w-full bg-deep-navy/50 border border-border-glass rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                            onBlur={(e) => handleAutoSave('birth_date', e.target.value)}
+                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                         />
                     </div>
 
+                    {/* Interface Settings */}
+                    <div className="pt-6 border-t border-border-subtle mt-6">
+                        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                            <Monitor className="w-4 h-4 text-accent-teal" />
+                            {t.profile.interfaceSettings}
+                        </h3>
 
-                    <button
-                        type="submit"
-                        disabled={isSaving || loading}
-                        className="w-full mt-6 py-3 bg-accent-teal text-deep-navy font-bold rounded-xl transition-all relative overflow-hidden group disabled:opacity-50"
-                    >
-                        {showSuccess ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <Check className="w-5 h-5" /> Guardado
-                            </span>
-                        ) : (
-                            <span className="group-hover:tracking-wider transition-all">
-                                {isSaving ? "Guardando..." : "Guardar Cambios"}
-                            </span>
-                        )}
-                    </button>
-                </form>
+                        {/* Language Selector */}
+                        <div className="mb-5">
+                            <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.language}</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div
+                                    onClick={() => setLanguage('es')}
+                                    className={`relative cursor-pointer rounded-xl border p-3 flex items-center gap-3 transition-colors ${language === 'es' ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'}`}
+                                >
+                                    <span className="text-2xl" role="img" aria-label="Español">🇪🇸</span>
+                                    <span className={`font-medium ${language === 'es' ? 'text-accent-teal' : 'text-muted'}`}>Español</span>
+                                    {language === 'es' && <Check className="w-4 h-4 text-accent-teal absolute right-3" />}
+                                </div>
+                                <div
+                                    onClick={() => setLanguage('en')}
+                                    className={`relative cursor-pointer rounded-xl border p-3 flex items-center gap-3 transition-colors ${language === 'en' ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'}`}
+                                >
+                                    <span className="text-2xl" role="img" aria-label="English">🇬🇧</span>
+                                    <span className={`font-medium ${language === 'en' ? 'text-accent-teal' : 'text-muted'}`}>English</span>
+                                    {language === 'en' && <Check className="w-4 h-4 text-accent-teal absolute right-3" />}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Theme Selector */}
+                        <div>
+                            <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.theme}</label>
+                            <div className="flex bg-muted/10 border border-border-subtle rounded-xl p-1">
+                                {[
+                                    { id: 'light', icon: Sun, label: t.profile.themeLight },
+                                    { id: 'dark', icon: Moon, label: t.profile.themeDark },
+                                    { id: 'system', icon: Monitor, label: t.profile.themeSystem }
+                                ].map((tOption) => {
+                                    const Icon = tOption.icon;
+                                    const isActive = theme === tOption.id;
+                                    return (
+                                        <button
+                                            key={tOption.id}
+                                            type="button"
+                                            onClick={() => setTheme(tOption.id as any)}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${isActive ? 'bg-foreground/10 text-foreground shadow-sm' : 'text-muted hover:text-muted'}`}
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                            {tOption.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     );

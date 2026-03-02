@@ -1,51 +1,92 @@
 @import "tailwindcss";
 
 @theme {
-  /* Colors */
-  --color-deep-navy: #050c14;
-  --color-card-bg: #0d1624;
-  --color-accent-teal: #00f2ff;
-  --color-glass-white: rgba(255, 255, 255, 0.05);
-  --color-border-glass: rgba(255, 255, 255, 0.1);
+  /* Semantic Variables */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card-bg);
+  --color-muted: var(--muted-fg);
+  --color-border-subtle: var(--border-glass);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-teal-dark: var(--accent-teal-dark);
+
   /* Typography */
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
 @layer base {
+  :root {
+    /* LIGHT MODE (De facto base variable values) */
+    --bg: #f8fafc;
+    /* slate-50 */
+    --fg: #0f172a;
+    /* slate-900 */
+    --card-bg: #ffffff;
+    /* pure white */
+    --muted-fg: #64748b;
+    /* slate-500 */
+    --border-glass: rgba(0, 0, 0, 0.1);
+    --glass-opacity: 0.7;
+    --accent-teal: #0369a1;
+    /* very dark blue-teal for high contrast */
+  }
+
+  .dark {
+    /* DARK MODE (Stitch Navy override) */
+    --bg: #050c14;
+    --fg: #ffffff;
+    --card-bg: #0d1624;
+    --muted-fg: #94a3b8;
+    /* slate-400 */
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --glass-opacity: 0.7;
+    --accent-teal: #00f2ff;
+  }
+
   body {
-    background-color: var(--color-deep-navy);
-    color: #ffffff;
+    background-color: var(--bg);
+    color: var(--fg);
   }
 }
 
 @layer utilities {
   .glass-card {
-    background: rgba(13, 22, 36, 0.7);
+    background: color-mix(in srgb, var(--card-bg) calc(var(--glass-opacity) * 100%), transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-glass);
     border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    /* Subtle shadow for light mode visibility */
   }
-  
+
+  .dark .glass-card {
+    box-shadow: none;
+    /* Remove light mode shadow in dark mode */
+  }
+
   .glow-teal {
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--accent-teal) 30%, transparent);
   }
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: var(--border-glass);
     border-radius: 10px;
   }
 
   .active-nav-border {
     position: relative;
   }
+
   .active-nav-border::after {
     content: '';
     position: absolute;
@@ -54,8 +95,8 @@
     transform: translateY(-50%);
     height: 24px;
     width: 4px;
-    background: #00f2ff;
+    background: var(--accent-teal);
     border-radius: 4px 0 0 4px;
-    box-shadow: -2px 0 10px rgba(0, 242, 255, 0.5);
+    box-shadow: -2px 0 10px color-mix(in srgb, var(--accent-teal) 50%, transparent);
   }
 }
