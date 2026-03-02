@@ -36,7 +36,16 @@ export const translations = {
             wallet: "BILLETERA",
             firstNamePlaceholder: "Tu nombre",
             lastNamePlaceholder: "Tu apellido",
-            photoChange: "Cambiar foto"
+            photoChange: "Cambiar foto",
+            title: "Tu Perfil",
+            connect: "Conectar",
+            loading: "Cargando...",
+            pointsLog: "Historial de Puntos",
+            noPoints: "Aún no tenés actividad de puntos.",
+            badges: "Insignias Recientes",
+            saveChanges: "Guardar Cambios",
+            cancel: "Cancelar",
+            connectPrompt: "Conectá tu billetera para gestionar tu cuenta y ver tus recompensas."
         },
         dashboard: {
             mainPool: "Colecta Principal",
@@ -123,25 +132,7 @@ export const translations = {
             swapSuccess: "¡Intercambio exitoso!",
             processing: "Procesando..."
         },
-        profile: {
-            title: "Tu Perfil",
-            connect: "Conectar",
-            editProfile: "Editar Perfil",
-            loading: "Cargando...",
-            interfaceSettings: "Ajustes de Interfaz",
-            language: "Idioma",
-            theme: "Tema",
-            themeLight: "Claro",
-            themeDark: "Oscuro",
-            themeSystem: "Sistema",
-            pointsLog: "Historial de Puntos",
-            noPoints: "Aún no tenés actividad de puntos.",
-            badges: "Insignias Recientes",
-            saveChanges: "Guardar Cambios",
-            cancel: "Cancelar",
-            role: "Colaborador",
-            connectPrompt: "Conectá tu billetera para gestionar tu cuenta y ver tus recompensas."
-        },
+
         common: {
             save: "Guardar",
             connect: "Conectar",
@@ -158,15 +149,28 @@ export const translations = {
             start: "Iniciar Curso"
         },
         colaboradores: {
-            title: "Colaboradores",
-            subtitle: "Conocé a tus compañeros de equipo. ReWork fomenta un ecosistema colaborativo donde todos aportamos valor y construimos juntos.",
-            searchPlaceholder: "Buscar por nombre o rol...",
-            loading: "Cargando equipo...",
-            noResults: "No se encontraron colaboradores.",
+            title: "El Centro de Squads",
+            subtitle: "Tu ecosistema de talento. Unité a un Squad o conectá con colaboradores de la red.",
+            searchPlaceholder: "Buscar squad o persona...",
+            loading: "Cargando ecosistema...",
+            noResults: "No se encontraron coincidencias.",
             anonymous: "Usuario Anónimo",
             roleDefault: "Colaborador",
             pointsContributed: "PTS Aportados",
-            connect: "Conectar"
+            connect: "Conectar",
+            tabs: {
+                squads: "Equipos",
+                people: "Personas"
+            },
+            squads: {
+                create: "Crear Squad",
+                join: "Unirse al Squad",
+                requestInvite: "Solicitar Invitación",
+                members: "miembros",
+                open: "Abierto",
+                private: "Privado",
+                commonSquads: "Comparten {count} squads"
+            }
         },
         colectas: {
             title: "Colectas",
@@ -285,7 +289,16 @@ export const translations = {
             wallet: "WALLET",
             firstNamePlaceholder: "Your name",
             lastNamePlaceholder: "Your last name",
-            photoChange: "Change photo"
+            photoChange: "Change photo",
+            title: "Your Profile",
+            connect: "Connect",
+            loading: "Loading...",
+            pointsLog: "Points History",
+            noPoints: "No points activity yet.",
+            badges: "Recent Badges",
+            saveChanges: "Save Changes",
+            cancel: "Cancel",
+            connectPrompt: "Connect your wallet to manage your account and view your rewards."
         },
         dashboard: {
             mainPool: "Main Pool",
@@ -372,25 +385,6 @@ export const translations = {
             swapSuccess: "Swap successful!",
             processing: "Processing..."
         },
-        profile: {
-            title: "Your Profile",
-            connect: "Connect",
-            editProfile: "Edit Profile",
-            loading: "Loading...",
-            interfaceSettings: "Interface Settings",
-            language: "Language",
-            theme: "Theme",
-            themeLight: "Light",
-            themeDark: "Dark",
-            themeSystem: "System",
-            pointsLog: "Points History",
-            noPoints: "No points activity yet.",
-            badges: "Recent Badges",
-            saveChanges: "Save Changes",
-            cancel: "Cancel",
-            role: "Employee",
-            connectPrompt: "Connect your wallet to manage your account and view your rewards."
-        },
         common: {
             save: "Save",
             connect: "Connect",
@@ -407,15 +401,28 @@ export const translations = {
             start: "Start Course"
         },
         colaboradores: {
-            title: "Collaborators",
-            subtitle: "Meet your teammates. ReWork fosters a collaborative ecosystem where everyone adds value and we build together.",
-            searchPlaceholder: "Search by name or role...",
-            loading: "Loading team...",
-            noResults: "No collaborators found.",
+            title: "The Squad Center",
+            subtitle: "Your talent ecosystem. Join a Squad or connect with network collaborators.",
+            searchPlaceholder: "Search squad or person...",
+            loading: "Loading ecosystem...",
+            noResults: "No matches found.",
             anonymous: "Anonymous User",
             roleDefault: "Collaborator",
             pointsContributed: "PTS Contributed",
-            connect: "Connect"
+            connect: "Connect",
+            tabs: {
+                squads: "Squads",
+                people: "People"
+            },
+            squads: {
+                create: "Create Squad",
+                join: "Join Squad",
+                requestInvite: "Request Invite",
+                members: "members",
+                open: "Open",
+                private: "Private",
+                commonSquads: "Share {count} squads"
+            }
         },
         colectas: {
             title: "Crowdfundings",
