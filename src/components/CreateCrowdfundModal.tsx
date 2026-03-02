@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, Loader2, Smile } from "lucide-react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 
@@ -16,10 +17,22 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
     const [goalAmount, setGoalAmount] = useState("");
     const [durationDays, setDurationDays] = useState("30");
     const [image, setImage] = useState("");
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const emojiPickerRef = useRef<HTMLDivElement>(null);
     const [tagsInput, setTagsInput] = useState("");
     const [destinationAccount, setDestinationAccount] = useState(publicKey || "");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+                setShowEmojiPicker(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     if (!isOpen) return null;
 
@@ -165,15 +178,35 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                         />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative">
                         <label className="text-sm font-medium text-muted">Imagen (URL o Emoji)</label>
-                        <input
-                            type="text"
-                            value={image}
-                            onChange={(e) => setImage(e.target.value)}
-                            className="w-full bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
-                            placeholder="💻"
-                        />
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={image}
+                                onChange={(e) => setImage(e.target.value)}
+                                className="flex-1 bg-card border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
+                                placeholder="💻 o https://..."
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                className="px-4 py-3 bg-card border border-border-subtle hover:bg-foreground/5 flex items-center justify-center rounded-xl transition-colors text-muted hover:text-foreground"
+                            >
+                                <Smile className="w-5 h-5 flex-shrink-0" />
+                            </button>
+                        </div>
+                        {showEmojiPicker && (
+                            <div className="absolute right-0 top-full mt-2 z-[60] shadow-2xl" ref={emojiPickerRef}>
+                                <EmojiPicker
+                                    theme={Theme.AUTO}
+                                    onEmojiClick={(emojiData) => {
+                                        setImage(emojiData.emoji);
+                                        setShowEmojiPicker(false);
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
