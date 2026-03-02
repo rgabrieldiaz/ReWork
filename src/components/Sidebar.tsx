@@ -43,7 +43,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             )}
 
             <aside className={`
-                fixed top-0 left-0 z-50 h-screen w-64 bg-background border-r border-border-subtle flex flex-col transition-transform duration-300 ease-in-out
+                fixed top-0 left-0 z-50 h-screen w-full lg:w-64 bg-background border-r border-border-subtle flex flex-col transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 <div className="flex items-center justify-between p-8">
@@ -73,6 +73,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={onClose}
                                 className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${isActive
                                     ? "text-foreground bg-foreground/5 active-nav-border border border-border-subtle/50"
                                     : "text-muted hover:text-foreground hover:bg-foreground/5 border border-transparent"
