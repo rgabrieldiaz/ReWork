@@ -93,9 +93,9 @@ export default function MarketplacePage() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
-    const [sortBy, setSortBy] = useState("time-asc");
-    const [conditionFilter, setConditionFilter] = useState("ambas");
-    const [hideFinished, setHideFinished] = useState(true);
+    const [activeTab, setActiveTab] = useState<'all' | 'auction' | 'direct'>('all');
+    const [activeSort, setActiveSort] = useState<'recent' | 'endingSoon'>('recent');
+    const [activeFilter, setActiveFilter] = useState<'none' | 'new' | 'used' | 'myBids'>('none');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
@@ -117,31 +117,39 @@ export default function MarketplacePage() {
             filtered = filtered.filter(a => a.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
         }
 
-        if (conditionFilter !== "ambas") {
-            filtered = filtered.filter(a => (a.condition || "nuevo") === conditionFilter);
+        if (activeTab === 'auction') {
+            filtered = filtered.filter(a => !a.is_direct_buy);
+        } else if (activeTab === 'direct') {
+            filtered = filtered.filter(a => a.is_direct_buy);
         }
 
-        if (hideFinished) {
-            const now = new Date().getTime();
-            filtered = filtered.filter(a => {
-                if (a.status === 'finished' || a.status === 'cancelled') return false;
-                if (a.end_time && new Date(a.end_time).getTime() <= now) return false;
-                return true;
-            });
+        if (activeFilter === 'new') {
+            filtered = filtered.filter(a => (a.condition || "nuevo") === "nuevo");
+        } else if (activeFilter === 'used') {
+            filtered = filtered.filter(a => (a.condition || "nuevo") === "usado");
+        } else if (activeFilter === 'myBids') {
+            if (address) {
+                filtered = filtered.filter(a => a.current_winner_address === address);
+            } else {
+                filtered = [];
+            }
         }
+
+        // Implicit hideFinished
+        const now = new Date().getTime();
+        filtered = filtered.filter(a => {
+            if (a.status === 'finished' || a.status === 'cancelled') return false;
+            if (a.end_time && new Date(a.end_time).getTime() <= now) return false;
+            return true;
+        });
 
         filtered.sort((a, b) => {
-            if (sortBy === "popularity") {
-                const popA = a.base_price > 0 ? a.current_bid / a.base_price : 0;
-                const popB = b.base_price > 0 ? b.current_bid / b.base_price : 0;
-                return popB - popA; // descending
-            }
-            if (sortBy === "time-asc") {
+            if (activeSort === 'endingSoon') {
                 if (!a.end_time) return 1;
                 if (!b.end_time) return -1;
                 return new Date(a.end_time).getTime() - new Date(b.end_time).getTime();
             }
-            if (sortBy === "date-desc") {
+            if (activeSort === 'recent') {
                 // Assuming ID represents creation order
                 return b.id - a.id;
             }
@@ -149,7 +157,7 @@ export default function MarketplacePage() {
         });
 
         return filtered;
-    }, [auctions, debouncedSearchQuery, sortBy, hideFinished, conditionFilter]);
+    }, [auctions, debouncedSearchQuery, activeTab, activeFilter, activeSort, address]);
 
     const handleBid = async (auction: Auction) => {
         if (!connected || !address) {
@@ -300,80 +308,103 @@ export default function MarketplacePage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-            {/* Filtros y Controles Principales */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-border-subtle">
-                <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 flex-1 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
-                    <div className="flex items-center gap-2 mr-2 shrink-0">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground m-0">{t.marketplace.title}</h1>
-                    </div>
-
-                    <div className="relative flex-1 w-full min-w-[200px]">
+            {/* Cabecera, Buscador y Botón Crear */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-[60%]">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground m-0 shrink-0">{t.marketplace.title}</h1>
+                    <div className="relative w-full lg:max-w-md">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted w-4 h-4" />
                         <input
                             type="text"
                             placeholder={t.marketplace.searchPlaceholder}
-                            className="pl-11 pr-4 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full"
+                            className="pl-11 pr-4 py-3 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full shadow-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                        <div className="relative">
-                            <select
-                                value={sortBy}
-                                onChange={e => setSortBy(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer w-full whitespace-nowrap text-foreground h-full inline-block"
-                            >
-                                <option value="time-asc">{t.marketplace.sortEndingSoon}</option>
-                                <option value="popularity">{t.marketplace.sortPopular}</option>
-                                <option value="date-desc">{t.marketplace.sortRecent}</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
-                        </div>
-
-                        <div className="relative shrink-0">
-                            <select
-                                value={conditionFilter}
-                                onChange={e => setConditionFilter(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-foreground h-full inline-block"
-                            >
-                                <option value="ambas">{t.marketplace.filterBoth}</option>
-                                <option value="nuevo">{t.marketplace.new}</option>
-                                <option value="usado">{t.marketplace.used}</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
-                        </div>
-
-                        <label className="flex items-center gap-2 text-xs sm:text-sm text-muted cursor-pointer hover:text-foreground transition-colors bg-card border border-border-subtle px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0 h-full">
-                            <input
-                                type="checkbox"
-                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-border-subtle bg-card text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
-                                checked={hideFinished}
-                                onChange={(e) => setHideFinished(e.target.checked)}
-                            />
-                            {t.marketplace.hideFinished}
-                        </label>
-                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0 justify-start xl:justify-end">
+                <div className="flex items-center gap-3 shrink-0 self-start lg:self-center">
                     <button
                         onClick={() => setIsInfoModalOpen(true)}
-                        className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent-teal hover:bg-accent-teal/10 border border-border-subtle rounded-xl transition-colors shrink-0"
-                        title="Acerca del Marketplace"
+                        className="w-11 h-11 flex items-center justify-center text-muted hover:text-accent-teal hover:bg-accent-teal/10 border border-border-subtle rounded-xl transition-colors shrink-0"
+                        title={t.marketplace.aboutTitle}
                     >
-                        <Info className="w-4 h-4" />
+                        <Info className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="flex justify-center items-center gap-1.5 px-3 sm:px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
+                        className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
                     >
-                        <Plus className="w-4 h-4 text-black" />
-                        <span className="hidden sm:inline">{t.marketplace.createAuction}</span>
-                        <span className="sm:hidden"><Plus className="w-4 h-4 mr-1 hidden" />{t.marketplace.createAuction.split(' ')[0]}</span>
+                        <Plus className="w-5 h-5 text-black" />
+                        <span>{t.marketplace.createSell}</span>
                     </button>
                 </div>
+            </div>
+
+            {/* Tabs de Navegación */}
+            <div className="flex items-center gap-6 border-b border-border-subtle mt-2">
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'all' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('all')}
+                >
+                    {t.marketplace.tabAll}
+                </button>
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'auction' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('auction')}
+                >
+                    {t.marketplace.tabAuctions}
+                </button>
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'direct' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('direct')}
+                >
+                    {t.marketplace.tabDirect}
+                </button>
+            </div>
+
+            {/* Sistema de Pills para Filtros y Orden */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 mb-4">
+                {/* Sort Pills (Mutually Exclusive) */}
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'recent' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveSort('recent')}
+                >
+                    {t.marketplace.pillRecent}
+                </button>
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'endingSoon' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveSort('endingSoon')}
+                >
+                    {t.marketplace.pillEndingSoon}
+                </button>
+
+                {/* Separator */}
+                <div className="w-px h-6 bg-border mx-2 shrink-0"></div>
+
+                {/* Filter Pills (Togglable) */}
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'new' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveFilter(activeFilter === 'new' ? 'none' : 'new')}
+                >
+                    {t.marketplace.pillNew}
+                </button>
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'used' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveFilter(activeFilter === 'used' ? 'none' : 'used')}
+                >
+                    {t.marketplace.pillUsed}
+                </button>
+
+                <div className="w-px h-6 bg-border mx-2 shrink-0 hidden sm:block"></div>
+
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ml-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'myBids' ? 'bg-accent-teal text-black border border-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.3)]' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveFilter(activeFilter === 'myBids' ? 'none' : 'myBids')}
+                >
+                    {t.marketplace.pillMyBids}
+                </button>
             </div>
             {displayedAuctions.length === 0 ? (
                 <div className="text-center py-20 border border-border-subtle border-dashed rounded-2xl bg-card">
