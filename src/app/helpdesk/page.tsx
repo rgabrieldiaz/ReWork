@@ -1,5 +1,6 @@
-import { useSettings } from "@/hooks/useSettings";
+"use client";
 
+import { useSettings } from "@/hooks/useSettings";
 export default function HelpDeskPage() {
     const { t } = useSettings();
 
