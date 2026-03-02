@@ -90,9 +90,9 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-card border border-border-subtle rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-                <div className="flex justify-between items-center p-6 border-b border-border-subtle">
+        <div className="fixed inset-0 z-50 flex p-4 bg-card/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto custom-scrollbar">
+            <div className="m-auto bg-card border border-border-subtle rounded-2xl w-full max-w-md shadow-2xl flex flex-col relative">
+                <div className="flex justify-between items-center p-6 border-b border-border-subtle shrink-0">
                     <h2 className="text-xl font-bold">Crear Nueva Colecta</h2>
                     <button onClick={onClose} className="text-muted hover:text-foreground transition-colors">
                         <X className="w-5 h-5" />
@@ -197,7 +197,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             </button>
                         </div>
                         {showEmojiPicker && (
-                            <div className="absolute right-0 top-full mt-2 z-[60] shadow-2xl" ref={emojiPickerRef}>
+                            <div className="absolute right-0 bottom-full mb-2 z-[60] shadow-2xl origin-bottom-right animate-in zoom-in-95 duration-200" ref={emojiPickerRef}>
                                 <EmojiPicker
                                     theme={Theme.AUTO}
                                     onEmojiClick={(emojiData) => {
@@ -209,7 +209,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                         )}
                     </div>
 
-                    <div className="pt-4 flex justify-end gap-3">
+                    <div className="pt-4 flex justify-end gap-3 shrink-0">
                         <button
                             type="button"
                             onClick={onClose}
