@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { X, Image as ImageIcon, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
@@ -12,18 +12,26 @@ interface CreateAuctionModalProps {
     onCreated: () => void;
 }
 
+const COMMON_EMOJIS = ["📦", "💻", "📱", "🎮", "🎨", "🎵", "🎫", "🚀"];
+
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
     const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        title: "",
-        image: "📦",
-        basePrice: "",
-        durationHours: "24",
-        currency: "USDC",
-        condition: "nuevo",
-    });
+
+    const [title, setTitle] = useState("");
+    const [image, setImage] = useState("📦");
+    const [basePrice, setBasePrice] = useState("");
+    const [durationDays, setDurationDays] = useState<number>(1);
+    const [currency, setCurrency] = useState<"USDC" | "XLM">("USDC");
+    const [condition, setCondition] = useState<"nuevo" | "usado">("nuevo");
+
+    // Derived states
+    const isUrl = image.startsWith("http");
+    const endTime = useMemo(() => {
+        const date = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+        return date.toLocaleString();
+    }, [durationDays]);
 
     if (!isOpen) return null;
 
@@ -34,11 +42,15 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             return;
         }
 
+        if (!title || !basePrice) {
+            alert("Por favor completa los campos obligatorios.");
+            return;
+        }
+
         setLoading(true);
         try {
-            const basePriceNum = Number(formData.basePrice);
-            const duration = Number(formData.durationHours);
-            const endTime = new Date(Date.now() + duration * 60 * 60 * 1000).toISOString();
+            const basePriceNum = Number(basePrice);
+            const endTimeIso = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
             // Get current max id
             const { data: maxIdData } = await supabase.from('auctions').select('id').order('id', { ascending: false }).limit(1);
@@ -46,17 +58,17 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
             const { error } = await supabase.from("auctions").insert({
                 id: nextId,
-                title: formData.title,
+                title: title,
                 seller: address,
-                image: formData.image,
+                image: image,
                 base_price: basePriceNum,
                 current_bid: 0,
                 bid_count: 0,
                 status: 'active',
-                end_time: endTime,
+                end_time: endTimeIso,
                 is_direct_buy: false,
-                currency: formData.currency,
-                condition: formData.condition
+                currency: currency,
+                condition: condition
             });
 
             if (error) throw error;
@@ -73,73 +85,215 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-card/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-card border border-border-subtle rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-                <div className="flex justify-between items-center p-6 border-b border-border-subtle bg-gradient-to-r from-neutral-900 to-black">
-                    <h2 className="text-xl font-bold tracking-tight">Crear Nueva Subasta</h2>
-                    <button onClick={onClose} className="text-muted hover:text-foreground transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="bg-gradient-to-br from-neutral-900 to-black border border-border-subtle rounded-3xl w-full max-w-5xl md:h-[85vh] md:max-h-[800px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row shadow-accent-teal/10">
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                {/* Left Column: Preview & Image Selection */}
+                <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-8 flex flex-col gap-8 md:overflow-y-auto scrollbar-hide">
                     <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Título del Producto</label>
-                        <input required type="text" className="w-full bg-card border border-border-subtle rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Lentes VR Oculus Quest 3" />
+                        <h3 className="text-xl font-bold tracking-tight mb-2 text-white">Previsualización</h3>
+                        <p className="text-sm text-muted">Así se verá tu artículo en el mercado P2P.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="aspect-square w-full bg-neutral-900/50 border border-border-subtle rounded-3xl flex items-center justify-center overflow-hidden shadow-inner relative group isolate">
+                        {/* Decorative background glow */}
+                        <div className="absolute inset-0 bg-accent-teal/5 rounded-3xl -z-10 group-hover:bg-accent-teal/10 transition-colors duration-500" />
+
+                        {isUrl ? (
+                            <img src={image} alt="Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setImage("📦")} />
+                        ) : (
+                            <span className="text-[120px] filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-transform duration-500 group-hover:scale-110">{image}</span>
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 pt-12">
+                            <h4 className="font-bold text-lg text-white leading-tight line-clamp-1">{title || "Nombre del artículo"}</h4>
+                            <div className="flex justify-between items-end mt-2">
+                                <span className="text-accent-teal font-black text-xl tracking-tight">{basePrice ? `${basePrice} ${currency}` : "Precio base"}</span>
+                                <span className="text-[10px] text-white/90 uppercase font-black tracking-widest bg-white/10 px-2.5 py-1 rounded border border-white/20 backdrop-blur-md">{condition}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 flex-1">
+                        <label className="block text-sm font-bold text-foreground">Imagen o Emoji</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={image}
+                                onChange={e => setImage(e.target.value)}
+                                className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-4 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
+                                placeholder="Pega una URL o elige un emoji..."
+                            />
+                            <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                        </div>
+                        <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-4 gap-2 pt-2">
+                            {COMMON_EMOJIS.map(emoji => (
+                                <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => setImage(emoji)}
+                                    className={`aspect-square flex items-center justify-center text-2xl rounded-2xl transition-all hover:scale-110 ${image === emoji ? 'bg-accent-teal/20 border-accent-teal/50 border shadow-[0_0_15px_rgba(0,242,255,0.15)] ring-1 ring-accent-teal/50' : 'bg-card/50 border border-border-subtle hover:bg-card'}`}
+                                >
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Data Inputs */}
+                <div className="w-full md:w-[55%] p-8 flex flex-col md:overflow-y-auto scrollbar-hide relative bg-gradient-to-br from-card/30 to-black">
+                    <div className="flex justify-between items-center mb-10 sticky top-0 bg-gradient-to-b from-black via-black/90 to-transparent pb-4 z-10 pt-2 -mt-2">
                         <div>
-                            <label className="block text-sm font-medium text-muted mb-1">Precio Inicial</label>
-                            <div className="flex bg-card border border-border-subtle rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
-                                <input required type="number" min="1" className="w-full bg-transparent px-4 py-2.5 text-sm focus:outline-none" value={formData.basePrice} onChange={e => setFormData({ ...formData, basePrice: e.target.value })} placeholder="Ej. 1000" />
-                                <div className="border-l border-border-subtle flex items-center">
-                                    <select
-                                        value={formData.currency}
-                                        onChange={e => setFormData({ ...formData, currency: e.target.value })}
-                                        className="bg-transparent pl-3 pr-8 py-2.5 text-sm focus:outline-none appearance-none cursor-pointer text-accent-teal font-bold focus:ring-0"
-                                        style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300f2ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+                            <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">Detalles de la Subasta</h2>
+                            <p className="text-sm text-muted mt-1">Configura parámetros comerciales inteligentes.</p>
+                        </div>
+                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <form id="create-auction-form" onSubmit={handleSubmit} className="space-y-8 flex-1">
+                        {/* Title */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-bold text-foreground">Título de la Publicación <span className="text-accent-teal">*</span></label>
+                            <input
+                                required
+                                type="text"
+                                maxLength={60}
+                                className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                placeholder="Ej. Lentes VR Oculus Quest 3, Licencia Figma..."
+                            />
+                        </div>
+
+                        {/* Price & Currency */}
+                        <div className="space-y-3">
+                            <label className="block text-sm font-bold text-foreground">Precio Base y Moneda <span className="text-accent-teal">*</span></label>
+                            <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
+                                <div className="relative group">
+                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
+                                    <input
+                                        required
+                                        type="number"
+                                        min="1"
+                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-10 pr-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
+                                        value={basePrice}
+                                        onChange={e => setBasePrice(e.target.value)}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div className="flex bg-neutral-900/50 border border-border-subtle rounded-2xl p-1.5 relative">
+                                    <div className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-neutral-800 rounded-xl transition-all duration-300 ease-out shadow-sm border border-white/5" style={{ left: currency === 'USDC' ? '6px' : 'calc(50% + 0px)' }} />
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrency('USDC')}
+                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'USDC' ? 'text-white' : 'text-muted hover:text-white'}`}
                                     >
-                                        <option value="USDC" className="bg-card">USDC</option>
-                                        <option value="XLM" className="bg-card">XLM</option>
-                                    </select>
+                                        <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-[10px] text-blue-400">U</div>
+                                        USDC
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrency('XLM')}
+                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'XLM' ? 'text-white' : 'text-muted hover:text-white'}`}
+                                    >
+                                        <div className="w-5 h-5 rounded-full bg-neutral-100/10 border border-neutral-400/50 flex items-center justify-center text-[10px] text-neutral-300">X</div>
+                                        XLM
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-muted mb-1">Duración (Horas)</label>
-                            <input required type="number" min="1" className="w-full bg-card border border-border-subtle rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent-teal" value={formData.durationHours} onChange={e => setFormData({ ...formData, durationHours: e.target.value })} placeholder="Ej. 48" />
-                        </div>
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-muted mb-1">Imagen (URL o Emoji)</label>
-                        <div className="flex bg-card border border-border-subtle rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
-                            <input required type="text" className="w-full bg-transparent px-4 py-2.5 text-sm focus:outline-none" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="Ej. 🥽 o https://..." />
-                            <div className="border-l border-border-subtle flex items-center shrink-0">
-                                <select
-                                    value={formData.condition}
-                                    onChange={e => setFormData({ ...formData, condition: e.target.value })}
-                                    className="bg-transparent pl-3 pr-8 py-2.5 text-sm focus:outline-none appearance-none cursor-pointer text-accent-teal font-bold focus:ring-0"
-                                    style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300f2ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
-                                >
-                                    <option value="nuevo" className="bg-card">Nuevo</option>
-                                    <option value="usado" className="bg-card">Usado</option>
-                                </select>
+                        {/* Duration Group */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-end">
+                                <label className="block text-sm font-bold text-foreground">Duración de la Subasta <span className="text-accent-teal">*</span></label>
+                                <span className="text-xs text-muted/80 font-medium bg-neutral-900/50 px-3 py-1.5 rounded-lg border border-border-subtle flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                                    Finaliza: {endTime}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[1, 3, 7].map(days => (
+                                    <button
+                                        key={days}
+                                        type="button"
+                                        onClick={() => setDurationDays(days)}
+                                        className={`py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                    >
+                                        {days} {days === 1 ? 'Día' : 'Días'}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    </div>
 
-                    <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                        <button type="button" onClick={onClose} className="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-muted hover:text-foreground transition-colors order-2 sm:order-1 border border-border-subtle bg-foreground/5 sm:border-transparent sm:bg-transparent rounded-xl">
-                            Cancelar
-                        </button>
-                        <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold bg-accent-teal text-black hover:bg-accent-teal/80 rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50 order-1 sm:order-2">
-                            {loading ? "Publicando..." : "Publicar Subasta"}
-                        </button>
+                        {/* Condition Group */}
+                        <div className="space-y-3">
+                            <label className="block text-sm font-bold text-foreground">Estado del Artículo</label>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setCondition('nuevo')}
+                                    className={`flex-1 py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'nuevo' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                >
+                                    ✨ Nuevo
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCondition('usado')}
+                                    className={`flex-1 py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'usado' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                >
+                                    ♻️ Usado
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div className="mt-10 pt-8 border-t border-border-subtle">
+                        {/* Trustless Work Info Box */}
+                        <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-5 flex gap-4 items-start mb-8 isolate relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
+                            <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
+                                <p className="text-xs text-blue-200/70 mt-1 mb-3 leading-relaxed">
+                                    Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>. Esto garantiza la seguridad total de la transacción para ambas partes.
+                                </p>
+                                <div className="flex items-center gap-2 text-[11px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2.5 py-1 rounded-md border border-blue-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                    Fee estimado de red: ~0.00001 XLM
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 lg:gap-4">
+                            <button type="button" onClick={onClose} className="px-6 py-4 text-sm font-bold text-muted hover:text-white transition-colors border border-border-subtle bg-transparent rounded-2xl">
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                form="create-auction-form"
+                                disabled={loading || !title || !basePrice}
+                                className="px-8 py-4 text-[15px] font-black bg-accent-teal text-black hover:bg-[#00d0eb] rounded-2xl transition-all shadow-[0_0_20px_rgba(0,242,255,0.25)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] disabled:opacity-50 disabled:shadow-none min-w-[220px] flex items-center justify-center gap-2 relative overflow-hidden group"
+                            >
+                                {loading && (
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                )}
+                                <span className={loading ? "opacity-90" : "flex items-center gap-2"}>
+                                    {loading ? "Procesando en Testnet..." : "Publicar Subasta"}
+                                </span>
+                                {/* Subtle shine effect */}
+                                {!loading && <div className="absolute inset-0 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />}
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
 }
+
