@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { X, Image as ImageIcon, ShieldCheck } from "lucide-react";
+import { X, Image as ImageIcon, ShieldCheck, Smile } from "lucide-react";
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
@@ -12,12 +13,11 @@ interface CreateAuctionModalProps {
     onCreated: () => void;
 }
 
-const COMMON_EMOJIS = ["📦", "💻", "📱", "🎮", "🎨", "🎵", "🎫", "🚀"];
-
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
     const [loading, setLoading] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     const [title, setTitle] = useState("");
     const [image, setImage] = useState("📦");
@@ -86,12 +86,12 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="bg-gradient-to-br from-neutral-900 to-black border border-border-subtle rounded-3xl w-full max-w-5xl md:h-[85vh] md:max-h-[800px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row shadow-accent-teal/10">
+            <div className="bg-gradient-to-br from-neutral-900 to-black border border-border-subtle rounded-3xl w-full max-w-5xl md:max-h-[95vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row shadow-accent-teal/10">
 
                 {/* Left Column: Preview & Image Selection */}
-                <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-8 flex flex-col gap-8 md:overflow-y-auto scrollbar-hide">
+                <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 flex flex-col gap-5 relative">
                     <div>
-                        <h3 className="text-xl font-bold tracking-tight mb-2 text-white">Previsualización</h3>
+                        <h3 className="text-xl font-bold tracking-tight mb-1 text-white">Previsualización</h3>
                         <p className="text-sm text-muted">Así se verá tu artículo en el mercado P2P.</p>
                     </div>
 
@@ -104,7 +104,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         ) : (
                             <span className="text-[120px] filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-transform duration-500 group-hover:scale-110">{image}</span>
                         )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 pt-12">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-10">
                             <h4 className="font-bold text-lg text-white leading-tight line-clamp-1">{title || "Nombre del artículo"}</h4>
                             <div className="flex justify-between items-end mt-2">
                                 <span className="text-accent-teal font-black text-xl tracking-tight">{basePrice ? `${basePrice} ${currency}` : "Precio base"}</span>
@@ -113,36 +113,62 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </div>
                     </div>
 
-                    <div className="space-y-4 flex-1">
+                    <div className="space-y-3 relative z-10">
                         <label className="block text-sm font-bold text-foreground">Imagen o Emoji</label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={image}
                                 onChange={e => setImage(e.target.value)}
-                                className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-4 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
+                                className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-12 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
                                 placeholder="Pega una URL o elige un emoji..."
                             />
                             <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+                            <button
+                                type="button"
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted hover:text-accent-teal transition-colors"
+                            >
+                                <Smile className="w-5 h-5" />
+                            </button>
+
+                            {showEmojiPicker && (
+                                <div className="absolute bottom-full mb-2 left-0 z-50">
+                                    <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)}></div>
+                                    <div className="relative z-50 shadow-2xl rounded-xl overflow-hidden border border-border-subtle">
+                                        <EmojiPicker
+                                            theme={Theme.DARK}
+                                            onEmojiClick={(emojiData) => {
+                                                setImage(emojiData.emoji);
+                                                setShowEmojiPicker(false);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-4 gap-2 pt-2">
-                            {COMMON_EMOJIS.map(emoji => (
-                                <button
-                                    key={emoji}
-                                    type="button"
-                                    onClick={() => setImage(emoji)}
-                                    className={`aspect-square flex items-center justify-center text-2xl rounded-2xl transition-all hover:scale-110 ${image === emoji ? 'bg-accent-teal/20 border-accent-teal/50 border shadow-[0_0_15px_rgba(0,242,255,0.15)] ring-1 ring-accent-teal/50' : 'bg-card/50 border border-border-subtle hover:bg-card'}`}
-                                >
-                                    {emoji}
-                                </button>
-                            ))}
+                    </div>
+
+                    {/* Trustless Work Info Box MOVED HERE */}
+                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3 items-start isolate relative overflow-hidden mt-auto">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
+                        <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
+                        <div>
+                            <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
+                            <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
+                                Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                Fee estimado de red: ~0.00001 XLM
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Column: Data Inputs */}
-                <div className="w-full md:w-[55%] p-8 flex flex-col md:overflow-y-auto scrollbar-hide relative bg-gradient-to-br from-card/30 to-black">
-                    <div className="flex justify-between items-center mb-10 sticky top-0 bg-gradient-to-b from-black via-black/90 to-transparent pb-4 z-10 pt-2 -mt-2">
+                <div className="w-full md:w-[55%] p-6 flex flex-col relative bg-gradient-to-br from-card/30 to-black">
+                    <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">Detalles de la Subasta</h2>
                             <p className="text-sm text-muted mt-1">Configura parámetros comerciales inteligentes.</p>
@@ -208,21 +234,21 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         {/* Duration Group */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-end">
-                                <label className="block text-sm font-bold text-foreground">Duración de la Subasta <span className="text-accent-teal">*</span></label>
-                                <span className="text-xs text-muted/80 font-medium bg-neutral-900/50 px-3 py-1.5 rounded-lg border border-border-subtle flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                                <label className="block text-sm font-bold text-foreground">Duración <span className="text-accent-teal">*</span></label>
+                                <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
                                     Finaliza: {endTime}
                                 </span>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
-                                {[1, 3, 7].map(days => (
+                            <div className="flex flex-wrap gap-2">
+                                {[1, 3, 7, 14, 31].map(days => (
                                     <button
                                         key={days}
                                         type="button"
                                         onClick={() => setDurationDays(days)}
-                                        className={`py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                        className={`flex-1 min-w-[50px] py-3.5 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                     >
-                                        {days} {days === 1 ? 'Día' : 'Días'}
+                                        {days}{days === 1 ? 'd' : 'd'}
                                     </button>
                                 ))}
                             </div>
@@ -250,23 +276,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </div>
                     </form>
 
-                    <div className="mt-10 pt-8 border-t border-border-subtle">
-                        {/* Trustless Work Info Box */}
-                        <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-5 flex gap-4 items-start mb-8 isolate relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
-                            <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
-                            <div>
-                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
-                                <p className="text-xs text-blue-200/70 mt-1 mb-3 leading-relaxed">
-                                    Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>. Esto garantiza la seguridad total de la transacción para ambas partes.
-                                </p>
-                                <div className="flex items-center gap-2 text-[11px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2.5 py-1 rounded-md border border-blue-500/20">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                    Fee estimado de red: ~0.00001 XLM
-                                </div>
-                            </div>
-                        </div>
-
+                    <div className="mt-8 pt-6 border-t border-border-subtle pb-4">
                         <div className="flex flex-col sm:flex-row justify-end gap-3 lg:gap-4">
                             <button type="button" onClick={onClose} className="px-6 py-4 text-sm font-bold text-muted hover:text-white transition-colors border border-border-subtle bg-transparent rounded-2xl">
                                 Cancelar
