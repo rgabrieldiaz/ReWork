@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
+import { AuctionDetailModal } from "@/components/AuctionDetailModal";
 import { UserBadge } from "@/components/UserBadge";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
@@ -30,6 +31,7 @@ interface Auction {
     currency: string;
     condition?: 'nuevo' | 'usado';
 }
+export type { Auction };
 
 // Custom hook to calculate time left
 function useCountdown(endTime: string | null) {
@@ -85,8 +87,8 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function MarketplacePage() {
     const [auctions, setAuctions] = useState<Auction[]>([]);
-    const [bids, setBids] = useState<Record<number, string>>({});
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
+    const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
     const { t } = useSettings();
@@ -161,18 +163,14 @@ export default function MarketplacePage() {
         return filtered;
     }, [auctions, debouncedSearchQuery, activeTab, activeFilter, activeSort, address, hideFinished]);
 
-    const handleBid = async (auction: Auction) => {
+    const handleBid = async (auction: Auction, bidAmount: number) => {
         if (!connected || !address) {
             alert("Por favor, conecta tu billetera Freighter primero.");
             return;
         }
 
-        const bidAmountStr = bids[auction.id];
-        if (!bidAmountStr) return;
-
-        const bidAmount = Number(bidAmountStr);
-        if (bidAmount <= auction.current_bid || bidAmount < auction.base_price) {
-            alert("Tu oferta debe ser mayor a la actual y al precio inicial.");
+        if (bidAmount <= auction.current_bid || (!auction.is_direct_buy && bidAmount < auction.base_price)) {
+            alert("La oferta no es válida.");
             return;
         }
 
@@ -262,10 +260,16 @@ export default function MarketplacePage() {
             if (sbError) throw sbError;
 
             // Optimistic update
-            setAuctions(prev => prev.map(a => a.id === auction.id ? {
+            const updatedAuctions = auctions.map(a => a.id === auction.id ? {
                 ...a, current_bid: bidAmount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: auction.bid_count + 1
-            } : a));
-            setBids(prev => ({ ...prev, [auction.id]: "" }));
+            } : a);
+            setAuctions(updatedAuctions);
+
+            // Update selected auction in modal
+            if (selectedAuction && selectedAuction.id === auction.id) {
+                setSelectedAuction(updatedAuctions.find(a => a.id === auction.id) || null);
+            }
+
             alert(t.alerts.bidSuccess);
             await addPoints(10, t.alerts.newBidMilestone);
         } catch (error: any) {
@@ -302,9 +306,9 @@ export default function MarketplacePage() {
                 alert("Publicación cancelada. El activo ha sido devuelto a tu wallet.");
             } else {
                 // Soft cancel if bids exist (safety feature, though button should be disabled)
-                const { error } = await supabase.from("auctions").update({ status: 'cancelled' }).eq("id", auction.id);
-                if (error) throw error;
-                setAuctions(prev => prev.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a));
+                const updatedAuctions = auctions.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a);
+                setAuctions(updatedAuctions);
+                if (selectedAuction?.id === auction.id) setSelectedAuction(null);
                 alert("Subasta cancelada.");
             }
         } catch (error) {
@@ -455,13 +459,10 @@ export default function MarketplacePage() {
                         <AuctionCard
                             key={item.id}
                             item={item}
-                            bids={bids}
-                            setBids={setBids}
-                            handleBid={handleBid}
-                            loadingIds={loadingIds}
                             currentAddress={address}
-                            onCancel={() => handleCancelAuction(item)}
-                            onClaim={() => handleClaimBack(item.id)}
+                            onSelect={() => setSelectedAuction(item)}
+                            onCancel={(e: any) => { e.stopPropagation(); handleCancelAuction(item); }}
+                            onClaim={(e: any) => { e.stopPropagation(); handleClaimBack(item.id); }}
                             t={t}
                         />
                     ))}
@@ -473,6 +474,16 @@ export default function MarketplacePage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onCreated={fetchAuctions}
+            />
+
+            <AuctionDetailModal
+                isOpen={!!selectedAuction}
+                onClose={() => setSelectedAuction(null)}
+                auction={selectedAuction}
+                currentAddress={address}
+                onBid={handleBid}
+                loadingBids={loadingIds}
+                t={t}
             />
 
             {/* Info Modal */}
@@ -522,7 +533,7 @@ export default function MarketplacePage() {
 }
 
 // Subcomponent para manejar la tarjeta y el countdown local
-function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddress, onCancel, onClaim, t }: any) {
+function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: any) {
     const { str: timeLeftStr, isEnded } = useCountdown(item.end_time);
 
     const isOwner = currentAddress === item.seller;
@@ -538,7 +549,7 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
     }, [isEnded, item.status, item.id]);
 
     return (
-        <div className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-60 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : 'border-border-subtle hover:border-accent-teal/30'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
+        <div onClick={onSelect} className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-60 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : 'border-border-subtle hover:border-accent-teal/30 cursor-pointer'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
             <div className={`h-48 ${isFinished || isCancelled ? 'bg-neutral-900/50' : 'bg-neutral-900'} border-b border-border-subtle flex items-center relative justify-center text-7xl flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500`}>
                 {item.image.length < 5 ? item.image : (
                     <img src={item.image} alt="Auction Image" className="w-full h-full object-cover" />
@@ -620,66 +631,6 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                             )}
                         </div>
                     )}
-
-                    {/* VISTA PARA COMPRADORES ACTIVOS */}
-                    {!isFinished && !isCancelled && !isOwner && !item.is_direct_buy && (() => {
-                        const minBid = Math.max(item.current_bid + 1, item.base_price);
-                        const currentVal = bids[item.id] !== undefined && bids[item.id] !== ""
-                            ? Number(bids[item.id])
-                            : minBid;
-
-                        const handleStep = (step: number) => {
-                            let nextVal = currentVal + step;
-                            if (nextVal < minBid) nextVal = minBid;
-                            setBids({ ...bids, [item.id]: nextVal.toString() });
-                        };
-
-                        return (
-                            <div className="flex gap-2.5 pt-1">
-                                <div className="flex flex-1 bg-card border border-border-subtle rounded-xl overflow-hidden focus-within:border-accent-teal transition-colors">
-                                    <button
-                                        onClick={() => handleStep(-1)}
-                                        disabled={currentVal <= minBid || loadingIds[item.id]}
-                                        className="px-4 text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 transition-colors border-r border-border-subtle text-xl flex items-center justify-center"
-                                        style={{ paddingBottom: '2px' }}
-                                    >-</button>
-                                    <div className="flex-1 relative flex items-center justify-center">
-                                        <span className="text-muted text-sm font-bold mr-1">$</span>
-                                        <input
-                                            type="number"
-                                            className="w-full bg-transparent text-center text-sm font-mono focus:outline-none transition-colors appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-foreground"
-                                            value={bids[item.id] !== undefined ? bids[item.id] : minBid}
-                                            onChange={(e) => setBids({ ...bids, [item.id]: e.target.value })}
-                                            onBlur={() => {
-                                                if (Number(bids[item.id]) < minBid) setBids({ ...bids, [item.id]: minBid.toString() });
-                                            }}
-                                            disabled={loadingIds[item.id]}
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => handleStep(1)}
-                                        disabled={loadingIds[item.id]}
-                                        className="px-4 text-muted hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 transition-colors border-l border-border-subtle text-xl flex items-center justify-center"
-                                        style={{ paddingBottom: '2px' }}
-                                    >+</button>
-                                </div>
-                                <button
-                                    onClick={() => handleBid(item)}
-                                    disabled={loadingIds[item.id] || (bids[item.id] !== undefined && Number(bids[item.id]) < minBid)}
-                                    className="bg-accent-teal/10 hover:bg-accent-teal text-accent-teal hover:text-black px-4 py-2 rounded-xl transition-all font-bold shrink-0 disabled:opacity-50 disabled:hover:bg-accent-teal/10 disabled:hover:text-accent-teal flex items-center gap-1.5"
-                                    title="Realizar Oferta Mediante Escrow"
-                                >
-                                    {loadingIds[item.id] ? (
-                                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <>
-                                            Puja
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        );
-                    })()}
 
                     {/* VISTA PARA OWNER - Cancelar Subasta (Solo si no hay pujas) */}
                     {isOwner && !isFinished && !isCancelled && (
