@@ -388,7 +388,7 @@ export default function MarketplacePage() {
             </div>
 
             {/* Sistema de Pills para Filtros y Orden */}
-            <div className="flex items-center gap-2 overflow-x-auto py-2 mb-4 justify-between scrollbar-hide">
+            <div className="flex items-center gap-2 overflow-x-auto py-3 px-2 mb-4 justify-between scrollbar-hide -mx-2">
                 <div className="flex items-center gap-2">
                     {/* Sort Pills (Mutually Exclusive) */}
                     <button
@@ -435,7 +435,7 @@ export default function MarketplacePage() {
                     <>
                         <div className="w-px h-6 bg-border mx-2 shrink-0 hidden sm:block"></div>
                         <button
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ml-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${hideFinished ? 'bg-accent-teal text-black border border-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.3)]' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mx-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${hideFinished ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
                             onClick={() => setHideFinished(!hideFinished)}
                         >
                             {t.marketplace.hideFinished}
