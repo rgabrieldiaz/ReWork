@@ -7,8 +7,10 @@ interface SettingsContextType {
     language: Language;
     theme: Theme;
     t: TranslationDictionary;
+    isSidebarCollapsed: boolean;
     setLanguage: (lang: Language) => void;
     setTheme: (theme: Theme) => void;
+    toggleSidebar: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export function SettingsProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>("es");
     const [theme, setThemeState] = useState<Theme>("dark");
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -33,6 +36,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
         setThemeState(initialTheme);
         applyTheme(initialTheme);
+
+        const storedSidebar = localStorage.getItem("rework_sidebar_collapsed");
+        if (storedSidebar === "true") {
+            setIsSidebarCollapsed(true);
+        }
 
         setMounted(true);
     }, []);
@@ -79,6 +87,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         applyTheme(newTheme);
     };
 
+    const toggleSidebar = () => {
+        const newState = !isSidebarCollapsed;
+        setIsSidebarCollapsed(newState);
+        localStorage.setItem("rework_sidebar_collapsed", String(newState));
+    };
+
     // Dictionary proxy for easy access
     const t = translations[language];
 
@@ -89,7 +103,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <SettingsContext.Provider value={{ language, theme, t, setLanguage, setTheme }}>
+        <SettingsContext.Provider value={{ language, theme, t, isSidebarCollapsed, setLanguage, setTheme, toggleSidebar }}>
             {children}
         </SettingsContext.Provider>
     );
