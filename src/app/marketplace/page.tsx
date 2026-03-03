@@ -93,9 +93,10 @@ export default function MarketplacePage() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
-    const [activeTab, setActiveTab] = useState<'all' | 'auction' | 'direct'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'auction' | 'direct' | 'history'>('all');
     const [activeSort, setActiveSort] = useState<'recent' | 'endingSoon'>('recent');
     const [activeFilter, setActiveFilter] = useState<'none' | 'new' | 'used' | 'myBids'>('none');
+    const [hideFinished, setHideFinished] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
@@ -117,31 +118,32 @@ export default function MarketplacePage() {
             filtered = filtered.filter(a => a.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
         }
 
-        if (activeTab === 'auction') {
-            filtered = filtered.filter(a => !a.is_direct_buy);
-        } else if (activeTab === 'direct') {
-            filtered = filtered.filter(a => a.is_direct_buy);
-        }
+        const now = new Date().getTime();
 
-        if (activeFilter === 'new') {
-            filtered = filtered.filter(a => (a.condition || "nuevo") === "nuevo");
-        } else if (activeFilter === 'used') {
-            filtered = filtered.filter(a => (a.condition || "nuevo") === "usado");
-        } else if (activeFilter === 'myBids') {
-            if (address) {
-                filtered = filtered.filter(a => a.current_winner_address === address);
-            } else {
-                filtered = [];
+        if (activeTab === 'history') {
+            // For History tab, ONLY show finished/cancelled/expired items
+            filtered = filtered.filter(a => {
+                if (a.status === 'finished' || a.status === 'cancelled') return true;
+                if (a.end_time && new Date(a.end_time).getTime() <= now) return true;
+                return false;
+            });
+        } else {
+            // Normal tabs filtering
+            if (activeTab === 'auction') {
+                filtered = filtered.filter(a => !a.is_direct_buy);
+            } else if (activeTab === 'direct') {
+                filtered = filtered.filter(a => a.is_direct_buy);
+            }
+
+            // Implicit/Explicit hideFinished logic for active tabs
+            if (hideFinished) {
+                filtered = filtered.filter(a => {
+                    if (a.status === 'finished' || a.status === 'cancelled') return false;
+                    if (a.end_time && new Date(a.end_time).getTime() <= now) return false;
+                    return true;
+                });
             }
         }
-
-        // Implicit hideFinished
-        const now = new Date().getTime();
-        filtered = filtered.filter(a => {
-            if (a.status === 'finished' || a.status === 'cancelled') return false;
-            if (a.end_time && new Date(a.end_time).getTime() <= now) return false;
-            return true;
-        });
 
         filtered.sort((a, b) => {
             if (activeSort === 'endingSoon') {
@@ -157,7 +159,7 @@ export default function MarketplacePage() {
         });
 
         return filtered;
-    }, [auctions, debouncedSearchQuery, activeTab, activeFilter, activeSort, address]);
+    }, [auctions, debouncedSearchQuery, activeTab, activeFilter, activeSort, address, hideFinished]);
 
     const handleBid = async (auction: Auction) => {
         if (!connected || !address) {
@@ -362,49 +364,70 @@ export default function MarketplacePage() {
                 >
                     {t.marketplace.tabDirect}
                 </button>
+                <div className="flex-1" />
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'history' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('history')}
+                >
+                    {t.marketplace.tabHistory}
+                </button>
             </div>
 
             {/* Sistema de Pills para Filtros y Orden */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 mb-4">
-                {/* Sort Pills (Mutually Exclusive) */}
-                <button
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'recent' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
-                    onClick={() => setActiveSort('recent')}
-                >
-                    {t.marketplace.pillRecent}
-                </button>
-                <button
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'endingSoon' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
-                    onClick={() => setActiveSort('endingSoon')}
-                >
-                    {t.marketplace.pillEndingSoon}
-                </button>
+            <div className="flex items-center gap-2 overflow-x-auto py-2 mb-4 justify-between scrollbar-hide">
+                <div className="flex items-center gap-2">
+                    {/* Sort Pills (Mutually Exclusive) */}
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'recent' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                        onClick={() => setActiveSort('recent')}
+                    >
+                        {t.marketplace.pillRecent}
+                    </button>
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeSort === 'endingSoon' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                        onClick={() => setActiveSort('endingSoon')}
+                    >
+                        {t.marketplace.pillEndingSoon}
+                    </button>
 
-                {/* Separator */}
-                <div className="w-px h-6 bg-border mx-2 shrink-0"></div>
+                    {/* Separator */}
+                    <div className="w-px h-6 bg-border mx-2 shrink-0"></div>
 
-                {/* Filter Pills (Togglable) */}
-                <button
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'new' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
-                    onClick={() => setActiveFilter(activeFilter === 'new' ? 'none' : 'new')}
-                >
-                    {t.marketplace.pillNew}
-                </button>
-                <button
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'used' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
-                    onClick={() => setActiveFilter(activeFilter === 'used' ? 'none' : 'used')}
-                >
-                    {t.marketplace.pillUsed}
-                </button>
+                    {/* Filter Pills (Togglable) */}
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'new' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                        onClick={() => setActiveFilter(activeFilter === 'new' ? 'none' : 'new')}
+                    >
+                        {t.marketplace.pillNew}
+                    </button>
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'used' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                        onClick={() => setActiveFilter(activeFilter === 'used' ? 'none' : 'used')}
+                    >
+                        {t.marketplace.pillUsed}
+                    </button>
 
-                <div className="w-px h-6 bg-border mx-2 shrink-0 hidden sm:block"></div>
+                    <div className="w-px h-6 bg-border mx-2 shrink-0 hidden sm:block"></div>
 
-                <button
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ml-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'myBids' ? 'bg-accent-teal text-black border border-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.3)]' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
-                    onClick={() => setActiveFilter(activeFilter === 'myBids' ? 'none' : 'myBids')}
-                >
-                    {t.marketplace.pillMyBids}
-                </button>
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ml-1 whitespace-nowrap cursor-pointer hover:scale-105 ${activeFilter === 'myBids' ? 'bg-accent-teal text-black border border-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.3)]' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                        onClick={() => setActiveFilter(activeFilter === 'myBids' ? 'none' : 'myBids')}
+                    >
+                        {t.marketplace.pillMyBids}
+                    </button>
+                </div>
+
+                {activeTab !== 'history' && (
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-muted hover:text-foreground transition-colors shrink-0">
+                        <input
+                            type="checkbox"
+                            checked={hideFinished}
+                            onChange={(e) => setHideFinished(e.target.checked)}
+                            className="w-4 h-4 rounded border-border-subtle text-accent-teal focus:ring-accent-teal bg-card"
+                        />
+                        {t.marketplace.hideFinished}
+                    </label>
+                )}
             </div>
             {displayedAuctions.length === 0 ? (
                 <div className="text-center py-20 border border-border-subtle border-dashed rounded-2xl bg-card">
@@ -501,7 +524,7 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
     }, [isEnded, item.status, item.id]);
 
     return (
-        <div className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-70' : 'border-border-subtle hover:border-accent-teal/30'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
+        <div className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-60 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : 'border-border-subtle hover:border-accent-teal/30'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
             <div className={`h-48 ${isFinished || isCancelled ? 'bg-neutral-900/50' : 'bg-neutral-900'} border-b border-border-subtle flex items-center relative justify-center text-7xl flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500`}>
                 {item.image.length < 5 ? item.image : (
                     <img src={item.image} alt="Auction Image" className="w-full h-full object-cover" />
@@ -562,7 +585,29 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                         </span>
                     </div>
 
-                    {/* VISTA PARA COMPRADORES */}
+                    {/* STATUS BADGES FOR FINISHED ITEMS */}
+                    {isFinished && !isCancelled && (
+                        <div className="flex flex-col gap-2 pt-1">
+                            {item.current_winner_address ? (
+                                <>
+                                    <div className="w-full bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between">
+                                        <span>{t.marketplace.soldTo}</span>
+                                        <span className="font-mono">{truncateAddress(item.current_winner_address)}</span>
+                                    </div>
+                                    {/* Trustless Escrow Badge */}
+                                    <div className="w-full bg-[#050505] text-green-500 border border-green-500/20 px-3 py-2 text-xs font-medium rounded-xl flex items-center justify-center gap-2">
+                                        <ShieldCheck className="w-4 h-4" /> {t.marketplace.paymentVerifiedOnChain}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="w-full bg-foreground/5 text-muted border border-border-subtle px-3 py-2 text-xs font-medium rounded-xl flex items-center justify-center">
+                                    {t.marketplace.finishedNoOffers}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* VISTA PARA COMPRADORES ACTIVOS */}
                     {!isFinished && !isCancelled && !isOwner && !item.is_direct_buy && (() => {
                         const minBid = Math.max(item.current_bid + 1, item.base_price);
                         const currentVal = bids[item.id] !== undefined && bids[item.id] !== ""
