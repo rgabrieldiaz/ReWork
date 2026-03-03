@@ -25,13 +25,15 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     const [durationDays, setDurationDays] = useState<number>(1);
     const [currency, setCurrency] = useState<"USDC" | "XLM">("USDC");
     const [condition, setCondition] = useState<"nuevo" | "usado">("nuevo");
+    const [isDirectBuy, setIsDirectBuy] = useState(false);
 
     // Derived states
     const isUrl = image.startsWith("http");
     const endTime = useMemo(() => {
+        if (isDirectBuy) return null;
         const date = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
         return date.toLocaleString();
-    }, [durationDays]);
+    }, [durationDays, isDirectBuy]);
 
     if (!isOpen) return null;
 
@@ -50,7 +52,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
         setLoading(true);
         try {
             const basePriceNum = Number(basePrice);
-            const endTimeIso = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+            const endTimeIso = isDirectBuy ? null : new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
             // Get current max id
             const { data: maxIdData } = await supabase.from('auctions').select('id').order('id', { ascending: false }).limit(1);
@@ -66,7 +68,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 bid_count: 0,
                 status: 'active',
                 end_time: endTimeIso,
-                is_direct_buy: false,
+                is_direct_buy: isDirectBuy,
                 currency: currency,
                 condition: condition
             });
@@ -107,7 +109,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-10">
                             <h4 className="font-bold text-lg text-white leading-tight line-clamp-1">{title || "Nombre del artículo"}</h4>
                             <div className="flex justify-between items-end mt-2">
-                                <span className="text-accent-teal font-black text-xl tracking-tight">{basePrice ? `${basePrice} ${currency}` : "Precio base"}</span>
+                                <span className="text-accent-teal font-black text-xl tracking-tight">{basePrice ? `${basePrice} ${currency}` : (isDirectBuy ? "PRECIO FIJO" : "Precio base")}</span>
                                 <span className="text-[10px] text-white/90 uppercase font-black tracking-widest bg-white/10 px-2.5 py-1 rounded border border-white/20 backdrop-blur-md">{condition}</span>
                             </div>
                         </div>
@@ -157,6 +159,10 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                             <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
                             <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
                                 Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
+                                <br />
+                                {isDirectBuy
+                                    ? "El pago se libera apenas el comprador confirma."
+                                    : "El pago se libera al finalizar el plazo de la subasta."}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -170,11 +176,32 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 <div className="w-full md:w-[55%] p-6 flex flex-col relative bg-gradient-to-br from-card/30 to-black">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">Detalles de la Subasta</h2>
+                            <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+                                {isDirectBuy ? "Crear Venta Directa" : "Crear Nueva Subasta"}
+                            </h2>
                             <p className="text-sm text-muted mt-1">Configura parámetros comerciales inteligentes.</p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90">
                             <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Segmented Control for Mode */}
+                    <div className="flex bg-neutral-900/50 border border-border-subtle rounded-2xl p-1.5 relative mb-6">
+                        <div className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-neutral-800 rounded-xl transition-all duration-300 ease-out shadow-sm border border-white/5" style={{ left: isDirectBuy ? 'calc(50% + 0px)' : '6px' }} />
+                        <button
+                            type="button"
+                            onClick={() => setIsDirectBuy(false)}
+                            className={`flex-[0.5] relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center transition-colors ${!isDirectBuy ? 'text-white' : 'text-muted hover:text-white'}`}
+                        >
+                            Subasta 🔨
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsDirectBuy(true)}
+                            className={`flex-[0.5] relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center transition-colors ${isDirectBuy ? 'text-white' : 'text-muted hover:text-white'}`}
+                        >
+                            Compra Directa 🛍️
                         </button>
                     </div>
 
@@ -195,7 +222,9 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
                         {/* Price & Currency */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-bold text-foreground">Precio Base y Moneda <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {isDirectBuy ? "Precio de Venta y Moneda" : "Precio Base y Moneda"} <span className="text-accent-teal">*</span>
+                            </label>
                             <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
                                 <div className="relative group">
                                     <span className="absolute left-5 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
@@ -232,27 +261,29 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </div>
 
                         {/* Duration Group */}
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-end">
-                                <label className="block text-sm font-bold text-foreground">Duración <span className="text-accent-teal">*</span></label>
-                                <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-                                    Finaliza: {endTime}
-                                </span>
+                        {!isDirectBuy && (
+                            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="flex justify-between items-end">
+                                    <label className="block text-sm font-bold text-foreground">Duración <span className="text-accent-teal">*</span></label>
+                                    <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+                                        Finaliza: {endTime}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {[1, 3, 7, 14, 31].map(days => (
+                                        <button
+                                            key={days}
+                                            type="button"
+                                            onClick={() => setDurationDays(days)}
+                                            className={`flex-1 min-w-[50px] py-3.5 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                        >
+                                            {days}{days === 1 ? 'd' : 'd'}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                {[1, 3, 7, 14, 31].map(days => (
-                                    <button
-                                        key={days}
-                                        type="button"
-                                        onClick={() => setDurationDays(days)}
-                                        className={`flex-1 min-w-[50px] py-3.5 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
-                                    >
-                                        {days}{days === 1 ? 'd' : 'd'}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        )}
 
                         {/* Condition Group */}
                         <div className="space-y-3">
@@ -285,7 +316,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                 type="submit"
                                 form="create-auction-form"
                                 disabled={loading || !title || !basePrice}
-                                className="px-8 py-4 text-[15px] font-black bg-accent-teal text-black hover:bg-[#00d0eb] rounded-2xl transition-all shadow-[0_0_20px_rgba(0,242,255,0.25)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] disabled:opacity-50 disabled:shadow-none min-w-[220px] flex items-center justify-center gap-2 relative overflow-hidden group"
+                                className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap disabled:opacity-50 disabled:shadow-none disabled:hover:bg-accent-teal relative overflow-hidden group min-w-[180px]"
                             >
                                 {loading && (
                                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -294,7 +325,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                     </svg>
                                 )}
                                 <span className={loading ? "opacity-90" : "flex items-center gap-2"}>
-                                    {loading ? "Procesando en Testnet..." : "Publicar Subasta"}
+                                    {loading ? "Procesando..." : (isDirectBuy ? "Crear Venta Directa" : "Publicar Subasta")}
                                 </span>
                                 {/* Subtle shine effect */}
                                 {!loading && <div className="absolute inset-0 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />}
