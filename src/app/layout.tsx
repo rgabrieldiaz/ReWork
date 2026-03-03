@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`}>
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`} suppressHydrationWarning>
         <SettingsProvider>
           <FreighterProvider>
             <ProfileProvider>
