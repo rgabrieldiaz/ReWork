@@ -116,8 +116,9 @@ export const translations = {
             noAuctionsSelected: "No encontramos artículos para tu búsqueda.",
             noAuctionsTitle: "No hay subastas",
             cancelled: "Cancelado",
+            cancelledByUser: "Cancelado por el usuario",
             finished: "Finalizado",
-            tabHistory: "Historial",
+            tabHistory: "Historial 🗄️",
             soldTo: "Vendido a",
             finishedNoOffers: "Finalizado sin ofertas",
             paymentVerifiedOnChain: "Pago Verificado on-chain",
@@ -127,6 +128,7 @@ export const translations = {
             noOneYet: "Nadie aún",
             lockedBids: "Bloqueado (Pujas activas)",
             deleteAuction: "Eliminar Subasta",
+            cancelListing: "Cancelar Publicación",
             claimAsset: "Reclamar Activo Puesto"
         },
         alerts: {
@@ -382,8 +384,9 @@ export const translations = {
             noAuctionsSelected: "We found no items for your search.",
             noAuctionsTitle: "No auctions",
             cancelled: "Cancelled",
+            cancelledByUser: "Cancelled by User",
             finished: "Finished",
-            tabHistory: "History",
+            tabHistory: "History 🗄️",
             soldTo: "Sold to",
             finishedNoOffers: "Finished without offers",
             paymentVerifiedOnChain: "Payment Verified on-chain",
@@ -393,6 +396,7 @@ export const translations = {
             noOneYet: "No one yet",
             lockedBids: "Locked (Active bids)",
             deleteAuction: "Delete Auction",
+            cancelListing: "Cancel Listing",
             claimAsset: "Claim Posted Asset"
         },
         alerts: {

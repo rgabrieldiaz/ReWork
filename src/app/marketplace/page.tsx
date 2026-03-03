@@ -277,15 +277,29 @@ export default function MarketplacePage() {
     };
 
     const handleCancelAuction = async (auction: Auction) => {
-        if (!confirm("¿Seguro que deseas eliminar esta subasta? Esta acción no se puede deshacer.")) return;
+        if (!confirm("¿Seguro que deseas cancelar esta publicación y simular retiro? Esta acción no se puede deshacer.")) return;
 
         try {
             if (auction.bid_count === 0) {
-                // Hard delete if no bids
-                const { error } = await supabase.from("auctions").delete().eq("id", auction.id);
+                // Mock Trustless cancellation since no escrow exists yet
+                alert("Iniciando retiro simulado de fondos y cierre de contrato on-chain...");
+
+                const res = await fetch('/api/trustless-work/cancel-escrow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auctionId: auction.id, seller: auction.seller })
+                });
+
+                if (!res.ok) {
+                    throw new Error("Error en la respuesta del servidor al cancelar.");
+                }
+
+                // Update to cancelled instead of hard delete
+                const { error } = await supabase.from("auctions").update({ status: 'cancelled' }).eq("id", auction.id);
                 if (error) throw error;
-                setAuctions(prev => prev.filter(a => a.id !== auction.id));
-                alert("Subasta eliminada definitivamente.");
+
+                setAuctions(prev => prev.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a));
+                alert("Publicación cancelada. El activo ha sido devuelto a tu wallet.");
             } else {
                 // Soft cancel if bids exist (safety feature, though button should be disabled)
                 const { error } = await supabase.from("auctions").update({ status: 'cancelled' }).eq("id", auction.id);
@@ -295,7 +309,7 @@ export default function MarketplacePage() {
             }
         } catch (error) {
             console.error("Error cancelando subasta:", error);
-            alert("Error al intentar borrar la subasta.");
+            alert("Error al intentar cancelar la subasta.");
         }
     };
 
@@ -418,15 +432,15 @@ export default function MarketplacePage() {
                 </div>
 
                 {activeTab !== 'history' && (
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-muted hover:text-foreground transition-colors shrink-0">
-                        <input
-                            type="checkbox"
-                            checked={hideFinished}
-                            onChange={(e) => setHideFinished(e.target.checked)}
-                            className="w-4 h-4 rounded border-border-subtle text-accent-teal focus:ring-accent-teal bg-card"
-                        />
-                        {t.marketplace.hideFinished}
-                    </label>
+                    <>
+                        <div className="w-px h-6 bg-border mx-2 shrink-0 hidden sm:block"></div>
+                        <button
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ml-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${hideFinished ? 'bg-accent-teal text-black border border-accent-teal shadow-[0_0_10px_rgba(0,242,255,0.3)]' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                            onClick={() => setHideFinished(!hideFinished)}
+                        >
+                            {t.marketplace.hideFinished}
+                        </button>
+                    </>
                 )}
             </div>
             {displayedAuctions.length === 0 ? (
@@ -534,7 +548,7 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                     <div className="flex-1" />
                     {isCancelled ? (
                         <div className="bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-                            <XCircle className="w-3.5 h-3.5" /> {t.marketplace.cancelled}
+                            <XCircle className="w-3.5 h-3.5" /> {t.marketplace.cancelledByUser}
                         </div>
                     ) : isFinished ? (
                         <div className="bg-neutral-500/10 text-muted border border-neutral-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
@@ -676,7 +690,7 @@ function AuctionCard({ item, bids, setBids, handleBid, loadingIds, currentAddres
                                 className="w-full py-2.5 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-foreground disabled:opacity-40 disabled:hover:bg-red-500/5 disabled:hover:text-red-500 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                             >
                                 <XCircle className="w-4 h-4" />
-                                {item.bid_count > 0 ? t.marketplace.lockedBids : t.marketplace.deleteAuction}
+                                {item.bid_count > 0 ? t.marketplace.lockedBids : t.marketplace.cancelListing}
                             </button>
                         </div>
                     )}
