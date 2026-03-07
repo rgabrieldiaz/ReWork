@@ -35,7 +35,7 @@ export default function SquadGoalsPage() {
         try {
             const [usersRes, goalsRes, votesRes] = await Promise.all([
                 supabase.from("users").select("wallet_address, first_name, last_name, avatar_url"),
-                supabase.from("squad_goals").select("*").order("created_at", { ascending: false }),
+                supabase.from("squad_goals").select("*").eq("workspace_id", localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000').order("created_at", { ascending: false }),
                 supabase.from("squad_goal_votes").select("*")
             ]);
 

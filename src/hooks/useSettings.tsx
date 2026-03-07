@@ -28,6 +28,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
         if (storedLang && (storedLang === "es" || storedLang === "en")) {
             setLanguageState(storedLang);
+        } else if (typeof window !== "undefined" && navigator.language) {
+            const browserLang = navigator.language.startsWith("es") ? "es" : "en";
+            setLanguageState(browserLang);
         }
 
         const initialTheme = (storedTheme && ["light", "dark", "system"].includes(storedTheme))

@@ -50,7 +50,8 @@ export default function ColectasPage() {
     const fetchCampaigns = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from("crowdfunds").select("*").order("created_at", { ascending: false });
+            const currentWorkspace = localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000';
+            const { data, error } = await supabase.from("crowdfunds").select("*").eq("workspace_id", currentWorkspace).order("created_at", { ascending: false });
             if (error) throw error;
             setCampaigns(data || []);
 

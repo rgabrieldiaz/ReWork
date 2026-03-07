@@ -105,7 +105,8 @@ export default function MarketplacePage() {
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
     const fetchAuctions = async () => {
-        const { data, error } = await supabase.from("auctions").select("*").order("id", { ascending: false });
+        const currentWorkspace = localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000';
+        const { data, error } = await supabase.from("auctions").select("*").eq("workspace_id", currentWorkspace).order("id", { ascending: false });
         if (data) setAuctions(data);
         if (error) console.error("Error fetching auctions:", error);
     };

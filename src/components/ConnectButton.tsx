@@ -3,9 +3,11 @@
 import { useFreighter } from "@/hooks/useFreighter";
 import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function ConnectButton() {
-    const { connected, address, connect, disconnect } = useFreighter();
+    const { connected, address, connect } = useFreighter();
+    const router = useRouter();
 
     useEffect(() => {
         if (connected && address) {
@@ -29,7 +31,7 @@ export function ConnectButton() {
                     {address.slice(0, 4)}...{address.slice(-4)}
                 </span>
                 <button
-                    onClick={disconnect}
+                    onClick={() => router.push('/logout')}
                     className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/5 border border-border-subtle text-muted hover:text-red-400 hover:border-red-400/50 transition-colors"
                     title="Desconectar"
                 >

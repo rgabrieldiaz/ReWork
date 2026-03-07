@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { useSettings } from "@/hooks/useSettings";
@@ -8,13 +9,23 @@ import { useSettings } from "@/hooks/useSettings";
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { isSidebarCollapsed } = useSettings();
+    const pathname = usePathname();
+
+    const publicPaths = ["/", "/auth", "/workspaces", "/caracteristicas", "/seguridad", "/planes", "/sobre-nosotros", "/logout"];
+    const isPublicRoute = publicPaths.includes(pathname) || pathname.startsWith("/join/");
 
     return (
         <div className="flex h-screen overflow-hidden">
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-            <main className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-                <Header onMenuClick={() => setIsSidebarOpen(true)} />
-                <div className="p-4 sm:p-8">
+            {!isPublicRoute && (
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            )}
+            <main className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${
+                isPublicRoute ? '' : (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
+            }`}>
+                {!isPublicRoute && (
+                    <Header onMenuClick={() => setIsSidebarOpen(true)} />
+                )}
+                <div className={isPublicRoute ? "" : "p-4 sm:p-8"}>
                     {children}
                 </div>
             </main>
