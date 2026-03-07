@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { useProfile } from "@/context/ProfileContext";
+import { supabase } from "@/lib/supabase";
+import { useProfile } from "@/hooks/useProfile";
 import { Loader2, AlertCircle, Building2 } from "lucide-react";
 
 export default function JoinWorkspacePage({ params }: { params: { slug: string } }) {

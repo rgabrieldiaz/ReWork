@@ -70,7 +70,7 @@ export default function ColaboradoresPage() {
     const handleJoinSquad = async (squadId: string, leaderId: string) => {
         try {
             await joinSquad(squadId);
-            const leader = collaborators.find(c => c.id === leaderId);
+            const leader = collaborators.find(c => c.wallet_address === leaderId);
             if (leader?.wallet_address && leader.wallet_address !== publicKey) {
                 await createNotification({
                     user_profile_id: leader.wallet_address,
@@ -245,16 +245,20 @@ export default function ColaboradoresPage() {
                                             {/* Member Avatars */}
                                             <div className="flex items-center">
                                                 <div className="flex -space-x-3">
-                                                    {members.slice(0, 4).map((m, i) => (
-                                                        <div key={m.user_id} className="w-8 h-8 rounded-full border-2 border-card bg-neutral-800 flex items-center justify-center overflow-hidden z-20" style={{ zIndex: 10 - i }}>
-                                                            {m.users?.avatar_url ? (
-                                                                <img src={m.users.avatar_url} alt="member" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <span className="text-[10px] font-bold text-accent-teal">{(m.users?.first_name || 'U')[0].toUpperCase()}</span>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                    {members.length > 4 && (
+                                                    {members.slice(0, 4).map((m, i) => {
+                                                        const member = m.users; // Assuming m is SquadMember and m.users is UserProfile
+                                                        if (!member) return null;
+                                                        return (
+                                                            <div key={m.user_id} className="w-8 h-8 rounded-full border-2 border-card bg-background overflow-hidden relative" style={{ zIndex: 3 - i }}>
+                                                                {member.avatar_url ? (
+                                                                    <img src={member.avatar_url} alt="member" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <span className="text-[10px] items-center justify-center flex w-full h-full font-bold text-accent-teal">{(member.first_name || 'U')[0].toUpperCase()}</span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                  {members.length > 4 && (
                                                         <div className="w-8 h-8 rounded-full border-2 border-card bg-neutral-900 flex items-center justify-center z-10">
                                                             <span className="text-[10px] font-bold text-muted">+{members.length - 4}</span>
                                                         </div>
@@ -265,14 +269,14 @@ export default function ColaboradoresPage() {
                                         </div>
 
                                         <div className="pt-4 border-t border-border-subtle flex gap-3">
-                                            {squad.leader_id === collaborators.find(c => c.wallet_address === publicKey)?.id ? (
+                                            {squad.leader_id === collaborators.find(c => c.wallet_address === publicKey)?.wallet_address ? (
                                                 <button
                                                     onClick={() => handleDisbandSquad(squad.id)}
                                                     className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
                                                 >
                                                     Desarmar Squad
                                                 </button>
-                                            ) : squadMembers.some(sm => sm.squad_id === squad.id && sm.user_id === collaborators.find(c => c.wallet_address === publicKey)?.id) ? (
+                                            ) : members.some((sm: any) => sm.user_id === collaborators.find(c => c.wallet_address === publicKey)?.wallet_address) ? (
                                                 <button
                                                     onClick={() => handleLeaveSquad(squad.id)}
                                                     className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
