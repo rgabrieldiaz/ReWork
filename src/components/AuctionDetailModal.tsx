@@ -107,11 +107,11 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
             {/* Click outside to close */}
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="bg-gradient-to-br from-neutral-900 to-black border border-border-subtle rounded-3xl w-full max-w-5xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row relative z-10">
+            <div className="bg-gradient-to-br from-card to-background border border-border-subtle rounded-3xl w-full max-w-5xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row relative z-10">
 
                 {/* Left Column: Visual (Glassmorphism) */}
                 <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 sm:p-8 flex flex-col justify-center relative min-h-[300px]">
-                    <div className="aspect-square w-full bg-neutral-900/50 border border-border-subtle rounded-3xl flex items-center justify-center overflow-hidden shadow-inner relative group isolate">
+                    <div className="aspect-square w-full bg-muted/10 border border-border-subtle rounded-3xl flex items-center justify-center overflow-hidden shadow-inner relative group isolate">
                         <div className="absolute inset-0 bg-accent-teal/5 rounded-3xl -z-10 transition-colors duration-500" />
 
                         {isUrl ? (
@@ -134,8 +134,8 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                 </div>
 
                 {/* Right Column: Actions & Details */}
-                <div className="w-full md:w-[55%] p-6 sm:p-8 flex flex-col relative bg-gradient-to-br from-card/30 to-black">
-                    <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90 z-20">
+                <div className="w-full md:w-[55%] p-6 sm:p-8 flex flex-col relative bg-gradient-to-br from-card/30 to-background">
+                    <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-muted/20 border border-border-subtle text-muted hover:text-foreground transition-all hover:rotate-90 z-20">
                         <X className="w-5 h-5" />
                     </button>
 
@@ -161,12 +161,12 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                 </span>
                             )}
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent break-words leading-tight">{auction.title}</h2>
+                        <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-foreground to-muted bg-clip-text text-transparent break-words leading-tight">{auction.title}</h2>
                     </div>
 
                     <div className="flex-1 space-y-6">
                         {/* Seller Details */}
-                        <div className="flex items-center justify-between bg-neutral-900/40 border border-border-subtle p-4 rounded-2xl">
+                        <div className="flex items-center justify-between bg-muted/10 border border-border-subtle p-4 rounded-2xl">
                             <div>
                                 <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Vendedor</span>
                                 <UserBadge address={auction.seller} />
@@ -174,7 +174,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                             {!auction.is_direct_buy && (
                                 <div className="text-right">
                                     <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Historial</span>
-                                    <span className="text-sm font-mono font-medium flex items-center justify-end gap-1.5 text-neutral-300">
+                                    <span className="text-sm font-mono font-medium flex items-center justify-end gap-1.5 text-foreground">
                                         <History className="w-3.5 h-3.5" />
                                         {auction.bid_count} {t.marketplace.bidsCount}
                                     </span>
@@ -183,12 +183,12 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                         </div>
 
                         {/* Modals content based on mode */}
-                        <div className="bg-[#050505] p-5 rounded-2xl border border-border-subtle shadow-inner">
+                        <div className="bg-muted/5 p-5 rounded-2xl border border-border-subtle shadow-inner">
                             {auction.is_direct_buy ? (
                                 <div className="flex justify-between items-end">
                                     <div className="flex flex-col">
                                         <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">Precio Fijo</span>
-                                        <span className="text-3xl font-mono font-black text-white">{auction.base_price} <span className="text-accent-teal">{currency}</span></span>
+                                        <span className="text-3xl font-mono font-black text-foreground">{auction.base_price} <span className="text-accent-teal">{currency}</span></span>
                                     </div>
                                     {isFinished && auction.current_winner_address && (
                                         <div className="text-right">
@@ -202,7 +202,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
                                             <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">Mejor Oferta</span>
-                                            <span className="text-3xl font-mono font-black text-white">{auction.current_bid || auction.base_price} <span className="text-accent-teal">{currency}</span></span>
+                                            <span className="text-3xl font-mono font-black text-foreground">{auction.current_bid || auction.base_price} <span className="text-accent-teal">{currency}</span></span>
                                         </div>
                                         {auction.end_time && !isFinished && !isCancelled && (
                                             <div className="text-right">
@@ -224,7 +224,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                         </div>
                                         <div className="text-right">
                                             <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Precio Inicial</span>
-                                            <span className="text-sm font-mono text-neutral-400">{auction.base_price} {currency}</span>
+                                            <span className="text-sm font-mono text-muted">{auction.base_price} {currency}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -239,13 +239,13 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                         <button
                                             onClick={() => handleStep(-1)}
                                             disabled={bidAmount <= minBid || isLoading}
-                                            className="px-5 mx-1 text-muted hover:text-white disabled:opacity-30 transition-colors text-2xl flex items-center justify-center font-light pb-1"
+                                            className="px-5 mx-1 text-muted hover:text-foreground disabled:opacity-30 transition-colors text-2xl flex items-center justify-center font-light pb-1"
                                         >-</button>
                                         <div className="flex-1 relative flex items-center justify-center border-x border-border-subtle/50">
                                             <span className="text-muted text-sm font-bold mr-1">$</span>
                                             <input
                                                 type="number"
-                                                className="w-full bg-transparent text-center text-lg font-mono font-bold focus:outline-none transition-colors appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-white"
+                                                className="w-full bg-transparent text-center text-lg font-mono font-bold focus:outline-none transition-colors appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-foreground"
                                                 value={bidAmount}
                                                 onChange={(e) => {
                                                     const val = Number(e.target.value);
@@ -260,7 +260,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                         <button
                                             onClick={() => handleStep(1)}
                                             disabled={isLoading}
-                                            className="px-5 mx-1 text-muted hover:text-white disabled:opacity-30 transition-colors text-2xl flex items-center justify-center font-light pb-1"
+                                            className="px-5 mx-1 text-muted hover:text-foreground disabled:opacity-30 transition-colors text-2xl flex items-center justify-center font-light pb-1"
                                         >+</button>
                                     </div>
                                 )}
@@ -293,20 +293,20 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                     </div>
 
                     {/* Trustless Work Info Box (Bottom Right) */}
-                    <div className="mt-8 bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3 items-start isolate relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
-                        <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
+                    <div className="mt-8 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 flex gap-3 items-start isolate relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 dark:from-blue-500/5 to-transparent -z-10" />
+                        <ShieldCheck className="w-6 h-6 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
-                            <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
+                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Contrato Escrow Inteligente</h4>
+                            <p className="text-xs text-blue-800/80 dark:text-blue-200/70 mt-1 mb-2 leading-relaxed">
                                 Los fondos serán custodiados on-chain por <strong>Trustless Work</strong>.
                                 <br />
                                 {auction.is_direct_buy
                                     ? "El pago se libera apenas confirmas la recepción del artículo."
                                     : "El pago se libera al finalizar exitosamente la subasta."}
                             </p>
-                            <div className="flex items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                            <div className="flex items-center gap-2 text-[10px] font-mono text-blue-700 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-200 dark:border-blue-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse" />
                                 Fee estimado de red: ~0.00001 XLM
                             </div>
                         </div>

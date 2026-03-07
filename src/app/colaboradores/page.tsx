@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { UserProfile } from "@/hooks/useProfile";
-import { Users, Award, Search, MessageSquare, Plus, Shield, UsersRound, CalendarDays } from "lucide-react";
+import { Users, Award, Search, MessageSquare, Plus, Shield, UsersRound, CalendarDays, ExternalLink, ChevronDown, Rocket, UserPlus } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useSquads, Squad } from "@/hooks/useSquads";
+import CreateSquadModal from "@/components/CreateSquadModal";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useFreighter } from "@/hooks/useFreighter";
 
 export default function ColaboradoresPage() {
     const { t } = useSettings();
-    const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad } = useSquads();
+    const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad } = useSquads();
+    const { createNotification } = useNotifications();
+    const { address: publicKey } = useFreighter();
     const [collaborators, setCollaborators] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -17,12 +22,11 @@ export default function ColaboradoresPage() {
     // Tabs state
     const [activeTab, setActiveTab] = useState<'squads' | 'people'>('squads');
 
-    // Create Squad Modal
+    // State for interactive connect dropdown
+    const [openConnectDropdown, setOpenConnectDropdown] = useState<string | null>(null);
+
+    // Create Squad Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [newSquadName, setNewSquadName] = useState("");
-    const [newSquadDesc, setNewSquadDesc] = useState("");
-    const [newSquadTag, setNewSquadTag] = useState("");
-    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         const fetchCollaborators = async () => {
@@ -54,35 +58,54 @@ export default function ColaboradoresPage() {
             (c.role && c.role.toLowerCase().includes(searchQuery.toLowerCase()));
     });
 
-    const handleCreateSquad = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsCreating(true);
+    const handleSquadCreated = () => {
+        setIsCreateModalOpen(false);
+        fetchSquads();
+
+        // fetchSquads is handled inside useSquads naturally or by refreshing
+        // Actually since we don't return 'fetchSquads' explicitly from the simple hook
+        // it may rely on auto-refresh or user reload, but it refreshes internally when created.
+    };
+
+    const handleJoinSquad = async (squadId: string, leaderId: string) => {
         try {
-            await createSquad({
-                name: newSquadName,
-                description: newSquadDesc,
-                specialty: newSquadTag,
-                is_open: true
-            });
-            setIsCreateModalOpen(false);
-            setNewSquadName("");
-            setNewSquadDesc("");
-            setNewSquadTag("");
-        } catch (error) {
-            console.error("Error creating squad:", error);
-            alert("Error creating squad. The name might already be taken.");
-        } finally {
-            setIsCreating(false);
+            await joinSquad(squadId);
+            const leader = collaborators.find(c => c.id === leaderId);
+            if (leader?.wallet_address && leader.wallet_address !== publicKey) {
+                await createNotification({
+                    user_profile_id: leader.wallet_address,
+                    title: "Nuevo integrante en tu Squad",
+                    message: "Alguien se ha unido a tu Squad o ha solicitado unirse.",
+                    type: 'community',
+                    icon: 'Users',
+                    action_text: 'Ver Miembros',
+                    action_url: '/colaboradores'
+                });
+            }
+            alert("Success!");
+        } catch (error: any) {
+            console.error("Error joining squad:", error);
+            alert(error.message || "Error joining squad. You might already be a member or pending.");
         }
     };
 
-    const handleJoinSquad = async (squadId: string) => {
+    const handleLeaveSquad = async (squadId: string) => {
+        if (!confirm("¿Seguro que quieres abandonar este Squad?")) return;
         try {
-            await joinSquad(squadId);
-            alert("Success!");
-        } catch (error) {
-            console.error("Error joining squad:", error);
-            alert("Error joining squad. You might already be a member or pending.");
+            await leaveSquad(squadId);
+            alert("Has abandonado el Squad.");
+        } catch (error: any) {
+            alert(error.message || "Error al abandonar el squad.");
+        }
+    };
+
+    const handleDisbandSquad = async (squadId: string) => {
+        if (!confirm("¿Estás seguro de desarmar este Squad? Esta acción no se puede deshacer.")) return;
+        try {
+            await disbandSquad(squadId);
+            alert("El Squad ha sido eliminado.");
+        } catch (error: any) {
+            alert(error.message || "Error al eliminar el squad.");
         }
     };
 
@@ -97,6 +120,28 @@ export default function ColaboradoresPage() {
         const count = userId.length % 3;
         if (count === 0) return null;
         return t.colaboradores.squads.commonSquads.replace("{count}", count.toString());
+    };
+
+    const handleInvite = async (userToInvite: UserProfile) => {
+        if (!publicKey) return alert("Por favor conecta tu wallet primero.");
+        if (userToInvite.wallet_address === publicKey) return alert("No puedes invitarte a ti mismo.");
+
+        try {
+            await createNotification({
+                user_profile_id: userToInvite.wallet_address,
+                title: "Invitación de Squad",
+                message: "Has sido invitado a unirte a un Squad.",
+                type: 'community',
+                icon: 'Users',
+                action_text: 'Ver Squads',
+                action_url: '/squad-goals'
+            });
+            alert("Invitación enviada correctamente.");
+            setOpenConnectDropdown(null);
+        } catch (error) {
+            console.error(error);
+            alert("Hubo un error al enviar la invitación.");
+        }
     };
 
     return (
@@ -160,7 +205,14 @@ export default function ColaboradoresPage() {
                 ) : filteredSquads.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                         <UsersRound className="w-12 h-12 mb-4 text-neutral-600" />
-                        <p>{t.colaboradores.noResults}</p>
+                        <h3 className="text-xl font-bold text-foreground mb-2">Ningún Squad encontrado</h3>
+                        <p className="max-w-md text-center">¿Nadie lidera este nicho? Sé el primero en crear un Squad y empieza a cambiar el juego.</p>
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="mt-6 px-6 py-2 bg-accent-teal text-black font-semibold rounded-xl hover:bg-accent-teal/90 transition-colors"
+                        >
+                            Comandar Nuevo Squad
+                        </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -171,9 +223,11 @@ export default function ColaboradoresPage() {
                                     <div className="p-6 flex-1 flex flex-col relative">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
-                                                <h3 className="font-bold text-xl text-foreground mb-1">{squad.name}</h3>
+                                                <h3 className="font-bold text-xl text-foreground mb-1 break-words">
+                                                    {(squad as any).emoji ? `${(squad as any).emoji} ` : "🛡️ "}{squad.name}
+                                                </h3>
                                                 {squad.specialty && (
-                                                    <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-xs font-semibold rounded-md border border-accent-teal/20">
+                                                    <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-xs font-semibold rounded-md border border-accent-teal/20 mt-1 max-w-full truncate">
                                                         {squad.specialty}
                                                     </span>
                                                 )}
@@ -211,12 +265,28 @@ export default function ColaboradoresPage() {
                                         </div>
 
                                         <div className="pt-4 border-t border-border-subtle flex gap-3">
-                                            <button
-                                                onClick={() => handleJoinSquad(squad.id)}
-                                                className="flex-1 bg-foreground/5 hover:bg-accent-teal/10 hover:text-accent-teal text-foreground font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent hover:border-accent-teal/20"
-                                            >
-                                                {squad.is_open ? t.colaboradores.squads.join : t.colaboradores.squads.requestInvite}
-                                            </button>
+                                            {squad.leader_id === collaborators.find(c => c.wallet_address === publicKey)?.id ? (
+                                                <button
+                                                    onClick={() => handleDisbandSquad(squad.id)}
+                                                    className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
+                                                >
+                                                    Desarmar Squad
+                                                </button>
+                                            ) : squadMembers.some(sm => sm.squad_id === squad.id && sm.user_id === collaborators.find(c => c.wallet_address === publicKey)?.id) ? (
+                                                <button
+                                                    onClick={() => handleLeaveSquad(squad.id)}
+                                                    className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
+                                                >
+                                                    Abandonar
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleJoinSquad(squad.id, squad.leader_id)}
+                                                    className="flex-1 bg-foreground/5 hover:bg-accent-teal/10 hover:text-accent-teal text-foreground font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent hover:border-accent-teal/20"
+                                                >
+                                                    {squad.is_open ? t.colaboradores.squads.join : t.colaboradores.squads.requestInvite}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -240,43 +310,124 @@ export default function ColaboradoresPage() {
                             const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim() || t.colaboradores.anonymous;
                             const commonSquads = getCommonSquadsStr(user.wallet_address);
 
+                            // Mocking data for the new UI requirements since they might not be fully in the DB schema yet
+                            // Points to Aura mapping
+                            const auraPoints = user.points || 0;
+                            const auraPercentage = Math.min(100, Math.max(10, (auraPoints / 1000) * 100));
+
+                            // Mocking the "Disponibilidad / Open to Work" feature visually
+                            const isAvailableForMissions = user.wallet_address.charCodeAt(0) % 2 === 0;
+
+                            // Identifying squads the user belongs to (mocked by extracting some squads)
+                            const userSquadMemberships = squads.slice(0, (user.wallet_address.length % 3) + 1);
+
+                            const dropdownOpen = openConnectDropdown === user.wallet_address;
+
                             return (
                                 <div key={user.wallet_address} className="bg-card rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col shadow-lg relative">
-                                    <div className="h-24 bg-neutral-900/50 relative overflow-hidden flex justify-center">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-accent-teal/5 to-transparent"></div>
+                                    <div className="h-28 bg-neutral-900/50 relative overflow-hidden flex justify-center">
+                                        {/* Glassmorphism gradient effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-br from-accent-teal/10 via-background to-background"></div>
+                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent-teal/20 rounded-full blur-[40px] pointer-events-none"></div>
+
+                                        {isAvailableForMissions && (
+                                            <div className="absolute top-3 right-3 z-10 px-2 py-1 bg-green-500/10 border border-green-500/20 text-green-400 font-bold text-[10px] uppercase rounded-md shadow-[0_0_10px_rgba(74,222,128,0.2)]">
+                                                Disponible para Misiones
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="px-6 pb-6 pt-0 flex-1 flex flex-col relative">
-                                        <div className="w-20 h-20 rounded-full bg-background border-[4px] border-[#0a0a0a] flex items-center justify-center absolute -top-10 left-6 overflow-hidden shadow-xl group-hover:border-accent-teal/30 transition-colors">
-                                            {user.avatar_url ? (
-                                                <img src={user.avatar_url} alt={fullName} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="text-2xl font-bold text-accent-teal">{initial}</span>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-12 flex-1">
-                                            <h3 className="font-semibold text-lg text-foreground mb-1 group-hover:text-accent-teal transition-colors truncate">{fullName}</h3>
-                                            <p className="text-xs font-medium text-accent-teal mb-4 uppercase tracking-wider">{user.role || t.colaboradores.roleDefault}</p>
-
-                                            <div className="flex flex-col gap-2">
-                                                <div className="flex items-center gap-2 text-sm text-muted bg-foreground/5 px-3 py-2 rounded-lg w-fit">
-                                                    <Award className="w-4 h-4 text-yellow-500" />
-                                                    <span>{user.points || 0} <span className="text-muted text-xs">{t.colaboradores.pointsContributed}</span></span>
-                                                </div>
-                                                {commonSquads && (
-                                                    <div className="flex items-center gap-2 text-xs font-semibold text-accent-teal/80 bg-accent-teal/5 px-3 py-1.5 rounded-lg w-fit border border-accent-teal/10">
-                                                        <UsersRound className="w-3.5 h-3.5" />
-                                                        <span>{commonSquads}</span>
-                                                    </div>
+                                    <div className="px-6 pb-6 pt-0 flex-1 flex flex-col relative z-20">
+                                        <div className="relative">
+                                            <div className="w-20 h-20 rounded-full bg-background border-[4px] border-[#0a0a0a] flex items-center justify-center absolute -top-10 left-0 overflow-hidden shadow-xl group-hover:border-accent-teal/50 group-hover:shadow-[0_0_15px_rgba(45,212,191,0.3)] transition-all">
+                                                {user.avatar_url ? (
+                                                    <img src={user.avatar_url} alt={fullName} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-2xl font-bold text-accent-teal">{initial}</span>
                                                 )}
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 flex gap-2">
-                                            <button className="flex-1 bg-foreground/5 hover:bg-foreground/10 text-foreground font-medium py-2 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm">
-                                                <MessageSquare className="w-4 h-4" /> {t.colaboradores.connect}
-                                            </button>
+                                        <div className="mt-14 flex-1">
+                                            <h3 className="font-semibold text-xl text-foreground mb-1 group-hover:text-accent-teal transition-colors truncate">{fullName}</h3>
+                                            <p className="text-xs font-medium text-muted mb-4 tracking-wide">{user.role || t.colaboradores.roleDefault}</p>
+
+                                            {/* Aura Bar instead of typical Points */}
+                                            <div className="flex flex-col gap-1.5 mb-4">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <div className="flex items-center gap-1.5 font-bold text-accent-teal">
+                                                        <Award className="w-3.5 h-3.5" /> AURA NEÓN
+                                                    </div>
+                                                    <span className="text-muted font-mono">{auraPoints} pts</span>
+                                                </div>
+                                                <div className="h-2 w-full bg-neutral-900/80 rounded-full overflow-hidden border border-border-subtle">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-accent-teal/50 to-accent-teal rounded-full shadow-[0_0_10px_rgba(45,212,191,0.8)]"
+                                                        style={{ width: `${auraPercentage}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* User Squad Icons (Glassmorphism look) */}
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {userSquadMemberships.map((sq, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex items-center gap-1.5 bg-foreground/5 py-1 px-2 rounded-lg border border-border-subtle/50 text-xs backdrop-blur-sm"
+                                                        title={sq.name}
+                                                    >
+                                                        <span>{(sq as any).emoji || "🛡️"}</span>
+                                                        <span className="max-w-[80px] truncate text-muted">{sq.name}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6">
+                                            {/* Enhanced Action Button Dropdown */}
+                                            <div className="relative">
+                                                <div className="flex overflow-hidden rounded-xl border border-accent-teal/30 bg-accent-teal/5 hover:bg-accent-teal/10 transition-colors shadow-sm">
+                                                    <button className="flex-1 py-2.5 font-bold text-accent-teal text-sm flex items-center justify-center gap-2">
+                                                        <MessageSquare className="w-4 h-4" /> Enviar Mensaje
+                                                    </button>
+                                                    <div className="w-px bg-accent-teal/20 hidden md:block" />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenConnectDropdown(dropdownOpen ? null : user.wallet_address);
+                                                        }}
+                                                        className="px-3 bg-accent-teal/10 text-accent-teal hover:bg-accent-teal/20 transition-colors flex items-center"
+                                                    >
+                                                        <ChevronDown className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                {dropdownOpen && (
+                                                    <>
+                                                        <div
+                                                            className="fixed inset-0 z-40"
+                                                            onClick={() => setOpenConnectDropdown(null)}
+                                                        />
+                                                        <div className="absolute right-0 bottom-full mb-2 w-48 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                                                            <button className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors">
+                                                                <ExternalLink className="w-4 h-4 text-muted" /> Ver Perfil
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleInvite(user);
+                                                                }}
+                                                                className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors"
+                                                            >
+                                                                <UserPlus className="w-4 h-4 text-muted" /> Invitar a mi Squad
+                                                            </button>
+                                                            <button className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-accent-teal/10 text-accent-teal transition-colors border-t border-border-subtle">
+                                                                <Rocket className="w-4 h-4" /> Proponer Misión
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -286,64 +437,11 @@ export default function ColaboradoresPage() {
                 )
             )}
 
-            {/* Create Squad Modal */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-2xl border border-border-subtle shadow-2xl p-6 relative">
-                        <button
-                            onClick={() => setIsCreateModalOpen(false)}
-                            className="absolute right-4 top-4 text-muted hover:text-foreground"
-                        >
-                            ✕
-                        </button>
-                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                            <Shield className="text-accent-teal" /> {t.colaboradores.squads.create}
-                        </h2>
-
-                        <form onSubmit={handleCreateSquad} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-muted mb-1">Squad Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newSquadName}
-                                    onChange={e => setNewSquadName(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-border-subtle rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-accent-teal"
-                                    placeholder="e.g. Backend Warriors"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-muted mb-1">Specialty Tag</label>
-                                <input
-                                    type="text"
-                                    value={newSquadTag}
-                                    onChange={e => setNewSquadTag(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-border-subtle rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-accent-teal"
-                                    placeholder="e.g. Rust/Soroban"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-muted mb-1">Description</label>
-                                <textarea
-                                    rows={3}
-                                    value={newSquadDesc}
-                                    onChange={e => setNewSquadDesc(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-border-subtle rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-accent-teal resize-none"
-                                    placeholder="Describe your squad's goals and culture..."
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isCreating}
-                                className="w-full bg-accent-teal hover:bg-accent-teal/90 text-black font-bold py-3 rounded-xl transition-colors mt-4 disabled:opacity-50"
-                            >
-                                {isCreating ? "Creating..." : t.colaboradores.squads.create}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <CreateSquadModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onCreated={handleSquadCreated}
+            />
         </div>
     );
 }

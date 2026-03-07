@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Gavel, Clock, Search, ShieldCheck, Plus, XCircle, HandCoins, ChevronDown, Info, X } from "lucide-react";
+import { Gavel, Clock, Search, ShieldCheck, Plus, XCircle, HandCoins, ChevronDown, Info, X, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
@@ -10,6 +10,7 @@ import { AuctionDetailModal } from "@/components/AuctionDetailModal";
 import { UserBadge } from "@/components/UserBadge";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Dummy addresses for demo purposes
 const DUMMY_PLATFORM_ADDRESS = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
@@ -92,6 +93,7 @@ export default function MarketplacePage() {
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
     const { t } = useSettings();
+    const { createNotification } = useNotifications();
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -270,6 +272,32 @@ export default function MarketplacePage() {
                 setSelectedAuction(updatedAuctions.find(a => a.id === auction.id) || null);
             }
 
+            // --- DISPARAR NOTIFICACION ---
+            if (auction.is_direct_buy) {
+                // Notificar al vendedor sobre la compra
+                await createNotification({
+                    user_profile_id: auction.seller,
+                    title: "¡Venta Concretada!",
+                    message: `Han comprado tu artículo "${auction.title}" por ${bidAmount} ${assetSymbol}.`,
+                    type: 'activity',
+                    icon: 'ShoppingBag',
+                    action_text: 'Ver detalles',
+                    action_url: '/marketplace'
+                });
+            } else if (auction.current_winner_address && auction.current_winner_address !== address) {
+                // Notificar al postor anterior sobre el Outbid
+                await createNotification({
+                    user_profile_id: auction.current_winner_address,
+                    title: "¡Alguien superó tu puja!",
+                    message: `Han pujado ${bidAmount} ${assetSymbol} por "${auction.title}". ¡Vuelve a ofertar!`,
+                    type: 'activity',
+                    icon: 'TrendingUp',
+                    action_text: 'Ir a Subasta',
+                    action_url: `/marketplace`
+                });
+            }
+            // -----------------------------
+
             alert(t.alerts.bidSuccess);
             await addPoints(10, t.alerts.newBidMilestone);
         } catch (error: any) {
@@ -337,7 +365,7 @@ export default function MarketplacePage() {
                         <input
                             type="text"
                             placeholder={t.marketplace.searchPlaceholder}
-                            className="pl-11 pr-4 py-3 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full shadow-sm"
+                            className="pl-11 pr-4 py-3 bg-card border border-neutral-300 dark:border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full shadow-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -449,9 +477,9 @@ export default function MarketplacePage() {
             </div>
             {displayedAuctions.length === 0 ? (
                 <div className="text-center py-20 border border-border-subtle border-dashed rounded-2xl bg-card">
-                    <Search className="w-12 h-12 text-neutral-700 mx-auto mb-4" />
+                    <Search className="w-12 h-12 text-foreground/50 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-1">{t.marketplace.noAuctionsTitle}</h3>
-                    <p className="text-muted text-sm">{t.marketplace.noAuctionsSelected}</p>
+                    <p className="text-foreground/60 text-sm">{t.marketplace.noAuctionsSelected}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -519,9 +547,9 @@ export default function MarketplacePage() {
                                     href="https://docs.trustlesswork.com/trustless-work/es"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors"
+                                    className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors gap-2"
                                 >
-                                    {t.marketplace.readDocs}
+                                    Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
                                 </a>
                             </div>
                         </div>

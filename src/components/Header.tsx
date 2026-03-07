@@ -4,22 +4,27 @@ import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useSettings } from "@/hooks/useSettings";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ConnectButton } from "@/components/ConnectButton";
 import { Bell } from "lucide-react";
+import { NotificationsDrawer } from "@/components/NotificationsDrawer";
+import { useState } from "react";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network } = useFreighter();
     const { profile, loading: profileLoading } = useProfile();
     const { t } = useSettings();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useBalances(address || null);
+    const { unreadCount } = useNotifications();
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
     const firstName = profile?.first_name || t.profile.role;
 
     // Simulate Net Worth based on XLM, USDC, and Points
     const xlmValue = (xlmBalance || 0) * 0.15; // Assume 1 XLM = $0.15
-    const ptsValue = (profile?.points || 0) * 0.05; // Assume 1 PTS = $0.05
+    const auraValue = (profile?.points || 0) * 0.05; // Assume 1 AURA = $0.05
     const usdcValue = usdcBalance || 0; // 1 USDC = $1.00
-    const totalNetWorth = (xlmValue + ptsValue + usdcValue).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const totalNetWorth = (xlmValue + auraValue + usdcValue).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
     return (
         <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-border-subtle sticky top-0 bg-background/80 backdrop-blur-md z-40">
@@ -54,12 +59,19 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 </span>
                             </div>
                         </div>
+
                     </div>
                 ) : (
                     // Unauthenticated Left Side
                     <div>
                         <h1 className="text-sm text-muted font-medium tracking-widest uppercase">{t.header.controlPanel}</h1>
-                        <p className="text-xl font-bold">ReWork</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className="w-6 h-6 bg-accent-teal rounded-md flex items-center justify-center flex-shrink-0 dark:hidden">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path><path clipRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" fillRule="evenodd"></path></svg>
+                            </div>
+                            <p className="text-xl font-bold hidden dark:block">ReWork</p>
+                            <p className="text-xl font-bold dark:hidden">Re<span className="text-accent-teal">Work</span></p>
+                        </div>
                     </div>
                 )}
             </div>
@@ -67,11 +79,15 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <div className="flex items-center gap-6">
                 {connected && (
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-4 text-xs font-mono mr-4 hidden sm:flex">
-                            <div className="flex items-center gap-2 bg-muted/10 px-2 py-1 rounded-md border border-slate-700/50">
-                                <span className="w-2 h-2 rounded-full bg-accent-teal glow-teal"></span>
-                                <span className="text-muted">{profile?.points || 0} <span className="text-foreground font-bold">PTS</span></span>
-                            </div>
+                        <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
+                            <span className="text-xs text-muted font-bold tracking-wider uppercase">Mi AURA</span>
+                            <div className="w-px h-5 bg-border-subtle"></div>
+                            <span className="flex items-center text-accent-teal glow-teal">
+                                <span className="text-lg font-black">{profile?.points || 0}</span>
+                                <span className="text-xs font-bold ml-1 pt-0.5">PTS</span>
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs font-mono mr-2 hidden sm:flex">
                             <div className="flex items-center gap-2 bg-muted/10 px-2 py-1 rounded-md border border-slate-700/50">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                 <span className="text-muted">
@@ -103,12 +119,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 </span>
                             </div>
                         </div>
-                        <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/5 border border-border-subtle text-muted hover:text-foreground transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            {/* Simulate notification dot for now */}
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-deep-navy"></span>
-                        </button>
-
                         {/* Network Indicator */}
                         <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
                             ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
@@ -122,10 +132,32 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 }`}></span>
                             {network === 'PUBLIC' ? t.header.mainnet : network || t.header.offline}
                         </div>
+
                     </div>
                 )}
-                <ConnectButton />
+                <div className="flex items-center gap-4">
+                    <ConnectButton />
+                    {connected && (
+                        <button
+                            onClick={() => setIsNotificationsOpen(true)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/5 border border-border-subtle text-muted hover:text-foreground transition-colors relative"
+                        >
+                            <Bell className="w-5 h-5" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-2 right-2 flex w-2.5 h-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-red-500 border-2 border-deep-navy"></span>
+                                </span>
+                            )}
+                        </button>
+                    )}
+                </div>
             </div>
+
+            <NotificationsDrawer
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
+            />
         </header>
     );
 }

@@ -18,8 +18,8 @@
 @layer base {
   :root {
     /* LIGHT MODE (De facto base variable values) */
-    --bg: #f8fafc;
-    /* slate-50 */
+    --bg: #f1f5f9;
+    /* slate-100 / light gray for separation */
     --fg: #0f172a;
     /* slate-900 */
     --card-bg: #ffffff;
@@ -42,6 +42,17 @@
     --border-glass: rgba(255, 255, 255, 0.1);
     --glass-opacity: 0.7;
     --accent-teal: #00f2ff;
+
+    /* Emoji Picker React Overrides */
+    --epr-bg-color: var(--card-bg);
+    --epr-category-label-bg-color: var(--card-bg);
+    --epr-text-color: var(--fg);
+    --epr-picker-border-color: transparent;
+    --epr-search-border-color: var(--border-glass);
+    --epr-search-input-bg-color: rgba(255, 255, 255, 0.05);
+    --epr-hover-bg-color: rgba(255, 255, 255, 0.05);
+    --epr-focus-bg-color: rgba(255, 255, 255, 0.05);
+    --epr-category-icon-active-color: var(--accent-teal);
   }
 
   body {

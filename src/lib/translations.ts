@@ -10,7 +10,7 @@ export const translations = {
             helpDesk: "Soporte"
         },
         header: {
-            welcome: "Bienvenido",
+            welcome: "Buenas",
             totalNetWorth: "Patrimonio Total",
             controlPanel: "Panel de Control",
             offline: "OFFLINE",
@@ -129,7 +129,7 @@ export const translations = {
             lockedBids: "Bloqueado (Pujas activas)",
             deleteAuction: "Eliminar Subasta",
             cancelListing: "Cancelar Publicación",
-            claimAsset: "Reclamar Activo Puesto"
+            claimAsset: "Finalizar y Retirar"
         },
         alerts: {
             connectWalletFirst: "Por favor, conectá tu billetera Freighter primero.",
@@ -278,7 +278,7 @@ export const translations = {
             helpDesk: "Help Desk"
         },
         header: {
-            welcome: "Welcome",
+            welcome: "Gm",
             totalNetWorth: "Total Net Worth",
             controlPanel: "Control Panel",
             offline: "OFFLINE",

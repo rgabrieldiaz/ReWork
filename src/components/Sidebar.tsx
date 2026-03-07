@@ -47,15 +47,15 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
             `}>
-                <div className="flex items-center justify-between p-8 relative">
-                    <div className="flex items-center gap-3 overflow-hidden">
+                <div className={`flex items-center relative transition-all duration-300 ${isSidebarCollapsed ? 'justify-center py-8' : 'justify-between p-8'}`}>
+                    <div className={`flex items-center overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
                         <div className="w-8 h-8 bg-accent-teal rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
                                 <path clipRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" fillRule="evenodd"></path>
                             </svg>
                         </div>
-                        <span className={`text-xl font-bold tracking-tight whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>
+                        <span className={`text-xl font-bold tracking-tight whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'hidden opacity-0 w-0' : 'block w-auto opacity-100'}`}>
                             Re<span className="text-accent-teal">Work</span>
                         </span>
                     </div>

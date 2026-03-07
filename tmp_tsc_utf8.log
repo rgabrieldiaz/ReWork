@@ -1,0 +1,15 @@
+﻿src/app/colaboradores/page.tsx(55,9): error TS2304: Cannot find name 'setIsCreateModalOpen'.
+src/app/colaboradores/page.tsx(128,44): error TS2304: Cannot find name 'setIsCreateModalOpen'.
+src/app/colaboradores/page.tsx(148,44): error TS2304: Cannot find name 'setIsCreateModalOpen'.
+src/app/colaboradores/page.tsx(356,25): error TS2304: Cannot find name 'isCreateModalOpen'.
+src/app/colaboradores/page.tsx(357,32): error TS2304: Cannot find name 'setIsCreateModalOpen'.
+src/app/squad-goals/page.tsx(217,46): error TS2339: Property 'aboutTitle' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+src/app/squad-goals/page.tsx(439,48): error TS2339: Property 'aboutTitle' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+src/app/squad-goals/page.tsx(448,48): error TS2339: Property 'aboutDescription' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+src/app/squad-goals/page.tsx(453,105): error TS2339: Property 'trustlessTitle' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+src/app/squad-goals/page.tsx(456,52): error TS2339: Property 'trustlessDesc' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+src/components/CreateSquadModal.tsx(45,47): error TS2339: Property 'fillFields' does not exist on type '{ create: string; join: string; requestInvite: string; members: string; open: string; private: string; commonSquads: string; }'.
+src/components/CreateSquadModal.tsx(96,55): error TS2339: Property 'preview' does not exist on type '{ create: string; join: string; requestInvite: string; members: string; open: string; private: string; commonSquads: string; }'.
+src/components/CreateSquadModal.tsx(138,102): error TS2339: Property 'leaderRole' does not exist on type '{ create: string; join: string; requestInvite: string; members: string; open: string; private: string; commonSquads: string; }'.
+tmp_check_db.ts(2,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+tmp_update_db.ts(2,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.

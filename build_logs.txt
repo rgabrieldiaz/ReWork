@@ -1,0 +1,23 @@
+
+> rework-web@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 13.5s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/squad-goals/page.tsx:173:36
+Type error: Property 'missionFunded' does not exist on type '{ title: string; subtitle: string; propose: string; tabProposed: string; tabActive: string; loading: string; requiredVotes: string; fundMission: string; funding: string; signProposal: string; voted: string; ... 9 more ...; errorFunding: string; }'.
+
+[0m [90m 171 |[39m                 }
+ [90m 172 |[39m
+[31m[1m>[22m[39m[90m 173 |[39m                 alert(t[33m.[39msquadGoals[33m.[39mmissionFunded)[33m;[39m
+ [90m     |[39m                                    [31m[1m^[22m[39m
+ [90m 174 |[39m                 fetchAllData()[33m;[39m
+ [90m 175 |[39m             } [36melse[39m {
+ [90m 176 |[39m                 alert([32m`${t.squadGoals.errorFunding} ${data.message}`[39m)[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

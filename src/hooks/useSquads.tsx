@@ -133,11 +133,51 @@ export function useSquads() {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            // Already requested or member?
+            if (error.code === '23505') throw new Error("Already joined or requested.");
+            throw error;
+        }
 
         await fetchSquads();
         return newMember;
     };
 
-    return { squads, squadMembers, loading, error, fetchSquads, createSquad, joinSquad };
+    const leaveSquad = async (squadId: string) => {
+        if (!walletAddress) throw new Error("Wallet not connected");
+
+        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
+        if (!user) throw new Error("User profile not found");
+
+        const { error } = await supabase
+            .from('squad_members')
+            .delete()
+            .eq('squad_id', squadId)
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+        await fetchSquads();
+    };
+
+    const disbandSquad = async (squadId: string) => {
+        if (!walletAddress) throw new Error("Wallet not connected");
+
+        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
+        if (!user) throw new Error("User profile not found");
+
+        // Verify leadership logic relies on RLS or we check manually
+        // Delete all members
+        await supabase.from('squad_members').delete().eq('squad_id', squadId);
+
+        const { error } = await supabase
+            .from('squads')
+            .delete()
+            .eq('id', squadId)
+            .eq('leader_id', user.id); // extra security
+
+        if (error) throw error;
+        await fetchSquads();
+    };
+
+    return { squads, squadMembers, loading, error, fetchSquads, createSquad, joinSquad, leaveSquad, disbandSquad };
 }

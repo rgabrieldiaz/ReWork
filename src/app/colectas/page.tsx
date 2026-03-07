@@ -1,32 +1,48 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Heart, Activity, Gift, Share2, ArrowUpRight, Search, Filter, AlertCircle, Clock, CheckCircle, Loader2, ChevronDown, Info, Plus, X, ShieldCheck } from "lucide-react";
+import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
-import { useInitializeEscrow } from "@trustless-work/escrow";
+import { ColectaDetailModal } from "@/components/ColectaDetailModal";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useInitializeEscrow } from "@trustless-work/escrow/hooks";
 
 // Utils
 const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(key.length - 4)}`;
 
 export default function ColectasPage() {
     const { t } = useSettings();
-    const { address: publicKey } = useFreighter();
+    const { connected, address: publicKey } = useFreighter();
     const { deployEscrow } = useInitializeEscrow();
-
+    const { createNotification } = useNotifications();
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [donations, setDonations] = useState<any[]>([]); // User's matched donations
     const [loading, setLoading] = useState(true);
+    const [userTeamWallets, setUserTeamWallets] = useState<Set<string>>(new Set());
 
     // UI State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState("progreso");
-    const [selectedTag, setSelectedTag] = useState<string>("todas");
-    const [hideFinished, setHideFinished] = useState(true);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+    // Custom hook inner logic mapped to timeout for debounce
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
+    // New Filter State matching Marketplace
+    const [activeTab, setActiveTab] = useState<'all' | 'active' | 'finished' | 'myDonations'>('all');
+    const [activeSort, setActiveSort] = useState<'recent' | 'endingSoon' | 'popular'>('recent');
+    const [activeFilter, setActiveFilter] = useState<'none' | 'goalMet' | 'almostThere'>('none');
+
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+    const [selectedColecta, setSelectedColecta] = useState<any>(null);
     const [donationAmounts, setDonationAmounts] = useState<Record<number, string>>({});
     const [processingId, setProcessingId] = useState<number | null>(null);
 
@@ -50,8 +66,41 @@ export default function ColectasPage() {
         }
     };
 
+    const fetchTeamWallets = async () => {
+        if (!publicKey) {
+            setUserTeamWallets(new Set());
+            return;
+        }
+        try {
+            const { data: user } = await supabase.from('users').select('id').eq('wallet_address', publicKey).maybeSingle();
+            if (!user) {
+                setUserTeamWallets(new Set([publicKey]));
+                return;
+            }
+            const { data: mySquads } = await supabase.from('squad_members').select('squad_id').eq('user_id', user.id);
+            if (!mySquads || mySquads.length === 0) {
+                setUserTeamWallets(new Set([publicKey]));
+                return;
+            }
+            const squadIds = mySquads.map(s => s.squad_id);
+            const { data: allMembers } = await supabase.from('squad_members').select('user_id').in('squad_id', squadIds);
+            const userIds = allMembers?.map(m => m.user_id) || [];
+            if (userIds.length > 0) {
+                const { data: teammates } = await supabase.from('users').select('wallet_address').in('id', userIds);
+                const wallets = teammates?.map(t => t.wallet_address) || [];
+                setUserTeamWallets(new Set(wallets));
+            } else {
+                setUserTeamWallets(new Set([publicKey]));
+            }
+        } catch (err) {
+            console.error("Error fetching team wallets", err);
+            setUserTeamWallets(new Set([publicKey]));
+        }
+    };
+
     useEffect(() => {
         fetchCampaigns();
+        fetchTeamWallets();
     }, [publicKey]);
 
     // Derived Data
@@ -62,43 +111,68 @@ export default function ColectasPage() {
     }, [campaigns]);
 
     const filteredCampaigns = useMemo(() => {
-        let filtered = campaigns.filter(c => {
-            const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.organizer.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesTag = selectedTag && selectedTag !== "todas" ? c.tags?.includes(selectedTag) : true;
+        let filtered = [...campaigns];
 
-            const isFinished = new Date(c.deadline).getTime() < Date.now() || c.current_amount >= c.goal_amount;
-            if (hideFinished && isFinished) return false;
+        if (debouncedSearchQuery) {
+            filtered = filtered.filter(c =>
+                c.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                c.organizer.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+            );
+        }
 
-            return matchesSearch && matchesTag;
+        const now = Date.now();
+
+        // Tabs Filtering
+        if (activeTab === 'active') {
+            filtered = filtered.filter(c => new Date(c.deadline).getTime() > now && c.current_amount < c.goal_amount);
+        } else if (activeTab === 'finished') {
+            filtered = filtered.filter(c => new Date(c.deadline).getTime() <= now || c.current_amount >= c.goal_amount);
+        } else if (activeTab === 'myDonations') {
+            const donatedIds = new Set(donations.map(d => d.crowdfund_id));
+            filtered = filtered.filter(c => donatedIds.has(c.id));
+        }
+
+        // Privacy Filtering
+        filtered = filtered.filter(c => {
+            if (c.privacy === 'private') {
+                return c.organizer === publicKey || userTeamWallets.has(c.organizer);
+            }
+            return true;
         });
 
+        // Pills Filtering
+        if (activeFilter === 'goalMet') {
+            filtered = filtered.filter(c => c.current_amount >= c.goal_amount);
+        } else if (activeFilter === 'almostThere') {
+            filtered = filtered.filter(c => {
+                const progress = c.current_amount / c.goal_amount;
+                return progress >= 0.75 && progress < 1.0;
+            });
+        }
+
+        // Sorting
         filtered.sort((a, b) => {
-            if (sortBy === "progreso") {
-                const pa = Math.min(100, (a.current_amount / a.goal_amount) * 100);
-                const pb = Math.min(100, (b.current_amount / b.goal_amount) * 100);
-                return pb - pa;
-            } else if (sortBy === "nuevas") {
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            } else if (sortBy === "populares") {
+            if (activeSort === 'endingSoon') {
+                return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+            } else if (activeSort === 'popular') {
                 return b.donor_count - a.donor_count;
+            } else { // 'recent'
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
             }
-            return 0;
         });
 
         return filtered;
-    }, [campaigns, searchQuery, sortBy, selectedTag, hideFinished]);
+    }, [campaigns, debouncedSearchQuery, activeTab, activeFilter, activeSort, donations]);
 
     // Actions
-    const handleDonate = async (camp: any) => {
-        const amount = donationAmounts[camp.id];
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            alert("Monto inválido.");
+    const handleDonate = async (camp: any, overrideAmount?: number) => {
+        if (!connected || !publicKey) {
+            alert("Conecta tu wallet Freighter para aportar.");
             return;
         }
-        if (!publicKey) {
-            alert("Conecta tu billetera primero.");
-            return;
-        }
+
+        const amountToDonate = overrideAmount || Number(donationAmounts[camp.id]);
+        if (!amountToDonate || amountToDonate <= 0) return;
 
         setProcessingId(camp.id);
         try {
@@ -107,12 +181,12 @@ export default function ColectasPage() {
             const payload = {
                 escrowType: "single-release" as const,
                 title: `Donación: ${camp.title}`,
-                description: `Aporte de ${amount} XLM para la colecta de ${camp.title}`,
+                description: `Aporte de ${amountToDonate} XLM para la colecta de ${camp.title}`,
                 sender: publicKey,
                 receiver: camp.organizer, // The organizer receives the funds
                 approver: camp.organizer, // Organizer approves (simplification)
                 fee: "100",
-                trustlines: [{ asset_type: "native", amount: amount.toString() }],
+                trustlines: [{ asset_type: "native", amount: amountToDonate.toString() }],
             };
 
             const deployData = await deployEscrow(payload as any, "single-release");
@@ -130,7 +204,7 @@ export default function ColectasPage() {
                 {
                     crowdfund_id: camp.id,
                     donor_public_key: publicKey,
-                    amount: parseInt(amount),
+                    amount: parseInt(amountToDonate.toString()),
                     escrow_contract_id: "tw_escrow_" + Math.random().toString(36).substring(7), // Mock ID
                 }
             ]);
@@ -140,16 +214,30 @@ export default function ColectasPage() {
             // 3. Actualizar Colecta
             const { error: rpcError } = await supabase.rpc('increment_crowdfund_amount', {
                 target_id: camp.id,
-                inc_amount: parseInt(amount)
+                inc_amount: parseInt(amountToDonate.toString())
             });
 
             if (rpcError) {
                 // Fallback si RPC no existe
                 await supabase.from("crowdfunds").update({
-                    current_amount: camp.current_amount + parseInt(amount),
+                    current_amount: camp.current_amount + parseInt(amountToDonate.toString()),
                     donor_count: camp.donor_count + 1
                 }).eq("id", camp.id);
             }
+
+            // --- NOTIFICAR AL ORGANIZADOR ---
+            if (camp.organizer !== publicKey) {
+                await createNotification({
+                    user_profile_id: camp.organizer,
+                    title: "¡Nuevo aporte en tu Colecta!",
+                    message: `Han aportado ${amountToDonate} XLM/USDC a "${camp.title}".`,
+                    type: 'activity',
+                    icon: 'Gift',
+                    action_text: 'Ver Colecta',
+                    action_url: '/colectas'
+                });
+            }
+            // --------------------------------
 
             setDonationAmounts(prev => ({ ...prev, [camp.id]: "" }));
             fetchCampaigns();
@@ -179,82 +267,108 @@ export default function ColectasPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 pb-16">
-            {/* Filtros y Controles Principales */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-border-subtle">
-                <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 flex-1 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
-                    <div className="flex items-center gap-2 mr-2 shrink-0">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground m-0">{t.colectas.title}</h1>
-                    </div>
-
-                    <div className="relative flex-1 w-full min-w-[200px]">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+            {/* Cabecera, Buscador y Botón Crear */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-[60%]">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground m-0 shrink-0">{t.colectas.title}</h1>
+                    <div className="relative w-full lg:max-w-md">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted w-4 h-4" />
                         <input
                             type="text"
-                            placeholder={t.colectas.searchPlaceholder}
-                            className="pl-11 pr-4 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full"
+                            placeholder={t.colectas.searchPlaceholder || "Buscar colectas..."}
+                            className="pl-11 pr-4 py-3 bg-card border border-neutral-300 dark:border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal transition-colors w-full shadow-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                        <div className="relative">
-                            <select
-                                value={sortBy}
-                                onChange={e => setSortBy(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer w-full whitespace-nowrap text-foreground h-full inline-block"
-                            >
-                                <option value="progreso">{t.colectas.sortClosest}</option>
-                                <option value="populares">{t.colectas.sortPopular}</option>
-                                <option value="nuevas">{t.colectas.sortRecent}</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
-                        </div>
-
-                        <div className="relative shrink-0">
-                            <select
-                                value={selectedTag}
-                                onChange={e => setSelectedTag(e.target.value)}
-                                className="pl-4 pr-10 py-2 bg-card border border-border-subtle rounded-xl text-sm focus:outline-none focus:border-accent-teal appearance-none cursor-pointer text-foreground h-full inline-block"
-                            >
-                                <option value="todas">{t.colectas.filterAll}</option>
-                                {allTags.map(tag => (
-                                    <option key={tag} value={tag}>{tag}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4 pointer-events-none" />
-                        </div>
-
-                        <label className="flex items-center gap-2 text-xs sm:text-sm text-muted cursor-pointer hover:text-foreground transition-colors bg-card border border-border-subtle px-3 sm:px-4 py-2 rounded-xl whitespace-nowrap shrink-0 h-full">
-                            <input
-                                type="checkbox"
-                                className="w-3 h-3 sm:w-4 sm:h-4 rounded border-border-subtle bg-card text-accent-teal focus:ring-accent-teal focus:ring-offset-black accent-accent-teal cursor-pointer"
-                                checked={hideFinished}
-                                onChange={(e) => setHideFinished(e.target.checked)}
-                            />
-                            {t.colectas.hideFinished}
-                        </label>
-                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0 justify-start xl:justify-end">
+                <div className="flex items-center gap-3 shrink-0 self-start lg:self-center">
                     <button
                         onClick={() => setIsInfoModalOpen(true)}
-                        className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent-teal hover:bg-accent-teal/10 border border-border-subtle rounded-xl transition-colors shrink-0"
-                        title={t.colectas.about}
+                        className="w-11 h-11 flex items-center justify-center text-muted hover:text-accent-teal hover:bg-accent-teal/10 border border-border-subtle rounded-xl transition-colors shrink-0"
+                        title={t.colectas.about || "Info"}
                     >
-                        <Info className="w-4 h-4" />
+                        <Info className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="flex justify-center items-center gap-1.5 px-3 sm:px-4 py-2 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-xs sm:text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
+                        className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
                     >
-                        <Plus className="w-4 h-4 text-black" />
-                        <span className="hidden sm:inline">{t.colectas.create}</span>
-                        <span className="sm:hidden">{t.colectas.createMobile}</span>
+                        <Plus className="w-5 h-5 text-black" />
+                        <span>{t.colectas.create || "Crear Colecta"}</span>
                     </button>
                 </div>
+            </div>
+
+            {/* Tabs de Navegación */}
+            <div className="flex items-center gap-6 border-b border-border-subtle mt-2 overflow-x-auto scrollbar-hide">
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm whitespace-nowrap ${activeTab === 'all' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('all')}
+                >
+                    Todas
+                </button>
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm whitespace-nowrap ${activeTab === 'active' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('active')}
+                >
+                    Activas
+                </button>
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm whitespace-nowrap ${activeTab === 'finished' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('finished')}
+                >
+                    Finalizadas
+                </button>
+                <div className="flex-1" />
+                <button
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm whitespace-nowrap ${activeTab === 'myDonations' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    onClick={() => setActiveTab('myDonations')}
+                >
+                    Mis Aportes
+                </button>
+            </div>
+
+            {/* Sistema de Pills para Filtros y Orden */}
+            <div className="flex items-center gap-2 overflow-x-auto py-3 px-2 mb-4 scrollbar-hide -mx-2">
+                {/* Sort Pills (Mutually Exclusive) */}
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${activeSort === 'recent' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveSort('recent')}
+                >
+                    Recientes
+                </button>
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${activeSort === 'endingSoon' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveSort('endingSoon')}
+                >
+                    Terminan Pronto
+                </button>
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${activeSort === 'popular' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveSort('popular')}
+                >
+                    Populares
+                </button>
+
+                {/* Separator */}
+                <div className="w-px h-6 bg-border mx-2 shrink-0"></div>
+
+                {/* Filter Pills (Togglable) */}
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-1 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${activeFilter === 'almostThere' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveFilter(activeFilter === 'almostThere' ? 'none' : 'almostThere')}
+                >
+                    Cerca de la Meta
+                </button>
+                <button
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all mr-2 whitespace-nowrap cursor-pointer hover:scale-105 shrink-0 ${activeFilter === 'goalMet' ? 'bg-accent-teal/15 text-accent-teal border border-accent-teal/40' : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'}`}
+                    onClick={() => setActiveFilter(activeFilter === 'goalMet' ? 'none' : 'goalMet')}
+                >
+                    Meta Alcanzada
+                </button>
             </div>
 
             {/* Listado de Colectas */}
@@ -262,22 +376,25 @@ export default function ColectasPage() {
                 <div className="py-20 flex justify-center text-muted">{t.colectas.loading}</div>
             ) : filteredCampaigns.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
-                    <AlertCircle className="w-12 h-12 mb-4 text-neutral-600" />
-                    <p>{t.colectas.noResults}</p>
+                    <AlertCircle className="w-12 h-12 mb-4 text-foreground/50" />
+                    <p className="text-foreground/60">{t.colectas.noResults}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {filteredCampaigns.map((camp) => {
                         const progress = Math.min(100, Math.floor((camp.current_amount / camp.goal_amount) * 100));
-                        const isOrganizer = publicKey === camp.organizer;
+                        const hasDonated = donations.some(d => d.crowdfund_id === camp.id);
                         const isGoalMet = camp.current_amount >= camp.goal_amount;
                         const isExpired = new Date(camp.deadline).getTime() < Date.now();
+                        const isOrganizer = camp.organizer === publicKey;
                         const isProcessing = processingId === camp.id;
 
-                        const hasDonated = donations.some(d => d.crowdfund_id === camp.id);
-
                         return (
-                            <div key={camp.id} className="bg-card rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col md:flex-row shadow-lg">
+                            <div
+                                key={camp.id}
+                                onClick={() => setSelectedColecta(camp)}
+                                className="bg-card cursor-pointer rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col md:flex-row shadow-lg"
+                            >
                                 <div className="w-full md:w-48 xl:w-64 min-h-[200px] bg-neutral-900/40 md:border-r border-border-subtle flex-shrink-0 relative overflow-hidden group/img">
                                     {isGoalMet && <div className="absolute inset-0 bg-accent-teal/5 z-0"></div>}
 
@@ -289,6 +406,23 @@ export default function ColectasPage() {
                                         )}
                                         {/* Gradient to ensure text readability */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/10 to-transparent"></div>
+                                    </div>
+
+                                    {/* Status Badge Top Right */}
+                                    <div className="absolute top-4 right-4 z-20">
+                                        {isGoalMet ? (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-teal/20 backdrop-blur-md rounded-full text-xs font-bold text-accent-teal border border-accent-teal/40 shadow-[0_0_10px_var(--accent-teal)30]">
+                                                <CheckCircle className="w-3.5 h-3.5" /> Meta
+                                            </span>
+                                        ) : isExpired ? (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/20 backdrop-blur-md rounded-full text-xs font-bold text-red-400 border border-red-500/40">
+                                                <X className="w-3.5 h-3.5" /> Fin
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 backdrop-blur-md rounded-full text-xs font-bold text-blue-400 border border-blue-500/40">
+                                                <Activity className="w-3.5 h-3.5" /> Activa
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2 z-20">
@@ -306,13 +440,10 @@ export default function ColectasPage() {
                                                 <Clock className="w-3 h-3" /> {t.colectas.endsOn} {new Date(camp.deadline).toLocaleDateString()}
                                             </p>
                                         </div>
-                                        <button className="text-muted hover:text-foreground transition-colors shrink-0 ml-2" title={t.colectas.share}>
-                                            <Share2 className="w-4 h-4" />
-                                        </button>
                                     </div>
                                     <p className="text-sm text-muted mb-6 flex-1">{camp.description || `Apoya esta colecta con tus ${camp.goal_amount === 150 ? 'USDC' : 'XLM'}.`}</p>
 
-                                    <div className="mt-auto space-y-5">
+                                    <div className="mt-auto">
                                         {/* Barra de Progreso */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between text-sm">
@@ -334,72 +465,6 @@ export default function ColectasPage() {
                                                 <span>{camp.donor_count} {t.colectas.contributions}</span>
                                             </div>
                                         </div>
-
-                                        {/* Lógica de Botones (Trustless Work) */}
-                                        <div className="pt-4 border-t border-border-subtle">
-                                            {isOrganizer ? (
-                                                <div className="flex flex-col gap-2">
-                                                    {isGoalMet ? (
-                                                        <button
-                                                            disabled={isProcessing}
-                                                            onClick={() => handleAction(camp, 'release')}
-                                                            className="w-full bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2"
-                                                        >
-                                                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
-                                                            {t.colectas.releaseFunds}
-                                                        </button>
-                                                    ) : (
-                                                        <button disabled className="w-full bg-neutral-800 text-muted font-semibold py-2.5 rounded-xl cursor-not-allowed">
-                                                            {t.colectas.manageFailed}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col gap-3">
-                                                    {!isGoalMet && !isExpired && (
-                                                        <div className="flex gap-3">
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                value={donationAmounts[camp.id] || ""}
-                                                                onChange={(e) => setDonationAmounts(prev => ({ ...prev, [camp.id]: e.target.value }))}
-                                                                placeholder={`${t.colectas.donatePlaceholder} ${camp.goal_amount === 150 ? 'USDC' : 'XLM'}`}
-                                                                className="w-1/3 min-w-[100px] bg-card border border-border-subtle rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-accent-teal transition-colors"
-                                                                disabled={isProcessing}
-                                                            />
-                                                            <button
-                                                                onClick={() => handleDonate(camp)}
-                                                                disabled={isProcessing || !donationAmounts[camp.id]}
-                                                                className="flex-1 bg-foreground hover:bg-neutral-200 text-black font-bold px-4 py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
-                                                            >
-                                                                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : t.colectas.donateWithEscrow}
-                                                                <ArrowUpRight className="w-4 h-4 opacity-50" />
-                                                            </button>
-                                                        </div>
-                                                    )}
-
-                                                    {isExpired && !isGoalMet && hasDonated && (
-                                                        <button
-                                                            onClick={() => handleAction(camp, 'refund')}
-                                                            className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold py-2.5 rounded-xl transition-colors border border-red-500/20"
-                                                        >
-                                                            {t.colectas.claimRefund}
-                                                        </button>
-                                                    )}
-
-                                                    {isGoalMet && !hasDonated && (
-                                                        <div className="text-center text-sm font-medium text-accent-teal bg-accent-teal/5 py-2 rounded-xl border border-accent-teal/10">
-                                                            {t.colectas.goalMetSuccess}
-                                                        </div>
-                                                    )}
-                                                    {isGoalMet && hasDonated && (
-                                                        <div className="text-center text-sm font-medium text-accent-teal bg-accent-teal/5 py-2 rounded-xl border border-accent-teal/10">
-                                                            {t.colectas.goalMetThanks}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -412,6 +477,18 @@ export default function ColectasPage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={fetchCampaigns}
+            />
+
+            <ColectaDetailModal
+                isOpen={!!selectedColecta}
+                onClose={() => setSelectedColecta(null)}
+                colecta={selectedColecta}
+                onDonate={handleDonate}
+                onAction={handleAction}
+                isProcessing={processingId === selectedColecta?.id}
+                hasDonated={selectedColecta ? donations.some(d => d.crowdfund_id === selectedColecta.id) : false}
+                isOrganizer={selectedColecta ? selectedColecta.organizer === publicKey : false}
+                t={t}
             />
 
             {/* Info Modal */}
