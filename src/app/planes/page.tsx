@@ -7,13 +7,13 @@ import { PublicFooter } from "@/components/PublicFooter";
 
 export default function PlanesPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden pt-24 pb-16">
+    <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden">
       {/* Background Orbs */}
       <PublicBackground />
 
       <PublicHeader />
 
-      <div className="max-w-6xl mx-auto px-6 mt-12">
+      <div className="max-w-6xl mx-auto px-6 pt-12 pb-16">
         <div className="text-center mb-16">
           <span className="text-xs font-bold text-accent-teal tracking-widest uppercase mb-2 block">Suscripción</span>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Escalabilidad Dinámica</h1>

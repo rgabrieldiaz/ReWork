@@ -7,13 +7,13 @@ import { PublicFooter } from "@/components/PublicFooter";
 
 export default function SeguridadPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden pt-24 pb-16">
+    <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden">
       {/* Background Orbs */}
       <PublicBackground />
       
       <PublicHeader />
 
-      <div className="max-w-4xl mx-auto px-6 mt-12">
+      <div className="max-w-4xl mx-auto px-6 pt-12 pb-16">
         <div className="text-center mb-16">
           <div className="w-16 h-16 bg-gradient-to-br from-accent-teal/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-accent-teal/30 shadow-[0_0_30px_rgba(0,242,255,0.15)]">
              <Shield className="w-8 h-8 text-accent-teal" />
