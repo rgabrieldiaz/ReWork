@@ -1,14 +1,18 @@
 import React from "react";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
+import { PublicHeader } from "@/components/PublicHeader";
+import { PublicBackground } from "@/components/PublicBackground";
 
 export default function PlanesPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden pt-24 pb-16">
       {/* Background Orbs */}
-       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 blur-[120px] rounded-full pointer-events-none -z-10 mix-blend-screen"></div>
+      <PublicBackground />
 
-      <div className="max-w-6xl mx-auto px-6">
+      <PublicHeader />
+
+      <div className="max-w-6xl mx-auto px-6 mt-12">
         <div className="text-center mb-16">
           <span className="text-xs font-bold text-accent-teal tracking-widest uppercase mb-2 block">Suscripción</span>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Escalabilidad Dinámica</h1>

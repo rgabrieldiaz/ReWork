@@ -1,14 +1,18 @@
 import React from "react";
 import Link from "next/link";
 import { Layers, Activity, ArrowRight } from "lucide-react";
+import { PublicHeader } from "@/components/PublicHeader";
+import { PublicBackground } from "@/components/PublicBackground";
 
 export default function CaracteristicasPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden pt-24 pb-16">
       {/* Background Orbs */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-teal/10 blur-[120px] rounded-full pointer-events-none -z-10 mix-blend-screen"></div>
+      <PublicBackground />
       
-      <div className="max-w-4xl mx-auto px-6">
+      <PublicHeader />
+
+      <div className="max-w-4xl mx-auto px-6 mt-12">
         <div className="text-center mb-16">
           <div className="w-16 h-16 bg-gradient-to-br from-accent-teal/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-accent-teal/30 shadow-[0_0_30px_rgba(0,242,255,0.15)]">
              <Layers className="w-8 h-8 text-accent-teal" />

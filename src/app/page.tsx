@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, Lock, ShieldCheck, Zap, Building2, Users, CheckCircle2 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { PublicHeader } from "@/components/PublicHeader";
+import { PublicBackground } from "@/components/PublicBackground";
 
 export default function LandingPage() {
   const { t, language, setLanguage } = useSettings();
@@ -11,49 +13,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground selection:bg-accent-teal/30 selection:text-accent-teal overflow-x-hidden">
       
       {/* Background Effects */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 dark:bg-cyan-500/20 blur-[120px] rounded-full mix-blend-screen opacity-50 dark:opacity-100 animate-pulse-slow"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-600/10 dark:bg-violet-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50 dark:opacity-100 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-      </div>
+      <PublicBackground />
 
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          {/* Isotipo */}
-          <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center border border-accent-teal/30 shadow-[0_0_15px_rgba(0,242,255,0.15)]">
-            <svg className="w-6 h-6 text-accent-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight hidden sm:block">ReWork</span>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
-          <a href="#features" className="hover:text-foreground transition-colors">Infraestructura</a>
-          <a href="#solutions" className="hover:text-foreground transition-colors">Soluciones</a>
-          <a href="#pricing" className="hover:text-foreground transition-colors">Planes</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle transition-colors text-xs font-bold text-muted hover:text-foreground"
-            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-          >
-            {language === 'es' ? 'ES' : 'EN'}
-          </button>
-          <Link href="/auth" className="hidden sm:block text-sm font-medium text-muted hover:text-foreground transition-colors">
-            Iniciar Sesión
-          </Link>
-          <Link 
-            href="/auth" 
-            className="group relative px-6 py-2.5 bg-accent-teal text-black rounded-lg font-bold text-sm overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.2)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all"
-          >
-            <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-            <span className="relative flex items-center gap-2">
-              Comenzar <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </Link>
-        </div>
-      </nav>
+      <PublicHeader />
 
       <main className="relative z-10 w-full">
         {/* Hero Section */}
