@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Shield, Lock, FileCheck, ArrowRight } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicBackground } from "@/components/PublicBackground";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export default function SeguridadPage() {
   return (
@@ -67,6 +68,7 @@ export default function SeguridadPage() {
           </Link>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

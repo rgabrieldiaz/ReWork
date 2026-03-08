@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UserCircle, ArrowRight } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicBackground } from "@/components/PublicBackground";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export default function SobreNosotrosPage() {
   return (
@@ -42,6 +43,7 @@ export default function SobreNosotrosPage() {
           </Link>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

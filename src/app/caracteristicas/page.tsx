@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Layers, Activity, ArrowRight } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicBackground } from "@/components/PublicBackground";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export default function CaracteristicasPage() {
   return (
@@ -52,6 +53,7 @@ export default function CaracteristicasPage() {
           </Link>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }
