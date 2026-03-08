@@ -9,6 +9,69 @@ export const translations = {
             learning: "Capacitación",
             helpDesk: "Soporte"
         },
+        publicNav: {
+            infrastructure: "Infraestructura",
+            solutions: "Soluciones",
+            plans: "Planes",
+            login: "Iniciar Sesión"
+        },
+        landing: {
+            hero: {
+                badge: "Stellar Network V2.0 Active",
+                title1: "El valor de la confianza, ",
+                title2: "garantizado por código.",
+                desc: "La infraestructura donde la reputación es tu activo más valioso y los pagos en USDC se liberan automáticamente al cumplir objetivos.",
+                ctaPrimary: "Comenzar mi Identidad",
+                ctaSecondary: "Explorar Infraestructura"
+            },
+            features: {
+                title: "Pilares de Confianza",
+                desc: "Construido con tecnología blockchain de vanguardia para garantizar transparencia absoluta.",
+                f1Title: "Pagos Automatizados",
+                f1Desc: "Contratos Escrow inteligentes (Trustless Work) que aseguran los fondos y los liberan instantáneamente solo cuando el trabajo es validado por la comunidad o líderes.",
+                f2Title: "Identidad Soberana (AURA)",
+                f2Desc: "Tu reputación profesional es inmutable y te pertenece. Acumulá AURA a través de colaboraciones exitosas y llévatela a cualquier ecosistema B2B.",
+                f3Title: "Eficiencia Stellar",
+                f3Desc: "Liquidaciones globales en segundos con fracciones de centavo en comisiones usando USDC nativo sobre la red Stellar. Pagos fronterizos sin fricción."
+            },
+            solutions: {
+                title: "¿Para Quién es ReWork?",
+                desc: "Un entorno dual diseñado para impulsar tanto a estructuras tradicionales como a nuevas formas organizacionales.",
+                s1Title: "Corporaciones y PyMEs",
+                s1Desc: "Moderniza la retención de talento mediante un ecosistema interno (Squad Goals) para incentivos, bonos garantizados por código y un mercado peer-to-peer exclusivo para tu equipo.",
+                s1Bullets: ["Retención de Talento", "Bonos Transparentes", "Marketplace Interno"],
+                s2Title: "Comunidades y Alianzas (DAOs)",
+                s2Desc: "Infraestructura perfecta para coordinar trabajo descentralizado, manejar presupuestos conjuntos (Treasury) y repartir pagos de recompensas (Bounties) de forma justa y trustless.",
+                s2Bullets: ["Gestión de Bounties", "Tesorería Conjunta", "Reputación Cross-Chain"]
+            },
+            pricing: {
+                title: "Planes de Infraestructura",
+                desc: "Elige el plan que se adapte a la escala de tu confianza.",
+                monthDesc: " / mes",
+                p1: {
+                    title: "Personal Identidad",
+                    price: "Gratis",
+                    desc: "Para freelancers y profesionales independientes.",
+                    bullets: ["Perfil AURA Universal", "Acceso a Workspaces Públicos", "Wallet Stellar integrada"],
+                    cta: "Crear Identidad"
+                },
+                p2: {
+                    badge: "MÁS POPULAR",
+                    title: "Workspace Pro",
+                    price: "$99",
+                    desc: "Para PyMEs, Agencias y Comunidades DAO.",
+                    bullets: ["Entorno Workspace Privado", "Marketplace P2P Interno", "Hasta 50 usuarios (AURA)", "Smart Contracts de Trustless Work"],
+                    cta: "Comenzar Prueba"
+                },
+                p3: {
+                    title: "Enterprise",
+                    price: "A Medida",
+                    desc: "Corporaciones multinacionales y grandes alianzas.",
+                    bullets: ["Usuarios ilimitados", "API de Interoperabilidad", "Soporte Dedicado 24/7", "Nodos Privados Stellar (Opcional)"],
+                    cta: "Contactar Ventas"
+                }
+            }
+        },
         header: {
             welcome: "Buenas",
             totalNetWorth: "Patrimonio Total",
@@ -276,6 +339,69 @@ export const translations = {
             people: "Team",
             learning: "Learning",
             helpDesk: "Help Desk"
+        },
+        publicNav: {
+            infrastructure: "Infrastructure",
+            solutions: "Solutions",
+            plans: "Plans",
+            login: "Log In"
+        },
+        landing: {
+            hero: {
+                badge: "Stellar Network V2.0 Active",
+                title1: "The value of trust, ",
+                title2: "guaranteed by code.",
+                desc: "The infrastructure where reputation is your most valuable asset and USDC payments are automatically released upon achieving goals.",
+                ctaPrimary: "Start My Identity",
+                ctaSecondary: "Explore Infrastructure"
+            },
+            features: {
+                title: "Pillars of Trust",
+                desc: "Built with cutting-edge blockchain technology to ensure absolute transparency.",
+                f1Title: "Automated Payments",
+                f1Desc: "Smart Escrow contracts (Trustless Work) that secure funds and release them instantly only when the work is validated by the community or leaders.",
+                f2Title: "Sovereign Identity (AURA)",
+                f2Desc: "Your professional reputation is immutable and belongs to you. Hoard AURA through successful collaborations and take it to any B2B ecosystem.",
+                f3Title: "Stellar Efficiency",
+                f3Desc: "Global settlements in seconds with fraction-of-a-cent fees using native USDC on the Stellar network. Frictionless cross-border payments."
+            },
+            solutions: {
+                title: "Who is ReWork For?",
+                desc: "A dual environment designed to empower both traditional structures and new organizational forms.",
+                s1Title: "Corporations and SMBs",
+                s1Desc: "Modernize talent retention through an internal ecosystem (Squad Goals) for incentives, code-guaranteed bonuses, and an exclusive peer-to-peer marketplace for your team.",
+                s1Bullets: ["Talent Retention", "Transparent Bonuses", "Internal Marketplace"],
+                s2Title: "Communities and Alliances (DAOs)",
+                s2Desc: "Perfect infrastructure for coordinating decentralized work, managing joint budgets (Treasury), and distributing reward payments (Bounties) fairly and trustlessly.",
+                s2Bullets: ["Bounty Management", "Joint Treasury", "Cross-Chain Reputation"]
+            },
+            pricing: {
+                title: "Infrastructure Plans",
+                desc: "Choose the plan that fits the scale of your trust.",
+                monthDesc: " / month",
+                p1: {
+                    title: "Personal Identity",
+                    price: "Free",
+                    desc: "For freelancers and independent professionals.",
+                    bullets: ["Universal AURA Profile", "Public Workspaces Access", "Integrated Stellar Wallet"],
+                    cta: "Create Identity"
+                },
+                p2: {
+                    badge: "MOST POPULAR",
+                    title: "Workspace Pro",
+                    price: "$99",
+                    desc: "For SMBs, Agencies, and DAO Communities.",
+                    bullets: ["Private Workspace Environment", "Internal P2P Marketplace", "Up to 50 users (AURA)", "Trustless Work Smart Contracts"],
+                    cta: "Start Trial"
+                },
+                p3: {
+                    title: "Enterprise",
+                    price: "Custom",
+                    desc: "Multinational corporations and massive alliances.",
+                    bullets: ["Unlimited users", "Interoperability API", "24/7 Dedicated Support", "Private Stellar Nodes (Optional)"],
+                    cta: "Contact Sales"
+                }
+            }
         },
         header: {
             welcome: "Gm",

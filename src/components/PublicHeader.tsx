@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 
-const NavContent = ({ language, setLanguage, className = "" }: any) => (
+const NavContent = ({ language, setLanguage, t, className = "" }: any) => (
   <div className={`flex items-center justify-between px-6 max-w-7xl mx-auto w-full relative ${className}`}>
     <div className="flex items-center gap-2">
       <Link href="/" className="flex items-center gap-2">
@@ -20,9 +20,9 @@ const NavContent = ({ language, setLanguage, className = "" }: any) => (
     </div>
     
     <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-sm font-medium text-muted">
-      <Link href="/caracteristicas" className="hover:text-foreground transition-colors">Infraestructura</Link>
-      <Link href="/sobre-nosotros" className="hover:text-foreground transition-colors">Soluciones</Link>
-      <Link href="/planes" className="hover:text-foreground transition-colors">Planes</Link>
+      <Link href="/caracteristicas" className="hover:text-foreground transition-colors">{t.publicNav.infrastructure}</Link>
+      <Link href="/sobre-nosotros" className="hover:text-foreground transition-colors">{t.publicNav.solutions}</Link>
+      <Link href="/planes" className="hover:text-foreground transition-colors">{t.publicNav.plans}</Link>
     </div>
     
     <div className="flex items-center gap-4">
@@ -39,7 +39,7 @@ const NavContent = ({ language, setLanguage, className = "" }: any) => (
       >
         <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
         <span className="relative flex items-center gap-2 z-10">
-          Iniciar Sesión <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          {t.publicNav.login} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </span>
       </Link>
     </div>
@@ -47,7 +47,7 @@ const NavContent = ({ language, setLanguage, className = "" }: any) => (
 );
 
 export function PublicHeader() {
-  const { language, setLanguage } = useSettings();
+  const { language, setLanguage, t } = useSettings();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function PublicHeader() {
     <>
       {/* Static Header (Original) */}
       <nav className="relative z-50 w-full bg-transparent">
-        <NavContent language={language} setLanguage={setLanguage} className="py-6" />
+        <NavContent language={language} setLanguage={setLanguage} t={t} className="py-6" />
       </nav>
 
       {/* Hidden Sticky Header sliding from top */}
@@ -79,8 +79,8 @@ export function PublicHeader() {
           isScrolled ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        <nav className="bg-black/90 backdrop-blur-md border-b border-border/50 shadow-2xl w-full">
-          <NavContent language={language} setLanguage={setLanguage} className="py-4" />
+        <nav className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-2xl w-full">
+          <NavContent language={language} setLanguage={setLanguage} t={t} className="py-4" />
         </nav>
       </div>
     </>

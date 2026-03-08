@@ -27,18 +27,18 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-teal opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-teal"></span>
             </span>
-            <span className="text-xs font-mono font-medium text-muted">Stellar Network V2.0 Active</span>
+            <span className="text-xs font-mono font-medium text-muted">{t.landing.hero.badge}</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8 max-w-4xl text-balance leading-[1.1]">
-            El valor de la confianza, <br/>
+            {t.landing.hero.title1}<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-teal via-cyan-400 to-blue-500">
-              garantizado por código.
+              {t.landing.hero.title2}
             </span>
           </h1>
           
           <p className="text-lg md:text-xl text-muted max-w-2xl text-balance mb-12">
-            La infraestructura donde la reputación es tu activo más valioso y los pagos en USDC se liberan automáticamente al cumplir objetivos.
+            {t.landing.hero.desc}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -46,14 +46,14 @@ export default function LandingPage() {
               href="/auth" 
               className="px-8 py-4 bg-foreground text-background rounded-xl font-bold hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 shadow-xl hover:scale-105 active:scale-95"
             >
-              Comenzar mi Identidad
+              {t.landing.hero.ctaPrimary}
               <Zap className="w-5 h-5 text-accent-teal" />
             </Link>
             <a 
               href="#features" 
               className="px-8 py-4 glass-card border border-border-subtle hover:border-accent-teal/50 rounded-xl font-bold transition-all flex items-center justify-center hover:bg-foreground/5"
             >
-              Explorar Infraestructura
+              {t.landing.hero.ctaSecondary}
             </a>
           </div>
         </section>
@@ -62,8 +62,8 @@ export default function LandingPage() {
         <section id="features" className="py-24 px-6 border-y border-border-subtle bg-foreground/[0.02]">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Pilares de Confianza</h2>
-              <p className="text-muted max-w-2xl mx-auto">Construido con tecnología blockchain de vanguardia para garantizar transparencia absoluta.</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.landing.features.title}</h2>
+              <p className="text-muted max-w-2xl mx-auto">{t.landing.features.desc}</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -72,9 +72,9 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 border border-blue-500/20 group-hover:scale-110 transition-transform">
                   <Lock className="w-7 h-7 text-blue-500" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Pagos Automatizados</h3>
+                <h3 className="text-xl font-bold mb-3">{t.landing.features.f1Title}</h3>
                 <p className="text-muted leading-relaxed">
-                  Contratos Escrow inteligentes (Trustless Work) que aseguran los fondos y los liberan instantáneamente solo cuando el trabajo es validado por la comunidad o líderes.
+                  {t.landing.features.f1Desc}
                 </p>
               </div>
 
@@ -85,9 +85,9 @@ export default function LandingPage() {
                   <div className="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 border border-purple-500/20 group-hover:scale-110 transition-transform">
                     <ShieldCheck className="w-7 h-7 text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Identidad Soberana (AURA)</h3>
+                  <h3 className="text-xl font-bold mb-3">{t.landing.features.f2Title}</h3>
                   <p className="text-muted leading-relaxed">
-                    Tu reputación profesional es inmutable y te pertenece. Acumulá AURA a través de colaboraciones exitosas y llévatela a cualquier ecosistema B2B.
+                    {t.landing.features.f2Desc}
                   </p>
                 </div>
               </div>
@@ -97,9 +97,9 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 border border-emerald-500/20 group-hover:scale-110 transition-transform">
                   <Zap className="w-7 h-7 text-emerald-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Eficiencia Stellar</h3>
+                <h3 className="text-xl font-bold mb-3">{t.landing.features.f3Title}</h3>
                 <p className="text-muted leading-relaxed">
-                  Liquidaciones globales en segundos con fracciones de centavo en comisiones usando USDC nativo sobre la red Stellar. Pagos fronterizos sin fricción.
+                  {t.landing.features.f3Desc}
                 </p>
               </div>
             </div>
@@ -109,8 +109,8 @@ export default function LandingPage() {
         {/* Solutions: Who is this for? */}
         <section id="solutions" className="py-24 px-6 max-w-7xl mx-auto">
            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">¿Para Quién es ReWork?</h2>
-              <p className="text-muted max-w-2xl mx-auto">Un entorno dual diseñado para impulsar tanto a estructuras tradicionales como a nuevas formas organizacionales.</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.landing.solutions.title}</h2>
+              <p className="text-muted max-w-2xl mx-auto">{t.landing.solutions.desc}</p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
@@ -118,12 +118,12 @@ export default function LandingPage() {
               <div className="glass-card p-10 border border-border-subtle rounded-3xl relative overflow-hidden group">
                 <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
                 <Building2 className="w-10 h-10 text-blue-400 mb-6" />
-                <h3 className="text-2xl font-bold mb-4">Corporaciones y PyMEs</h3>
+                <h3 className="text-2xl font-bold mb-4">{t.landing.solutions.s1Title}</h3>
                 <p className="text-muted mb-8 leading-relaxed">
-                  Moderniza la retención de talento mediante un ecosistema interno (Squad Goals) para incentivos, bonos garantizados por código y un mercado peer-to-peer exclusivo para tu equipo.
+                  {t.landing.solutions.s1Desc}
                 </p>
                 <ul className="space-y-3 mb-8">
-                  {['Retención de Talento', 'Bonos Transparentes', 'Marketplace Interno'].map((item, i) => (
+                  {t.landing.solutions.s1Bullets.map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-muted">
                       <CheckCircle2 className="w-4 h-4 text-blue-400" /> {item}
                     </li>
@@ -135,12 +135,12 @@ export default function LandingPage() {
                <div className="glass-card p-10 border border-border-subtle rounded-3xl relative overflow-hidden group">
                 <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-accent-teal/10 blur-3xl rounded-full"></div>
                 <Users className="w-10 h-10 text-accent-teal mb-6" />
-                <h3 className="text-2xl font-bold mb-4">Comunidades y Alianzas (DAOs)</h3>
+                <h3 className="text-2xl font-bold mb-4">{t.landing.solutions.s2Title}</h3>
                 <p className="text-muted mb-8 leading-relaxed">
-                  Infraestructura perfecta para coordinar trabajo descentralizado, manejar presupuestos conjuntos (Treasury) y repartir pagos de recompensas (Bounties) de forma justa y trustless.
+                  {t.landing.solutions.s2Desc}
                 </p>
                 <ul className="space-y-3 mb-8">
-                  {['Gestión de Bounties', 'Tesorería Conjunta', 'Reputación Cross-Chain'].map((item, i) => (
+                  {t.landing.solutions.s2Bullets.map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-muted">
                       <CheckCircle2 className="w-4 h-4 text-accent-teal" /> {item}
                     </li>
@@ -153,55 +153,53 @@ export default function LandingPage() {
         {/* Pricing */}
         <section id="pricing" className="py-24 px-6 border-t border-border-subtle bg-foreground/[0.02]">
           <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Planes de Infraestructura</h2>
-            <p className="text-muted max-w-2xl mx-auto mb-16">Elige el plan que se adapte a la escala de tu confianza.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.landing.pricing.title}</h2>
+            <p className="text-muted max-w-2xl mx-auto mb-16">{t.landing.pricing.desc}</p>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto text-left">
               
               <div className="glass-card p-8 rounded-3xl border border-border-subtle">
-                <h3 className="text-xl font-bold mb-2">Personal Identidad</h3>
-                <p className="text-2xl font-mono font-bold mb-6">Gratis</p>
-                <p className="text-sm text-muted mb-8">Para freelancers y profesionales independientes.</p>
+                <h3 className="text-xl font-bold mb-2">{t.landing.pricing.p1.title}</h3>
+                <p className="text-2xl font-mono font-bold mb-6">{t.landing.pricing.p1.price}</p>
+                <p className="text-sm text-muted mb-8">{t.landing.pricing.p1.desc}</p>
                 <ul className="space-y-4 mb-8">
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Perfil AURA Universal</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Acceso a Workspaces Públicos</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Wallet Stellar integrada</li>
+                  {t.landing.pricing.p1.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> {b}</li>
+                  ))}
                 </ul>
                 <Link href="/auth" className="block w-full text-center py-3 rounded-xl border border-border-subtle hover:bg-foreground/5 transition-colors font-bold text-sm">
-                  Crear Identidad
+                  {t.landing.pricing.p1.cta}
                 </Link>
               </div>
 
               <div className="glass-card p-8 rounded-3xl border-2 border-accent-teal relative transform md:-translate-y-4 shadow-[0_0_30px_rgba(0,242,255,0.1)]">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent-teal text-black text-xs font-bold px-3 py-1 rounded-full">
-                  MÁS POPULAR
+                  {t.landing.pricing.p2.badge}
                 </div>
-                <h3 className="text-xl font-bold mb-2">Workspace Pro</h3>
-                <p className="text-2xl font-mono font-bold mb-6">$99<span className="text-sm text-muted font-sans"> / mes</span></p>
-                <p className="text-sm text-muted mb-8">Para PyMEs, Agencias y Comunidades DAO.</p>
+                <h3 className="text-xl font-bold mb-2">{t.landing.pricing.p2.title}</h3>
+                <p className="text-2xl font-mono font-bold mb-6">{t.landing.pricing.p2.price}<span className="text-sm text-muted font-sans">{t.landing.pricing.monthDesc}</span></p>
+                <p className="text-sm text-muted mb-8">{t.landing.pricing.p2.desc}</p>
                 <ul className="space-y-4 mb-8">
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Entorno Workspace Privado</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Marketplace P2P Interno</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Hasta 50 usuarios (AURA)</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Smart Contracts de Trustless Work</li>
+                  {t.landing.pricing.p2.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> {b}</li>
+                  ))}
                 </ul>
                 <Link href="/auth" className="block w-full text-center py-3 rounded-xl bg-accent-teal text-black hover:bg-accent-teal/90 transition-colors font-bold text-sm shadow-md">
-                  Comenzar Prueba
+                  {t.landing.pricing.p2.cta}
                 </Link>
               </div>
 
               <div className="glass-card p-8 rounded-3xl border border-border-subtle">
-                <h3 className="text-xl font-bold mb-2">Enterprise</h3>
-                <p className="text-2xl font-mono font-bold mb-6">A Medida</p>
-                <p className="text-sm text-muted mb-8">Corporaciones multinacionales y grandes alianzas.</p>
+                <h3 className="text-xl font-bold mb-2">{t.landing.pricing.p3.title}</h3>
+                <p className="text-2xl font-mono font-bold mb-6">{t.landing.pricing.p3.price}</p>
+                <p className="text-sm text-muted mb-8">{t.landing.pricing.p3.desc}</p>
                 <ul className="space-y-4 mb-8">
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Usuarios ilimitados</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> API de Interoperabilidad</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Soporte Dedicado 24/7</li>
-                  <li className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> Nodos Privados Stellar (Opcional)</li>
+                  {t.landing.pricing.p3.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-3 text-sm"><CheckCircle2 className="w-5 h-5 text-accent-teal shrink-0" /> {b}</li>
+                  ))}
                 </ul>
                 <button className="block w-full text-center py-3 rounded-xl border border-border-subtle hover:bg-foreground/5 transition-colors font-bold text-sm">
-                  Contactar Ventas
+                  {t.landing.pricing.p3.cta}
                 </button>
               </div>
 
