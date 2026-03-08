@@ -31,9 +31,9 @@ export function PublicFooter() {
         <div>
           <h4 className="font-bold mb-4">Legal</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Términos de Uso</a></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Privacidad</a></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Status</a></li>
+            <li><Link href="/terminos-de-uso" className="hover:text-accent-teal transition-colors">Términos de Uso</Link></li>
+            <li><Link href="/privacidad" className="hover:text-accent-teal transition-colors">Privacidad</Link></li>
+            <li><Link href="/status" className="hover:text-accent-teal transition-colors">Status</Link></li>
           </ul>
         </div>
       </div>

@@ -1,14 +1,28 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 
 export function PublicHeader() {
   const { language, setLanguage } = useSettings();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <nav className="relative z-50 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto w-full">
+    <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border/50 py-3 shadow-lg" : "bg-transparent py-6"
+    }`}>
+      <nav className="flex items-center justify-between px-6 max-w-7xl mx-auto w-full">
       <div className="flex items-center gap-2">
         <Link href="/" className="flex items-center gap-2">
           {/* Isotipo */}
@@ -20,7 +34,7 @@ export function PublicHeader() {
           <span className="text-xl font-bold tracking-tight hidden sm:block">ReWork</span>
         </Link>
       </div>
-      <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
+      <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-sm font-medium text-muted">
         <Link href="/caracteristicas" className="hover:text-foreground transition-colors">Infraestructura</Link>
         <Link href="/sobre-nosotros" className="hover:text-foreground transition-colors">Soluciones</Link>
         <Link href="/planes" className="hover:text-foreground transition-colors">Planes</Link>
@@ -33,19 +47,17 @@ export function PublicHeader() {
         >
           {language === 'es' ? 'ES' : 'EN'}
         </button>
-        <Link href="/auth" className="hidden sm:block text-sm font-medium text-muted hover:text-foreground transition-colors">
-          Iniciar Sesión
-        </Link>
         <Link 
           href="/auth" 
-          className="group relative px-6 py-2.5 bg-accent-teal text-black rounded-lg font-bold text-sm overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.2)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all"
+          className="group relative px-6 py-2.5 bg-accent-teal text-black rounded-lg font-bold text-sm overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.2)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all flex items-center gap-2"
         >
           <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-          <span className="relative flex items-center gap-2">
-            Comenzar <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <span className="relative flex items-center gap-2 z-10">
+            Iniciar Sesión <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </span>
         </Link>
       </div>
-    </nav>
+      </nav>
+    </div>
   );
 }

@@ -11,7 +11,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const { isSidebarCollapsed } = useSettings();
     const pathname = usePathname();
 
-    const publicPaths = ["/", "/auth", "/workspaces", "/caracteristicas", "/seguridad", "/planes", "/sobre-nosotros", "/logout"];
+    const publicPaths = ["/", "/auth", "/workspaces", "/caracteristicas", "/seguridad", "/planes", "/sobre-nosotros", "/terminos-de-uso", "/privacidad", "/status", "/logout"];
     const isPublicRoute = publicPaths.includes(pathname) || pathname.startsWith("/join/");
 
     return (
