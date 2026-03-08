@@ -7,7 +7,8 @@ export const translations = {
             marketplace: "Mercado",
             people: "Colaboradores",
             learning: "Capacitación",
-            helpDesk: "Soporte"
+            helpDesk: "Soporte",
+            web3Identity: "Red Web3"
         },
         publicNav: {
             infrastructure: "Infraestructura",
@@ -71,6 +72,26 @@ export const translations = {
                     cta: "Contactar Ventas"
                 }
             }
+        },
+        publicFooter: {
+            product: "Producto",
+            features: "Características",
+            security: "Seguridad",
+            plans: "Planes",
+            developers: "Desarrolladores",
+            apiDocs: "Documentación API",
+            stellarDocs: "Stellar/Soroban Docs",
+            trustlessRepo: "Trustless Work Repo",
+            company: "Compañía",
+            about: "Sobre Nosotros",
+            blog: "Blog",
+            careers: "Carreras",
+            legal: "Legal",
+            terms: "Términos de Uso",
+            privacy: "Privacidad",
+            status: "Status",
+            rights: "© 2026 ReWork Decentralized Infrastructure. Todos los derechos reservados.",
+            operational: "Stellar Network: Operacional"
         },
         header: {
             welcome: "Buenas",
@@ -328,6 +349,40 @@ export const translations = {
             fillFields: "Por favor, completá todos los campos correctamente.",
             success: "Propuesta de misión enviada al Squad.",
             error: "Error al crear propuesta:"
+        },
+        carrerasPage: {
+            title: "Trabajá en ReWork",
+            subtitle: "Construyendo la infraestructura de confianza del futuro.",
+            openPositions: "Posiciones Abiertas",
+            noPositions: "No hay posiciones abiertas en este momento. Por favor, revisa más adelante o escríbenos a talento@rework.com",
+            whyJoin: "Por qué unirte a nosotros",
+            reason1Desc: "Impactamos el futuro del trabajo.",
+            reason2Desc: "Trabajo 100% remoto y asíncrono.",
+            reason3Desc: "Compensación en Stablecoins (USDC)."
+        },
+        docsPage: {
+            searchPlaceholder: "Buscar en la documentación...",
+            heroTitle: "Centro de Documentación",
+            heroSubtitle: "Encuentra toda la ayuda técnica y recursos sobre ReWork, Stellar y Trustless Work.",
+            resourcesTitle: "Recursos Oficiales",
+            stellarDocs: "Documentación de Stellar",
+            stellarDesc: "Aprende cómo operamos sobre la red blockchain más rápida para pagos.",
+            twDocs: "Trustless Work Escrow",
+            twDesc: "Descubre cómo funcionan los contratos inteligentes para asegurar la confianza.",
+            apiDocs: "ReWork API",
+            apiDesc: "Integra nuestra plataforma B2B en tu propio sistema empresarial.",
+            helpTitle: "Cómo funciona ReWork",
+            article1Title: "¿Qué es una Colecta Trustless?",
+            article1Desc: "Una colecta trustless retiene fondos en un smart contract hasta cumplirse la meta. Garantiza que el dinero no pueda ser usado para otro fin.",
+            article2Title: "Entendiendo las Misiones de Equipo",
+            article2Desc: "Los Squad Goals son contratos multi-firma donde la comunidad aprueba la liberación de recompensas USDC de forma distribuida.",
+            article3Title: "Tu Reputación (AURA)",
+            article3Desc: "El AURA es inmutable y vive en la cadena. Aprende cómo ganar AURA y llevarlo contigo."
+        },
+        blogPage: {
+            title: "Blog en Construcción",
+            subtitle: "Pronto comenzaremos a comunicar novedades, guías del ecosistema e historias de éxito.",
+            actionText: "Aún no está disponible, pero estamos preparando contenido de valor para la comunidad."
         }
     },
     en: {
@@ -338,7 +393,8 @@ export const translations = {
             marketplace: "Marketplace",
             people: "Team",
             learning: "Learning",
-            helpDesk: "Help Desk"
+            helpDesk: "Help Desk",
+            web3Identity: "Web3 Network"
         },
         publicNav: {
             infrastructure: "Infrastructure",
@@ -402,6 +458,26 @@ export const translations = {
                     cta: "Contact Sales"
                 }
             }
+        },
+        publicFooter: {
+            product: "Product",
+            features: "Features",
+            security: "Security",
+            plans: "Plans",
+            developers: "Developers",
+            apiDocs: "API Documentation",
+            stellarDocs: "Stellar/Soroban Docs",
+            trustlessRepo: "Trustless Work Repo",
+            company: "Company",
+            about: "About Us",
+            blog: "Blog",
+            careers: "Careers",
+            legal: "Legal",
+            terms: "Terms of Use",
+            privacy: "Privacy",
+            status: "Status",
+            rights: "© 2026 ReWork Decentralized Infrastructure. All rights reserved.",
+            operational: "Stellar Network: Operational"
         },
         header: {
             welcome: "Gm",
@@ -658,6 +734,40 @@ export const translations = {
             fillFields: "Please fill in all fields correctly.",
             success: "Mission proposal sent to Squad.",
             error: "Error creating proposal:"
+        },
+        carrerasPage: {
+            title: "Join ReWork",
+            subtitle: "Building the trust infrastructure of the future.",
+            openPositions: "Open Positions",
+            noPositions: "There are no open positions at this moment. Please check back later or email us at talent@rework.com",
+            whyJoin: "Why Join Us",
+            reason1Desc: "We impact the future of work.",
+            reason2Desc: "100% remote and asynchronous work.",
+            reason3Desc: "Compensation in Stablecoins (USDC)."
+        },
+        docsPage: {
+            searchPlaceholder: "Search documentation...",
+            heroTitle: "Documentation Center",
+            heroSubtitle: "Find all technical help and resources about ReWork, Stellar, and Trustless Work.",
+            resourcesTitle: "Official Resources",
+            stellarDocs: "Stellar Documentation",
+            stellarDesc: "Learn how we operate on the fastest blockchain network for payments.",
+            twDocs: "Trustless Work Escrow",
+            twDesc: "Discover how smart contracts work to ensure trust.",
+            apiDocs: "ReWork API",
+            apiDesc: "Integrate our B2B platform into your own enterprise system.",
+            helpTitle: "How ReWork Works",
+            article1Title: "What is a Trustless Pool?",
+            article1Desc: "A trustless pool holds funds in a smart contract until the goal is met. It guarantees money cannot be used for anything else.",
+            article2Title: "Understanding Squad Goals",
+            article2Desc: "Squad Goals are multi-sig contracts where the community approves the release of USDC rewards in a distributed manner.",
+            article3Title: "Your Reputation (AURA)",
+            article3Desc: "AURA is immutable and lives on-chain. Learn how to earn AURA and take it with you."
+        },
+        blogPage: {
+            title: "Blog under Construction",
+            subtitle: "We will soon start communicating news, ecosystem guides, and success stories.",
+            actionText: "Not available yet, but we are preparing valuable content for the community."
         }
     }
 };

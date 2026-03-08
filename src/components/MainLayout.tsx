@@ -11,21 +11,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const { isSidebarCollapsed } = useSettings();
     const pathname = usePathname();
 
-    const publicPaths = ["/", "/auth", "/workspaces", "/caracteristicas", "/seguridad", "/planes", "/sobre-nosotros", "/terminos-de-uso", "/privacidad", "/status", "/logout"];
-    const isPublicRoute = publicPaths.includes(pathname) || pathname.startsWith("/join/");
+    const isAppRoute = pathname.startsWith("/app");
 
     return (
         <div className="flex h-screen overflow-hidden">
-            {!isPublicRoute && (
+            {isAppRoute && (
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             )}
             <main id="main-scroll-container" className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${
-                isPublicRoute ? '' : (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
+                !isAppRoute ? '' : (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
             }`}>
-                {!isPublicRoute && (
+                {isAppRoute && (
                     <Header onMenuClick={() => setIsSidebarOpen(true)} />
                 )}
-                <div className={isPublicRoute ? "" : "p-4 sm:p-8"}>
+                <div className={!isAppRoute ? "" : "p-4 sm:p-8"}>
                     {children}
                 </div>
             </main>

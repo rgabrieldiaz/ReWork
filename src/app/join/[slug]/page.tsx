@@ -55,7 +55,7 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
       setError("Error al unirse al workspace: " + joinError.message);
     } else {
       localStorage.setItem("rework_current_workspace", workspace.id);
-      router.push("/dashboard");
+      router.push("/app");
     }
   };
 

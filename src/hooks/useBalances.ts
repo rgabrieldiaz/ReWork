@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
 export function useBalances(address: string | null) {
@@ -6,6 +6,11 @@ export function useBalances(address: string | null) {
     const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const refresh = useCallback(() => {
+        setRefreshKey(k => k + 1);
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -13,6 +18,7 @@ export function useBalances(address: string | null) {
         const fetchBalance = async () => {
             if (!address) {
                 setXlmBalance(null);
+                setUsdcBalance(null);
                 setLoading(false);
                 return;
             }
@@ -21,27 +27,20 @@ export function useBalances(address: string | null) {
             setError(null);
 
             try {
-                // Pointing to testnet by default for ReWork development
-                // You can swap to 'https://horizon.stellar.org' for mainnet
                 const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
-
                 const account = await server.loadAccount(address);
 
-                // Find the native (XLM) balance
                 const nativeBalance = account.balances.find(b => b.asset_type === 'native');
-
-                // Find USDC balance (looking by asset_code since testnet issuers can vary, but typically we'd match exact issuer)
                 const usdcBalanceAsset = account.balances.find(b => 'asset_code' in b && b.asset_code === 'USDC');
 
                 if (isMounted) {
                     if (nativeBalance) setXlmBalance(parseFloat(nativeBalance.balance));
                     if (usdcBalanceAsset) setUsdcBalance(parseFloat(usdcBalanceAsset.balance));
-                    else setUsdcBalance(0); // If no trustline or 0 balance
+                    else setUsdcBalance(0);
                 }
             } catch (err) {
                 const error = err as { response?: { status?: number } };
                 if (error?.response?.status === 404) {
-                    // Account not funded on the network yet
                     if (isMounted) {
                         setXlmBalance(0);
                         setUsdcBalance(0);
@@ -60,7 +59,7 @@ export function useBalances(address: string | null) {
         return () => {
             isMounted = false;
         };
-    }, [address]);
+    }, [address, refreshKey]);
 
-    return { xlmBalance, usdcBalance, loading, error };
+    return { xlmBalance, usdcBalance, loading, error, refresh };
 }

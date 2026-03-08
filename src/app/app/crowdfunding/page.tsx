@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck, RefreshCw } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
 import { ColectaDetailModal } from "@/components/ColectaDetailModal";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useInitializeEscrow } from "@trustless-work/escrow/hooks";
+import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 
 // Utils
 const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(key.length - 4)}`;
@@ -16,12 +16,17 @@ const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(k
 export default function ColectasPage() {
     const { t } = useSettings();
     const { connected, address: publicKey } = useFreighter();
-    const { deployEscrow } = useInitializeEscrow();
     const { createNotification } = useNotifications();
     const [campaigns, setCampaigns] = useState<any[]>([]);
-    const [donations, setDonations] = useState<any[]>([]); // User's matched donations
+    const [donations, setDonations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [userTeamWallets, setUserTeamWallets] = useState<Set<string>>(new Set());
+    const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     // UI State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -44,7 +49,7 @@ export default function ColectasPage() {
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [selectedColecta, setSelectedColecta] = useState<any>(null);
     const [donationAmounts, setDonationAmounts] = useState<Record<number, string>>({});
-    const [processingId, setProcessingId] = useState<number | null>(null);
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
     // Fetch data
     const fetchCampaigns = async () => {
@@ -168,7 +173,7 @@ export default function ColectasPage() {
     // Actions
     const handleDonate = async (camp: any, overrideAmount?: number) => {
         if (!connected || !publicKey) {
-            alert("Conecta tu wallet Freighter para aportar.");
+            showToast("Conecta tu wallet Freighter para aportar.", 'error');
             return;
         }
 
@@ -177,75 +182,101 @@ export default function ColectasPage() {
 
         setProcessingId(camp.id);
         try {
-            // 1. Integración con TW Escrow
-            // Payload
-            const payload = {
-                escrowType: "single-release" as const,
+            // 1. Deploy escrow via server proxy (same pattern as Marketplace)
+            const payload: any = {
+                signer: publicKey,
+                engagementId: `rework-crowdfund-${camp.id}-${Date.now()}`,
                 title: `Donación: ${camp.title}`,
-                description: `Aporte de ${amountToDonate} XLM para la colecta de ${camp.title}`,
-                sender: publicKey,
-                receiver: camp.organizer, // The organizer receives the funds
-                approver: camp.organizer, // Organizer approves (simplification)
-                fee: "100",
-                trustlines: [{ asset_type: "native", amount: amountToDonate.toString() }],
+                description: `Aporte de ${amountToDonate} USDC para la colecta de ${camp.title}`,
+                roles: {
+                    approver: camp.organizer,
+                    serviceProvider: camp.organizer,
+                    platformAddress: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW",
+                    releaseSigner: camp.organizer,
+                    disputeResolver: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW",
+                    receiver: camp.organizer,
+                },
+                amount: amountToDonate,
+                platformFee: 0.5,
+                milestones: [{ description: `Colecta: ${camp.title}` }],
+                trustline: {
+                    address: "GBBD47IF6LWK7P7MDEVSCWT7FC4JFMTWHWXIGPN6BMTWSQNEPW2H3F2P",
+                    symbol: "USDC"
+                }
             };
 
-            const deployData = await deployEscrow(payload as any, "single-release");
-            if (!deployData || !deployData.unsignedTransaction) {
-                throw new Error("No se pudo firmar el contrato en TW.");
-            }
+            const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const deployData = await deployRes.json();
+            if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow.");
 
-            // En un entorno real, firmariamos transaccion con Freighter:
-            // const { signTransaction } = await import("@stellar/freighter-api");
-            // const signedTx = await signTransaction(deployData.unsignedTransaction, { network: "TESTNET" });
-            // ... (Aca simplificamos asumiendo exito)
+            const { unsignedTransaction } = deployData;
+            if (!unsignedTransaction) throw new Error("Sin XDR de Trustless Work.");
 
-            // 2. Guardar Donación
-            const { error: dbError } = await supabase.from("crowdfund_donations").insert([
-                {
-                    crowdfund_id: camp.id,
-                    donor_public_key: publicKey,
-                    amount: parseInt(amountToDonate.toString()),
-                    escrow_contract_id: "tw_escrow_" + Math.random().toString(36).substring(7), // Mock ID
-                }
-            ]);
+            // 2. Sign with Freighter
+            const net = await getNetworkDetails();
+            const signedResult = await signTransaction(unsignedTransaction, {
+                networkPassphrase: net.networkPassphrase || "Test SDF Network ; September 2015"
+            });
+            const signedXdr = typeof signedResult === "string" ? signedResult : (signedResult as any)?.signedTxXdr || (signedResult as any)?.signedXdr || signedResult;
+            if (!signedXdr) throw new Error("Firma cancelada o fallida desde Freighter.");
 
+            // 3. Submit to network
+            const sendRes = await fetch('/api/trustless-work/send-transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ xdr: signedXdr })
+            });
+            const sendText = await sendRes.text();
+            let sendData: any = {};
+            try { sendData = JSON.parse(sendText); } catch (_) {}
+            if (!sendRes.ok) throw new Error(sendData.error || sendData.message || "Error enviando la transacción.");
+
+            const newEscrowId = sendData.contractId || sendData.id || `escrow-cf-${Date.now()}`;
+
+            // 4. Persist donation
+            const { error: dbError } = await supabase.from("crowdfund_donations").insert([{
+                crowdfund_id: camp.id,
+                donor_public_key: publicKey,
+                amount: parseInt(amountToDonate.toString()),
+                escrow_contract_id: newEscrowId,
+            }]);
             if (dbError) throw dbError;
 
-            // 3. Actualizar Colecta
+            // 5. Update campaign amount
             const { error: rpcError } = await supabase.rpc('increment_crowdfund_amount', {
                 target_id: camp.id,
                 inc_amount: parseInt(amountToDonate.toString())
             });
-
             if (rpcError) {
-                // Fallback si RPC no existe
                 await supabase.from("crowdfunds").update({
                     current_amount: camp.current_amount + parseInt(amountToDonate.toString()),
                     donor_count: camp.donor_count + 1
                 }).eq("id", camp.id);
             }
 
-            // --- NOTIFICAR AL ORGANIZADOR ---
+            // 6. Notify organizer
             if (camp.organizer !== publicKey) {
                 await createNotification({
                     user_profile_id: camp.organizer,
                     title: "¡Nuevo aporte en tu Colecta!",
-                    message: `Han aportado ${amountToDonate} XLM/USDC a "${camp.title}".`,
+                    message: `Han aportado ${amountToDonate} USDC a "${camp.title}".`,
                     type: 'activity',
                     icon: 'Gift',
                     action_text: 'Ver Colecta',
-                    action_url: '/colectas'
+                    action_url: '/app/crowdfunding'
                 });
             }
-            // --------------------------------
 
             setDonationAmounts(prev => ({ ...prev, [camp.id]: "" }));
             fetchCampaigns();
-            alert("🎉 Donación realizada correctamente. Los fondos están en Escrow de TW.");
+            showToast("🎉 Donación realizada. Los fondos están en Escrow de Trustless Work.");
         } catch (err: any) {
             console.error(err);
-            alert("Error: " + err.message);
+            showToast("Error: " + (err.message || "Error desconocido"), 'error');
         } finally {
             setProcessingId(null);
         }
@@ -254,14 +285,49 @@ export default function ColectasPage() {
     const handleAction = async (camp: any, action: 'release' | 'refund') => {
         setProcessingId(camp.id);
         try {
-            // Simulación de interacción con TW
             await new Promise(r => setTimeout(r, 1500));
-            alert(action === 'release'
+            showToast(action === 'release'
                 ? "Fondos liberados exitosamente del Escrow hacia tu cuenta."
                 : "Se ha solicitado el reembolso (Claim Refund) de la donación."
             );
         } catch (error) {
             console.error(error);
+            showToast("Error al procesar la acción.", 'error');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    // Bug 8: Republish expired campaign
+    const handleRepublish = async (camp: any) => {
+        if (!publicKey || camp.organizer !== publicKey) {
+            showToast("Solo el organizador puede republicar.", 'error');
+            return;
+        }
+        setProcessingId(`republish-${camp.id}`);
+        try {
+            const newDeadline = new Date();
+            newDeadline.setDate(newDeadline.getDate() + 30); // +30 días
+
+            const { error } = await supabase.from('crowdfunds').insert([{
+                workspace_id: localStorage.getItem('rework_current_workspace') || '00000000-0000-0000-0000-000000000000',
+                title: camp.title,
+                description: camp.description,
+                organizer: camp.organizer,
+                goal_amount: camp.goal_amount,
+                current_amount: 0,
+                donor_count: 0,
+                deadline: newDeadline.toISOString(),
+                image: camp.image,
+                tags: camp.tags,
+                privacy: camp.privacy,
+                currency: camp.currency || 'USDC',
+            }]);
+            if (error) throw error;
+            showToast("✅ Colecta republicada con 30 días adicionales.");
+            fetchCampaigns();
+        } catch (err: any) {
+            showToast("Error al republicar: " + err.message, 'error');
         } finally {
             setProcessingId(null);
         }
@@ -269,6 +335,18 @@ export default function ColectasPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300 ${
+                    toast.type === 'error'
+                        ? 'bg-red-500/20 border-red-500/30 text-red-300'
+                        : 'bg-accent-teal/20 border-accent-teal/30 text-accent-teal'
+                }`}>
+                    {toast.type === 'error' ? <AlertCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                    <p className="text-sm font-medium">{toast.msg}</p>
+                    <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100"><X className="w-4 h-4" /></button>
+                </div>
+            )}
             {/* Cabecera, Buscador y Botón Crear */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-[60%]">

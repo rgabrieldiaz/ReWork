@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
@@ -23,13 +23,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const role = profile?.role || t.profile.role;
 
     const navItems = [
-        { name: t.nav.dashboard, href: "/", icon: Home },
-        { name: t.nav.squadGoals, href: "/squad-goals", icon: Target },
-        { name: t.nav.crowdfunding, href: "/colectas", icon: TrendingUp },
-        { name: t.nav.marketplace, href: "/marketplace", icon: ShoppingBag },
-        { name: t.nav.people, href: "/colaboradores", icon: Users },
-        { name: t.nav.learning, href: "/capacitacion", icon: Lightbulb },
-        { name: t.nav.helpDesk, href: "/helpdesk", icon: LifeBuoy },
+        { name: t.nav.dashboard, href: "/app", icon: Home },
+        { name: t.nav.squadGoals, href: "/app/squad-goals", icon: Target },
+        { name: t.nav.crowdfunding, href: "/app/crowdfunding", icon: TrendingUp },
+        { name: t.nav.marketplace, href: "/app/marketplace", icon: ShoppingBag },
+        { name: t.nav.people, href: "/app/teams", icon: Users },
+        { name: t.nav.learning, href: "/app/learn", icon: Lightbulb },
+        { name: t.nav.helpDesk, href: "/app/help-desk", icon: LifeBuoy },
+        { name: t.nav.web3Identity, href: "/app/web3-identity", icon: Globe },
     ];
 
     return (

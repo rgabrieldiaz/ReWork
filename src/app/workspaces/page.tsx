@@ -52,7 +52,7 @@ export default function WorkspacesHub() {
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
             
             {/* Corporación / Empresa (Ruta principal actual) */}
-            <Link href="/dashboard" className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] block">
+            <Link href="/app" className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] block">
                 {/* Decoration */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
                 

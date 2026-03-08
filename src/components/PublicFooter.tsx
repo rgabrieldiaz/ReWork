@@ -1,47 +1,50 @@
 import Link from "next/link";
+import { useSettings } from "@/hooks/useSettings";
 
 export function PublicFooter() {
+  const { t } = useSettings();
+
   return (
     <footer className="border-t border-border-subtle py-12 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
         <div>
-          <h4 className="font-bold mb-4">Producto</h4>
+          <h4 className="font-bold mb-4">{t.publicFooter.product}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/caracteristicas" className="hover:text-accent-teal transition-colors">Características</Link></li>
-            <li><Link href="/seguridad" className="hover:text-accent-teal transition-colors">Seguridad</Link></li>
-            <li><Link href="/planes" className="hover:text-accent-teal transition-colors">Planes</Link></li>
+            <li><Link href="/caracteristicas" className="hover:text-accent-teal transition-colors">{t.publicFooter.features}</Link></li>
+            <li><Link href="/seguridad" className="hover:text-accent-teal transition-colors">{t.publicFooter.security}</Link></li>
+            <li><Link href="/planes" className="hover:text-accent-teal transition-colors">{t.publicFooter.plans}</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="font-bold mb-4">Desarrolladores</h4>
+          <h4 className="font-bold mb-4">{t.publicFooter.developers}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Documentación API</a></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Stellar/Soroban Docs</a></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Trustless Work Repo</a></li>
+            <li><Link href="/docs" className="hover:text-accent-teal transition-colors">{t.publicFooter.apiDocs}</Link></li>
+            <li><Link href="/docs" className="hover:text-accent-teal transition-colors">{t.publicFooter.stellarDocs}</Link></li>
+            <li><Link href="/docs" className="hover:text-accent-teal transition-colors">{t.publicFooter.trustlessRepo}</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="font-bold mb-4">Compañía</h4>
+          <h4 className="font-bold mb-4">{t.publicFooter.company}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/sobre-nosotros" className="hover:text-accent-teal transition-colors">Sobre Nosotros</Link></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Blog</a></li>
-            <li><a href="#" className="hover:text-accent-teal transition-colors">Carreras</a></li>
+            <li><Link href="/sobre-nosotros" className="hover:text-accent-teal transition-colors">{t.publicFooter.about}</Link></li>
+            <li><Link href="/blog" className="hover:text-accent-teal transition-colors">{t.publicFooter.blog}</Link></li>
+            <li><Link href="/carreras" className="hover:text-accent-teal transition-colors">{t.publicFooter.careers}</Link></li>
           </ul>
         </div>
         <div>
-          <h4 className="font-bold mb-4">Legal</h4>
+          <h4 className="font-bold mb-4">{t.publicFooter.legal}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/terminos-de-uso" className="hover:text-accent-teal transition-colors">Términos de Uso</Link></li>
-            <li><Link href="/privacidad" className="hover:text-accent-teal transition-colors">Privacidad</Link></li>
-            <li><Link href="/status" className="hover:text-accent-teal transition-colors">Status</Link></li>
+            <li><Link href="/terminos-de-uso" className="hover:text-accent-teal transition-colors">{t.publicFooter.terms}</Link></li>
+            <li><Link href="/privacidad" className="hover:text-accent-teal transition-colors">{t.publicFooter.privacy}</Link></li>
+            <li><Link href="/status" className="hover:text-accent-teal transition-colors">{t.publicFooter.status}</Link></li>
           </ul>
         </div>
       </div>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border-subtle text-sm text-muted">
-        <p>© 2026 ReWork Decentralized Infrastructure. All rights reserved.</p>
+        <p>{t.publicFooter.rights}</p>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          Stellar Network: Operacional
+          {t.publicFooter.operational}
         </div>
       </div>
     </footer>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Target, Users, AlertCircle, Loader2, CheckCircle, Clock, Search, Plus, Info, X, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Target, Users, AlertCircle, Loader2, CheckCircle, Clock, Search, Plus, Info, X, ShieldCheck, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import CreateSquadGoalModal from "@/components/CreateSquadGoalModal";
@@ -25,6 +25,12 @@ export default function SquadGoalsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 5000);
+    };
 
     const { deployEscrow } = useInitializeEscrow();
     const { releaseFunds } = useReleaseFunds();
@@ -70,7 +76,7 @@ export default function SquadGoalsPage() {
     const hasVoted = (goalId: string) => votes.some(v => v.goal_id === goalId && v.wallet_address === publicKey);
 
     const handleVote = async (goalId: string) => {
-        if (!publicKey) return alert(t.alerts.connectWalletFirst);
+        if (!publicKey) return showToast(t.alerts.connectWalletFirst, 'error');
         if (hasVoted(goalId)) return;
 
         setProcessingId(goalId);
@@ -95,20 +101,21 @@ export default function SquadGoalsPage() {
             }
 
             await fetchAllData();
+            showToast("✅ Firma registrada correctamente.");
         } catch (e) {
             console.error(e);
-            alert(t.squadGoals.errorVoting);
+            showToast(t.squadGoals.errorVoting, 'error');
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleFundMission = async (goal: any) => {
-        if (!publicKey) return alert(t.alerts.connectWalletFirst);
-        if (!process.env.NEXT_PUBLIC_TW_API_KEY) return alert("Trustless Work API key missing");
+        if (!publicKey) return showToast(t.alerts.connectWalletFirst, 'error');
+        if (!process.env.NEXT_PUBLIC_TW_API_KEY) return showToast("Trustless Work API key faltante. Contactá al administrador.", 'error');
 
         const memberWallets = squadMembers.filter(m => m.wallet_address).map(m => m.wallet_address);
-        if (memberWallets.length === 0) return alert(t.squadGoals.errorFunding + " No wallets");
+        if (memberWallets.length === 0) return showToast(t.squadGoals.errorFunding + " No hay wallets de miembros registradas.", 'error');
 
         const amountPerMember = Number((goal.amount / memberWallets.length).toFixed(7));
 
@@ -170,23 +177,26 @@ export default function SquadGoalsPage() {
                     }
                 }
 
-                alert(t.squadGoals.fundSuccess);
+                showToast(t.squadGoals.fundSuccess);
                 fetchAllData();
             } else {
-                alert(`${t.squadGoals.errorFunding} ${data.message}`);
+                showToast(`${t.squadGoals.errorFunding} ${data.message}`, 'error');
             }
 
         } catch (e: any) {
             console.error("Funding error", e);
-            alert(`${t.squadGoals.errorFunding} ${e.message}`);
+            showToast(`${t.squadGoals.errorFunding} ${e.message}`, 'error');
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleReleaseMission = async (goal: any) => {
-        if (!publicKey) return alert(t.alerts.connectWalletFirst);
-        if (!goal.trustless_contract_id) return alert("No contract ID found.");
+        if (!publicKey) return showToast(t.alerts.connectWalletFirst, 'error');
+        if (!goal.trustless_contract_id) {
+            showToast("Esta misión no tiene un contrato Trustless Work activo. Debe ser fondeada primero.", 'error');
+            return;
+        }
 
         const memberWallets = squadMembers.filter(m => m.wallet_address).map(m => m.wallet_address);
 
@@ -213,12 +223,12 @@ export default function SquadGoalsPage() {
             }
 
             await supabase.from("squad_goals").update({ status: "completed" }).eq("id", goal.id);
-            alert(t.squadGoals.releaseSuccess);
+            showToast(t.squadGoals.releaseSuccess);
             fetchAllData();
 
         } catch (e: any) {
             console.error("Release error", e);
-            alert(t.squadGoals.errorFunding);
+            showToast(`Error al liberar fondos: ${e.message || 'Error desconocido'}`, 'error');
         } finally {
             setProcessingId(null);
         }
@@ -226,6 +236,18 @@ export default function SquadGoalsPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-16">
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-300 max-w-sm ${
+                    toast.type === 'error'
+                        ? 'bg-red-500/20 border-red-500/30 text-red-300'
+                        : 'bg-accent-teal/20 border-accent-teal/30 text-accent-teal'
+                }`}>
+                    {toast.type === 'error' ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <CheckCircle className="w-4 h-4 shrink-0" />}
+                    <p className="text-sm font-medium">{toast.msg}</p>
+                    <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 shrink-0"><X className="w-4 h-4" /></button>
+                </div>
+            )}
             {/* Cabecera, Buscador y Botón Crear */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-[60%]">

@@ -32,9 +32,12 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const { connected, address } = useFreighter();
   const { profile, addPoints } = useProfile();
-  const { xlmBalance, usdcBalance } = useBalances(address);
+  const { xlmBalance, usdcBalance, refresh: refreshBalances } = useBalances(address || null);
   const { notifyPointsEarned } = useGamification();
   const { t } = useSettings();
+
+  // Contributors state (Bug 7: real data)
+  const [contributors, setContributors] = useState<any[]>([]);
 
   // Swap Widget State
   const [fromToken, setFromToken] = useState<"USDC" | "XLM">("USDC");
@@ -49,6 +52,21 @@ export default function Home() {
   const [bidAmount, setBidAmount] = useState("");
   const [loadingBid, setLoadingBid] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+
+  // Bug 7: Fetch real contributors from Supabase
+  useEffect(() => {
+    const fetchContributors = async () => {
+      const currentWorkspace = localStorage.getItem('rework_current_workspace') || '00000000-0000-0000-0000-000000000000';
+      const { data } = await supabase
+        .from('users')
+        .select('wallet_address, first_name, last_name, avatar_url, points')
+        .eq('workspace_id', currentWorkspace)
+        .order('points', { ascending: false })
+        .limit(5);
+      if (data && data.length > 0) setContributors(data);
+    };
+    fetchContributors();
+  }, []);
 
   useEffect(() => {
     const fetchAuctions = async () => {
@@ -77,14 +95,15 @@ export default function Home() {
     fetchAuctions();
   }, [conditionFilter]);
 
-  const handleBid = async () => {
+  // Bug 2 fix: accept optional direct amount param to avoid async setState race
+  const handleBid = async (directAmount?: number) => {
     if (!selectedAuction) return;
     if (!connected || !address) {
       alert(t.alerts.connectWalletFirst);
       return;
     }
 
-    const amount = Number(bidAmount);
+    const amount = directAmount !== undefined ? directAmount : Number(bidAmount);
     if (amount <= selectedAuction.current_bid || Math.floor(amount) < Math.floor(selectedAuction.base_price)) {
       alert(t.alerts.bidTooLow);
       return;
@@ -198,6 +217,8 @@ export default function Home() {
     setTimeout(() => {
       setIsSwapping(false);
       setSwapAmount("");
+      // Bug 3: refresh balances after swap
+      refreshBalances();
       notifyPointsEarned(0, `¡Intercambio de ${swapAmount} ${fromToken} a ${receivedAmount} ${toToken} exitoso!`);
     }, 1500);
   };
@@ -450,47 +471,44 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              {/* Row 1 */}
+              {/* Current user row (always first) */}
               <div className="flex items-center gap-4 p-3 rounded-xl border border-accent-teal/20 bg-accent-teal/5">
                 <div className="w-10 h-10 rounded-full bg-accent-teal text-background flex items-center justify-center font-bold text-xs">{t.dashboard.you}</div>
                 <div className="flex-1">
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-semibold">{t.dashboard.currentSession}</span>
-                    <span className="text-accent-teal font-mono">+500 pts</span>
+                    <span className="text-accent-teal font-mono">+{profile?.points || 0} pts</span>
                   </div>
                   <div className="w-full bg-muted/10 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-accent-teal h-full w-full"></div>
+                    <div className="bg-accent-teal h-full" style={{ width: `${Math.min(100, ((profile?.points || 0) / 1000) * 100)}%` }} />
                   </div>
                 </div>
               </div>
 
-              {/* Row 2 */}
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent">
-                <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold border border-purple-500/30">SJ</div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-semibold">Sarah Jensen</span>
-                    <span className="text-muted font-mono">320 pts</span>
+              {/* Real contributors from Supabase */}
+              {(contributors.length > 0 ? contributors : [
+                { wallet_address: 'mock1', first_name: 'Sarah', last_name: 'Jensen', points: 320 },
+                { wallet_address: 'mock2', first_name: 'Mike', last_name: 'Chen', points: 210 },
+              ]).filter(c => c.wallet_address !== address).slice(0, 3).map((user: any, idx: number) => {
+                const initials = `${user.first_name?.[0] || '?'}${user.last_name?.[0] || ''}`.toUpperCase();
+                const colors = ['bg-purple-500/20 text-purple-400 border-purple-500/30', 'bg-blue-500/20 text-blue-400 border-blue-500/30', 'bg-orange-500/20 text-orange-400 border-orange-500/30'];
+                return (
+                  <div key={user.wallet_address} className="flex items-center gap-4 p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border overflow-hidden ${colors[idx % colors.length]}`}>
+                      {user.avatar_url ? <img src={user.avatar_url} alt={initials} className="w-full h-full object-cover" /> : initials}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-semibold">{user.first_name} {user.last_name}</span>
+                        <span className="text-muted font-mono">{user.points || 0} pts</span>
+                      </div>
+                      <div className="w-full bg-muted/10 h-1 rounded-full overflow-hidden">
+                        <div className="bg-slate-600 h-full" style={{ width: `${Math.min(100, ((user.points || 0) / 1000) * 100)}%` }} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-muted/10 h-1 rounded-full overflow-hidden">
-                    <div className="bg-slate-600 h-full w-[45%]"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 3 */}
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-foreground/5 transition-colors border border-transparent">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold border border-blue-500/30">MC</div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-semibold">Mike Chen</span>
-                    <span className="text-muted font-mono">210 pts</span>
-                  </div>
-                  <div className="w-full bg-muted/10 h-1 rounded-full overflow-hidden">
-                    <div className="bg-slate-600 h-full w-[30%]"></div>
-                  </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
 
             <button className="w-full mt-6 text-xs text-muted hover:text-accent-teal transition-colors font-semibold uppercase tracking-widest">
@@ -586,7 +604,9 @@ export default function Home() {
                 </div>
 
                 <button
-                  onClick={selectedAuction.is_direct_buy ? () => { setBidAmount(selectedAuction.base_price.toString()); handleBid(); } : handleBid}
+                  onClick={selectedAuction.is_direct_buy
+                    ? () => handleBid(selectedAuction.base_price)
+                    : () => handleBid()}
                   disabled={loadingBid || (!selectedAuction.is_direct_buy && !bidAmount)}
                   className="w-full px-6 py-3 font-bold bg-accent-teal text-black hover:bg-foreground rounded-xl transition-all shadow-[0_0_15px_rgba(0,242,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >

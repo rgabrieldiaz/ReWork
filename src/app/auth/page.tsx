@@ -27,9 +27,9 @@ export default function AuthGateway() {
       setStep("CREATING_AURA");
       setLoading(false);
       
-      // Simular final de onboarding
+      // Simular final de onboarding y redirigir a /app
       setTimeout(() => {
-         router.push("/workspaces");
+         router.push("/app");
       }, 3500);
     }, 1500);
   };
@@ -86,7 +86,7 @@ export default function AuthGateway() {
             {step === "SELECT" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <button 
-                        onClick={() => router.push("/workspaces")}
+                        onClick={() => router.push("/app")}
                         className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group"
                     >
                         <div className="flex items-center gap-4">
