@@ -19,7 +19,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             {!isPublicRoute && (
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             )}
-            <main className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${
+            <main id="main-scroll-container" className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${
                 isPublicRoute ? '' : (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
             }`}>
                 {!isPublicRoute && (

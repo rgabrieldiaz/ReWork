@@ -51,13 +51,19 @@ export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    const scrollContainer = document.getElementById('main-scroll-container');
+    if (!scrollContainer) return;
+
     const handleScroll = () => {
       // Show sticky nav after scrolling down 100px
-      setIsScrolled(window.scrollY > 100);
+      setIsScrolled(scrollContainer.scrollTop > 100);
     };
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Add initial check
+    handleScroll();
+    
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
