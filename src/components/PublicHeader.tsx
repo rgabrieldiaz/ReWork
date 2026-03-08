@@ -35,10 +35,10 @@ const NavContent = ({ language, setLanguage, t, className = "" }: any) => (
       </button>
       <Link 
         href="/auth" 
-        className="group relative px-6 py-2.5 bg-accent-teal text-black rounded-lg font-bold text-sm overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.2)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all flex items-center gap-2"
+        className="group relative px-2 py-2.5 bg-accent-teal text-black rounded-lg font-bold text-sm overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.2)] hover:shadow-[0_0_30px_rgba(0,242,255,0.4)] transition-all flex items-center justify-center gap-2 w-[160px]"
       >
         <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-        <span className="relative flex items-center gap-2 z-10">
+        <span className="relative flex items-center justify-center gap-2 z-10 w-full">
           {t.publicNav.login} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </span>
       </Link>
