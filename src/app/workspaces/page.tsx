@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, Users, Hexagon, ChevronRight, LogOut, Globe, Zap, Loader2, Copy, CheckCircle2, ExternalLink } from "lucide-react";
+import { ArrowRight, Building2, Users, Hexagon, ChevronRight, LogOut, Globe, Zap, Loader2, Copy, CheckCircle2, ExternalLink, Pencil, X as XIcon } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
@@ -229,12 +229,22 @@ export default function WorkspacesHub() {
                 }
               </div>
               <div className="flex items-center gap-2">
-                {isAdmin && myWorkspace && (
+                {isAdmin && myWorkspace && !editingWorkspace && (
                   <button
-                    onClick={e => { e.stopPropagation(); setEditingWorkspace(!editingWorkspace); if (editingWorkspace) { setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); } }}
-                    className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors"
+                    onClick={e => { e.stopPropagation(); setEditingWorkspace(true); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors"
+                    title="Editar workspace"
                   >
-                    {editingWorkspace ? "Cancelar" : "Editar"}
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {isAdmin && myWorkspace && editingWorkspace && (
+                  <button
+                    onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-foreground/10 text-muted border border-border-subtle hover:bg-foreground/15 transition-colors"
+                    title="Cancelar edición"
+                  >
+                    <XIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
                 <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
@@ -281,16 +291,25 @@ export default function WorkspacesHub() {
                     <p className="text-muted text-sm mb-4">{myWorkspace.description || "Entorno corporativo privado."}</p>
                   )}
 
-                  {/* Save button */}
+                  {/* Save + Cancel buttons */}
                   {editingWorkspace && (
-                    <button
-                      onClick={e => { e.stopPropagation(); handleSaveWorkspace(); }}
-                      disabled={savingWorkspace}
-                      className="mb-4 flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
-                    >
-                      {savingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                      {savingWorkspace ? "Guardando..." : "Guardar cambios"}
-                    </button>
+                    <div className="flex items-center gap-2 mb-4">
+                      <button
+                        onClick={e => { e.stopPropagation(); handleSaveWorkspace(); }}
+                        disabled={savingWorkspace}
+                        className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
+                      >
+                        {savingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        {savingWorkspace ? "Guardando..." : "Guardar"}
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
+                        disabled={savingWorkspace}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-foreground/5 text-muted font-bold text-sm rounded-xl border border-border-subtle hover:bg-foreground/10 transition-colors disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   )}
 
                   {myWorkspace.tags?.length > 0 && (

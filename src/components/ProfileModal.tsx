@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
-import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2 } from "lucide-react";
+import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileModalProps {
@@ -23,14 +23,27 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [addressCopied, setAddressCopied] = useState(false);
+    const [wsName, setWsName] = useState("");
+    const [wsDesc, setWsDesc] = useState("");
+    const [wsId, setWsId] = useState<string | null>(null);
+    const [savingWs, setSavingWs] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const isAdmin = profile?.role?.toLowerCase() === 'admin';
 
     const handleCopyAddress = () => {
         if (!address) return;
         navigator.clipboard.writeText(address);
         setAddressCopied(true);
         setTimeout(() => setAddressCopied(false), 2000);
+    };
+
+    const handleSaveWorkspace = async () => {
+        if (!wsId || !isAdmin) return;
+        setSavingWs(true);
+        await supabase.from('workspaces').update({ name: wsName.trim(), description: wsDesc.trim() }).eq('id', wsId);
+        setSavingWs(false);
     };
 
     // Sync state when profile loads
@@ -42,6 +55,14 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             setAvatarUrl(profile.avatar_url || null);
         }
     }, [profile]);
+
+    // Load workspace for admin users
+    useEffect(() => {
+        if (!address || !isAdmin) return;
+        supabase.from('workspaces').select('id, name, description').eq('owner_wallet', address).eq('is_public', false).maybeSingle().then(({ data }) => {
+            if (data) { setWsId(data.id); setWsName(data.name || ''); setWsDesc(data.description || ''); }
+        });
+    }, [address, isAdmin]);
 
     if (!isOpen) return null;
 
@@ -204,6 +225,46 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                         />
                     </div>
+
+                    {/* Workspace Settings — solo admin */}
+                    {isAdmin && wsId && (
+                        <div className="pt-5 border-t border-border-subtle mt-5">
+                            <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-accent-teal" />
+                                Workspace
+                            </h3>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Nombre</label>
+                                    <input
+                                        type="text"
+                                        value={wsName}
+                                        onChange={e => setWsName(e.target.value)}
+                                        className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
+                                        placeholder="Nombre del workspace"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Descripción</label>
+                                    <textarea
+                                        value={wsDesc}
+                                        onChange={e => setWsDesc(e.target.value)}
+                                        rows={3}
+                                        className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all resize-none"
+                                        placeholder="Descripción del workspace"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleSaveWorkspace}
+                                    disabled={savingWs}
+                                    className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
+                                >
+                                    {savingWs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                    {savingWs ? 'Guardando...' : 'Guardar Workspace'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Interface Settings */}
                     <div className="pt-6 border-t border-border-subtle mt-6">
