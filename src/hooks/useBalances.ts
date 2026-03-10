@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
-export function useBalances(address: string | null) {
+const HORIZON_TESTNET = 'https://horizon-testnet.stellar.org';
+const HORIZON_MAINNET = 'https://horizon.stellar.org';
+
+function getHorizonUrl(network: string | null | undefined): string {
+    if (!network) return HORIZON_TESTNET;
+    const n = network.toUpperCase();
+    if (n === 'PUBLIC' || n === 'MAINNET') return HORIZON_MAINNET;
+    return HORIZON_TESTNET;
+}
+
+export function useBalances(address: string | null, network?: string | null) {
     const [xlmBalance, setXlmBalance] = useState<number | null>(null);
     const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
@@ -27,7 +37,8 @@ export function useBalances(address: string | null) {
             setError(null);
 
             try {
-                const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
+                const horizonUrl = getHorizonUrl(network);
+                const server = new StellarSdk.Horizon.Server(horizonUrl);
                 const account = await server.loadAccount(address);
 
                 const nativeBalance = account.balances.find(b => b.asset_type === 'native');
@@ -59,7 +70,7 @@ export function useBalances(address: string | null) {
         return () => {
             isMounted = false;
         };
-    }, [address, refreshKey]);
+    }, [address, network, refreshKey]);
 
     return { xlmBalance, usdcBalance, loading, error, refresh };
 }

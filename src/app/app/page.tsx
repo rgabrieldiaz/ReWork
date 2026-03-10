@@ -8,7 +8,7 @@ import { useBalances } from "@/hooks/useBalances";
 import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { supabase } from "@/lib/supabase";
-import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
+import * as StellarSdk from "@stellar/stellar-sdk";
 import { X, Clock, ShieldCheck } from "lucide-react";
 
 interface Auction {
@@ -30,9 +30,9 @@ interface Auction {
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { connected, address } = useFreighter();
+  const { connected, address, network, sign } = useFreighter();
   const { profile, addPoints } = useProfile();
-  const { xlmBalance, usdcBalance, refresh: refreshBalances } = useBalances(address || null);
+  const { xlmBalance, usdcBalance, refresh: refreshBalances } = useBalances(address || null, network);
   const { notifyPointsEarned } = useGamification();
   const { t } = useSettings();
 
@@ -209,18 +209,75 @@ export default function Home() {
     setToToken(fromToken);
   };
 
-  const executeSwap = () => {
-    if (!connected || Number(swapAmount) <= 0) return;
+  const executeSwap = async () => {
+    if (!connected || !address || Number(swapAmount) <= 0) return;
     setIsSwapping(true);
+    try {
+      // Determine network config
+      const isMainnet = network?.toUpperCase() === 'PUBLIC' || network?.toUpperCase() === 'MAINNET';
+      const horizonUrl = isMainnet
+        ? 'https://horizon.stellar.org'
+        : 'https://horizon-testnet.stellar.org';
+      const networkPassphrase = isMainnet
+        ? 'Public Global Stellar Network ; September 2015'
+        : 'Test SDF Network ; September 2015';
 
-    // Simulate network delay
-    setTimeout(() => {
+      // USDC issuer differs by network
+      const USDC_ISSUER = isMainnet
+        ? 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN' // Circle USDC Mainnet
+        : 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5'; // Testnet USDC
+
+      const USDC = new StellarSdk.Asset('USDC', USDC_ISSUER);
+      const XLM = StellarSdk.Asset.native();
+
+      const sendAsset = fromToken === 'XLM' ? XLM : USDC;
+      const destAsset = toToken === 'XLM' ? XLM : USDC;
+      const sendAmount = swapAmount;
+      // Minimum received: 5% slippage tolerance
+      const minReceived = (Number(receivedAmount) * 0.95).toFixed(7);
+
+      const server = new StellarSdk.Horizon.Server(horizonUrl);
+      const account = await server.loadAccount(address);
+
+      const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: StellarSdk.BASE_FEE,
+        networkPassphrase,
+      })
+        .addOperation(
+          StellarSdk.Operation.pathPaymentStrictSend({
+            sendAsset,
+            sendAmount,
+            destination: address, // self-swap
+            destAsset,
+            destMin: minReceived,
+            path: [], // direct path
+          })
+        )
+        .setTimeout(180)
+        .build();
+
+      const xdr = tx.toXDR();
+      const { signedTxXdr } = await sign(xdr, networkPassphrase);
+
+      // Submit to Horizon
+      const submitTx = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, networkPassphrase);
+      const result = await server.submitTransaction(submitTx);
+
+      if (result.hash) {
+        setSwapAmount('');
+        // Re-fetch balances after confirmed hash
+        setTimeout(() => refreshBalances(), 2000);
+        notifyPointsEarned(0, `¡Intercambio de ${swapAmount} ${fromToken} a ${receivedAmount} ${toToken} exitoso! Hash: ${result.hash.slice(0, 8)}...`);
+      }
+    } catch (err: any) {
+      console.error('Swap error:', err);
+      const msg = err?.response?.data?.extras?.result_codes?.operations?.[0]
+        || err?.message
+        || 'Error desconocido';
+      alert(`Error en el intercambio: ${msg}`);
+    } finally {
       setIsSwapping(false);
-      setSwapAmount("");
-      // Bug 3: refresh balances after swap
-      refreshBalances();
-      notifyPointsEarned(0, `¡Intercambio de ${swapAmount} ${fromToken} a ${receivedAmount} ${toToken} exitoso!`);
-    }, 1500);
+    }
   };
 
   return (
