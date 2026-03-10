@@ -213,7 +213,6 @@ export default function Home() {
     if (!connected || !address || Number(swapAmount) <= 0) return;
     setIsSwapping(true);
     try {
-      // Determine network config
       const isMainnet = network?.toUpperCase() === 'PUBLIC' || network?.toUpperCase() === 'MAINNET';
       const horizonUrl = isMainnet
         ? 'https://horizon.stellar.org'
@@ -222,35 +221,54 @@ export default function Home() {
         ? 'Public Global Stellar Network ; September 2015'
         : 'Test SDF Network ; September 2015';
 
-      // USDC issuer differs by network
       const USDC_ISSUER = isMainnet
-        ? 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN' // Circle USDC Mainnet
-        : 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5'; // Testnet USDC
+        ? 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN'
+        : 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
 
       const USDC = new StellarSdk.Asset('USDC', USDC_ISSUER);
       const XLM = StellarSdk.Asset.native();
 
       const sendAsset = fromToken === 'XLM' ? XLM : USDC;
       const destAsset = toToken === 'XLM' ? XLM : USDC;
-      const sendAmount = swapAmount;
-      // Minimum received: 5% slippage tolerance
-      const minReceived = (Number(receivedAmount) * 0.95).toFixed(7);
 
       const server = new StellarSdk.Horizon.Server(horizonUrl);
-      const account = await server.loadAccount(address);
 
+      // 1️⃣ Discover a real DEX path before building the TX
+      const pathsResult = await server
+        .strictSendPaths(sendAsset, swapAmount, [destAsset])
+        .call();
+
+      if (!pathsResult.records || pathsResult.records.length === 0) {
+        throw new Error(
+          `No hay liquidez disponible para intercambiar ${fromToken} → ${toToken} en esta red. ` +
+          `Verificá que tu cuenta tenga trustline de USDC configurada.`
+        );
+      }
+
+      // Pick the best path (first record = best rate from Horizon)
+      const bestPath = pathsResult.records[0];
+      const intermediatePath: StellarSdk.Asset[] = (bestPath.path || []).map(
+        (a: any) => a.asset_type === 'native'
+          ? StellarSdk.Asset.native()
+          : new StellarSdk.Asset(a.asset_code, a.asset_issuer)
+      );
+      // destMin with 2% slippage on the discovered destination amount
+      const destMin = (Number(bestPath.destination_amount) * 0.98).toFixed(7);
+
+      // 2️⃣ Build and sign the TX with the discovered path
+      const account = await server.loadAccount(address);
       const tx = new StellarSdk.TransactionBuilder(account, {
-        fee: StellarSdk.BASE_FEE,
+        fee: (Number(StellarSdk.BASE_FEE) * 10).toString(), // bump fee to avoid underfunded
         networkPassphrase,
       })
         .addOperation(
           StellarSdk.Operation.pathPaymentStrictSend({
             sendAsset,
-            sendAmount,
-            destination: address, // self-swap
+            sendAmount: swapAmount,
+            destination: address,
             destAsset,
-            destMin: minReceived,
-            path: [], // direct path
+            destMin,
+            path: intermediatePath,
           })
         )
         .setTimeout(180)
@@ -259,26 +277,28 @@ export default function Home() {
       const xdr = tx.toXDR();
       const { signedTxXdr } = await sign(xdr, networkPassphrase);
 
-      // Submit to Horizon
+      // 3️⃣ Submit
       const submitTx = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, networkPassphrase);
       const result = await server.submitTransaction(submitTx);
 
       if (result.hash) {
         setSwapAmount('');
-        // Re-fetch balances after confirmed hash
         setTimeout(() => refreshBalances(), 2000);
-        notifyPointsEarned(0, `¡Intercambio de ${swapAmount} ${fromToken} a ${receivedAmount} ${toToken} exitoso! Hash: ${result.hash.slice(0, 8)}...`);
+        notifyPointsEarned(0, `¡Intercambio exitoso! ${swapAmount} ${fromToken} → ${bestPath.destination_amount} ${toToken} | Hash: ${result.hash.slice(0, 8)}...`);
       }
     } catch (err: any) {
       console.error('Swap error:', err);
-      const msg = err?.response?.data?.extras?.result_codes?.operations?.[0]
-        || err?.message
-        || 'Error desconocido';
+      // Extract Horizon result_code for a clear user message
+      const ops: string[] = err?.response?.data?.extras?.result_codes?.operations ?? [];
+      const txCode: string = err?.response?.data?.extras?.result_codes?.transaction ?? '';
+      const horizonMsg = [...(txCode ? [txCode] : []), ...ops].join(', ');
+      const msg = horizonMsg || err?.message || 'Error desconocido';
       alert(`Error en el intercambio: ${msg}`);
     } finally {
       setIsSwapping(false);
     }
   };
+
 
   return (
     <div className="animate-in fade-in duration-500">
