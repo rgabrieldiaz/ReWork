@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Copy, Wallet, ChevronRight, TrendingUp, Sparkles, LogOut, ArrowRightLeft } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
-import { useBalances } from "@/hooks/useBalances";
+import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { supabase } from "@/lib/supabase";
@@ -32,7 +32,7 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const { connected, address, network, sign } = useFreighter();
   const { profile, addPoints } = useProfile();
-  const { xlmBalance, usdcBalance, refresh: refreshBalances } = useBalances(address || null, network);
+  const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { notifyPointsEarned } = useGamification();
   const { t } = useSettings();
 

@@ -2,7 +2,7 @@
 
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
-import { useBalances } from "@/hooks/useBalances";
+import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ConnectButton } from "@/components/ConnectButton";
@@ -14,7 +14,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network } = useFreighter();
     const { profile, loading: profileLoading } = useProfile();
     const { t } = useSettings();
-    const { xlmBalance, usdcBalance, loading: balanceLoading } = useBalances(address || null);
+    const { xlmBalance, usdcBalance, loading: balanceLoading } = useSharedBalances();
     const { unreadCount } = useNotifications();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
