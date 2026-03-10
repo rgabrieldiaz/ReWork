@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
-import { X, Check, Upload, Loader2, Globe, Moon, Sun, Monitor } from "lucide-react";
+import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileModalProps {
@@ -22,8 +22,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [birthDate, setBirthDate] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [addressCopied, setAddressCopied] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleCopyAddress = () => {
+        if (!address) return;
+        navigator.clipboard.writeText(address);
+        setAddressCopied(true);
+        setTimeout(() => setAddressCopied(false), 2000);
+    };
 
     // Sync state when profile loads
     useEffect(() => {
@@ -135,7 +143,21 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         </button>
                     </div>
                     <h2 className="text-xl font-bold text-foreground mt-2">{t.profile.editProfile}</h2>
-                    <p className="text-sm text-muted font-mono mt-1">{address ? `${address.slice(0, 4)}...${address.slice(-4)}` : ""}</p>
+                    {address && (
+                        <button
+                            onClick={handleCopyAddress}
+                            className="flex items-center gap-1.5 mt-1 text-xs font-mono text-muted hover:text-foreground transition-colors group"
+                            title="Copiar dirección completa"
+                        >
+                            {addressCopied
+                                ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                : <Copy className="w-3.5 h-3.5 group-hover:text-accent-teal transition-colors" />
+                            }
+                            <span className={addressCopied ? 'text-emerald-400' : ''}>
+                                {addressCopied ? 'Copiado!' : `${address.slice(0, 8)}...${address.slice(-6)}`}
+                            </span>
+                        </button>
+                    )}
                     <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase border ${
                         profile?.role?.toLowerCase() === 'admin'
                             ? 'text-accent-teal bg-accent-teal/10 border-accent-teal/30'
@@ -146,28 +168,31 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 </div>
 
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.firstName}</label>
-                        <input
-                            type="text"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            onBlur={(e) => handleAutoSave('first_name', e.target.value)}
-                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                            placeholder={t.profile.firstNamePlaceholder}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.lastName}</label>
-                        <input
-                            type="text"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            onBlur={(e) => handleAutoSave('last_name', e.target.value)}
-                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                            placeholder={t.profile.lastNamePlaceholder}
-                        />
+                    {/* First + Last name on the same row */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.firstName}</label>
+                            <input
+                                type="text"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                onBlur={(e) => handleAutoSave('first_name', e.target.value)}
+                                className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
+                                placeholder={t.profile.firstNamePlaceholder}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.lastName}</label>
+                            <input
+                                type="text"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                onBlur={(e) => handleAutoSave('last_name', e.target.value)}
+                                className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
+                                placeholder={t.profile.lastNamePlaceholder}
+                            />
+                        </div>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.birthDate}</label>

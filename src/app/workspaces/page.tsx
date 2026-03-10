@@ -42,6 +42,12 @@ export default function WorkspacesHub() {
 
   const [myWorkspace, setMyWorkspace] = useState<Workspace | null>(null);
   const [loadingWorkspace, setLoadingWorkspace] = useState(true);
+  const [editingWorkspace, setEditingWorkspace] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [savingWorkspace, setSavingWorkspace] = useState(false);
+
+  const isAdmin = profile?.role?.toLowerCase() === 'admin';
 
   const [showBounties, setShowBounties] = useState(false);
   const [bounties, setBounties] = useState<GlobalBounty[]>([]);
@@ -70,6 +76,10 @@ export default function WorkspacesHub() {
       // Prefer the private workspace (is_public = false) → that's the org workspace
       const privateWs = list.find(w => !w.is_public) ?? list[0] ?? null;
       setMyWorkspace(privateWs);
+      if (privateWs) {
+        setEditName(privateWs.name);
+        setEditDesc(privateWs.description || "");
+      }
       setLoadingWorkspace(false);
 
       // Guardar workspace_id en localStorage para el dashboard
@@ -94,6 +104,20 @@ export default function WorkspacesHub() {
     setBounties((data || []) as GlobalBounty[]);
     setLoadingBounties(false);
     setShowBounties(true);
+  };
+
+  const handleSaveWorkspace = async () => {
+    if (!myWorkspace || !isAdmin) return;
+    setSavingWorkspace(true);
+    const { error } = await supabase
+      .from("workspaces")
+      .update({ name: editName.trim(), description: editDesc.trim() })
+      .eq("id", myWorkspace.id);
+    if (!error) {
+      setMyWorkspace({ ...myWorkspace, name: editName.trim(), description: editDesc.trim() });
+      setEditingWorkspace(false);
+    }
+    setSavingWorkspace(false);
   };
 
   const handleCopyAddress = () => {
@@ -192,8 +216,8 @@ export default function WorkspacesHub() {
 
           {/* ── CARD IZQUIERDA: Workspace Privado (dinámico desde Supabase) ── */}
           <div
-            onClick={() => myWorkspace && router.push("/app")}
-            className={`glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] ${myWorkspace ? 'cursor-pointer' : 'cursor-default opacity-80'}`}
+            onClick={() => !isAdmin && myWorkspace && router.push("/app")}
+            className={`glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] ${myWorkspace && !isAdmin ? 'cursor-pointer' : 'cursor-default'} ${!myWorkspace ? 'opacity-80' : ''}`}
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
 
@@ -204,9 +228,19 @@ export default function WorkspacesHub() {
                   : <Building2 className="w-7 h-7 text-foreground" />
                 }
               </div>
-              <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-                {loadingWorkspace ? "Cargando..." : myWorkspace ? "Pro Environment" : "Sin Workspace"}
-              </span>
+              <div className="flex items-center gap-2">
+                {isAdmin && myWorkspace && (
+                  <button
+                    onClick={e => { e.stopPropagation(); setEditingWorkspace(!editingWorkspace); if (editingWorkspace) { setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); } }}
+                    className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors"
+                  >
+                    {editingWorkspace ? "Cancelar" : "Editar"}
+                  </button>
+                )}
+                <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
+                  {loadingWorkspace ? "Cargando..." : myWorkspace ? "Pro Environment" : "Sin Workspace"}
+                </span>
+              </div>
             </div>
 
             <div className="relative z-10">
@@ -217,11 +251,48 @@ export default function WorkspacesHub() {
                 </div>
               ) : myWorkspace ? (
                 <>
-                  <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
-                    {myWorkspace.name}
-                    <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
-                  </h2>
-                  <p className="text-muted text-sm mb-4">{myWorkspace.description || "Entorno corporativo privado."}</p>
+                  {/* Nombre editable */}
+                  {editingWorkspace ? (
+                    <input
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      className="w-full text-2xl font-bold bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:border-accent-teal text-foreground"
+                      placeholder="Nombre del workspace"
+                    />
+                  ) : (
+                    <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
+                      {myWorkspace.name}
+                      {!isAdmin && <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />}
+                    </h2>
+                  )}
+
+                  {/* Descripción editable */}
+                  {editingWorkspace ? (
+                    <textarea
+                      value={editDesc}
+                      onChange={e => setEditDesc(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      rows={3}
+                      className="w-full text-sm bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-3 focus:outline-none focus:border-accent-teal text-foreground resize-none"
+                      placeholder="Descripción del workspace"
+                    />
+                  ) : (
+                    <p className="text-muted text-sm mb-4">{myWorkspace.description || "Entorno corporativo privado."}</p>
+                  )}
+
+                  {/* Save button */}
+                  {editingWorkspace && (
+                    <button
+                      onClick={e => { e.stopPropagation(); handleSaveWorkspace(); }}
+                      disabled={savingWorkspace}
+                      className="mb-4 flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
+                    >
+                      {savingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                      {savingWorkspace ? "Guardando..." : "Guardar cambios"}
+                    </button>
+                  )}
+
                   {myWorkspace.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-4">
                       {myWorkspace.tags.map(tag => (
@@ -232,6 +303,11 @@ export default function WorkspacesHub() {
                   <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
                     <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {myWorkspace.member_count} Miembros</span>
                     <span className="flex items-center gap-1.5"><Hexagon className="w-4 h-4 text-accent-teal" /> {myWorkspace.squad_count} Squads</span>
+                    {isAdmin && !editingWorkspace && (
+                      <button onClick={e => { e.stopPropagation(); router.push("/app"); }} className="ml-auto text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
+                        Ingresar <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </>
               ) : (
