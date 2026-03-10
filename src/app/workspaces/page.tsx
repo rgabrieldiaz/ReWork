@@ -57,17 +57,24 @@ export default function WorkspacesHub() {
     }
     const fetchMyWorkspace = async () => {
       setLoadingWorkspace(true);
-      const { data } = await supabase
+      // Fetch ALL workspaces owned by this wallet (may be multiple)
+      const { data, error } = await supabase
         .from("workspaces")
         .select("*")
         .eq("owner_wallet", address)
-        .maybeSingle();
-      setMyWorkspace(data as Workspace | null);
+        .order("created_at", { ascending: true });
+
+      if (error) console.error("Error fetching workspace:", error);
+
+      const list = (data || []) as Workspace[];
+      // Prefer the private workspace (is_public = false) → that's the org workspace
+      const privateWs = list.find(w => !w.is_public) ?? list[0] ?? null;
+      setMyWorkspace(privateWs);
       setLoadingWorkspace(false);
 
       // Guardar workspace_id en localStorage para el dashboard
-      if (data?.id) {
-        localStorage.setItem("rework_current_workspace", data.id);
+      if (privateWs?.id) {
+        localStorage.setItem("rework_current_workspace", privateWs.id);
       }
     };
     fetchMyWorkspace();
