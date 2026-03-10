@@ -63,17 +63,20 @@ export default function WorkspacesHub() {
     }
     const fetchMyWorkspace = async () => {
       setLoadingWorkspace(true);
-      // Fetch ALL workspaces owned by this wallet (may be multiple)
       const { data, error } = await supabase
         .from("workspaces")
-        .select("*")
+        .select(`*, workspace_members(count), squads(count)`)
         .eq("owner_wallet", address)
         .order("created_at", { ascending: true });
 
       if (error) console.error("Error fetching workspace:", error);
 
-      const list = (data || []) as Workspace[];
-      // Prefer the private workspace (is_public = false) → that's the org workspace
+      const list = ((data || []) as any[]).map(w => ({
+        ...w,
+        member_count: (w.workspace_members?.[0]?.count ?? 0) as number,
+        squad_count: (w.squads?.[0]?.count ?? 0) as number,
+      })) as Workspace[];
+
       const privateWs = list.find(w => !w.is_public) ?? list[0] ?? null;
       setMyWorkspace(privateWs);
       if (privateWs) {
@@ -82,13 +85,13 @@ export default function WorkspacesHub() {
       }
       setLoadingWorkspace(false);
 
-      // Guardar workspace_id en localStorage para el dashboard
       if (privateWs?.id) {
         localStorage.setItem("rework_current_workspace", privateWs.id);
       }
     };
     fetchMyWorkspace();
   }, [address]);
+
 
   // Cargar bounties globales
   const loadBounties = async () => {
