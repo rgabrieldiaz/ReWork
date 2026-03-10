@@ -20,38 +20,28 @@ export default function AuthGateway() {
     setError(null);
 
     try {
-      // Si ya está conectado, avanzamos directo al paso visual
-      if (!connected) {
-        await connect();
+      // SIEMPRE llamar connect() para forzar el popup de Freighter (setAllowed)
+      // incluso si hay una sesión previa. El usuario debe confirmar en la auth page.
+      const addr = await connect();
+
+      if (!addr) {
+        throw new Error("No se pudo obtener la dirección de la wallet.");
       }
 
-      // Re-check tras intentar conectar
-      // connect() modifica el estado global de useFreighter, 
-      // con pequeño delay para que el estado se propague
-      await new Promise(r => setTimeout(r, 800));
-
-      // Si después del intento seguimos sin address, falló
-      // Usamos window check por si Freighter no está instalado
-      const hasFreighter = typeof window !== 'undefined' && !!(window as any).freighter;
-      if (!hasFreighter && !connected) {
-        setError("Freighter no está instalado. Instalá la extensión desde freighter.app");
-        setLoading(false);
-        return;
-      }
-
-      // Avanzamos al step de AURA visual
+      // Conexión exitosa: avanzar al step visual de AURA
       setStep("CREATING_AURA");
       setLoading(false);
 
-      // Tras la animación, redirigimos a /workspaces (selector de entorno)
+      // Tras la animación, ir a /workspaces para elegir entorno
       setTimeout(() => {
         router.push("/workspaces");
       }, 3000);
 
     } catch (err: any) {
       console.error("Error conectando wallet:", err);
-      // El usuario cerró el popup de Freighter o rechazó
-      if (err?.message?.toLowerCase().includes("user rejected") || err?.message?.toLowerCase().includes("denied")) {
+      if (err?.message?.toLowerCase().includes("not installed") || err?.message?.toLowerCase().includes("extension")) {
+        setError("Freighter no está instalado. Instalá la extensión desde freighter.app");
+      } else if (err?.message?.toLowerCase().includes("user rejected") || err?.message?.toLowerCase().includes("denied")) {
         setError("Conexión rechazada. Aprobá la solicitud en Freighter para continuar.");
       } else {
         setError(err?.message || "Error al conectar la wallet. Intentá de nuevo.");
