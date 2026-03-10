@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Wallet, Mail, Fingerprint, Key, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Wallet, Fingerprint, Key, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -13,25 +13,56 @@ export default function AuthGateway() {
   const { language, setLanguage } = useSettings();
   const [step, setStep] = useState<"SELECT" | "CREATING_AURA">("SELECT");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock flow for connecting Web3
   const handleConnectWallet = async () => {
     setLoading(true);
-    // Simular el tiempo de conexión o usar la conexión real si no está conectada
-    if (!connected) {
+    setError(null);
+
+    try {
+      // Si ya está conectado, avanzamos directo al paso visual
+      if (!connected) {
         await connect();
-    }
-    
-    // Si se conectó exitosamente, procedemos al paso de creación visual
-    setTimeout(() => {
+      }
+
+      // Re-check tras intentar conectar
+      // connect() modifica el estado global de useFreighter, 
+      // con pequeño delay para que el estado se propague
+      await new Promise(r => setTimeout(r, 800));
+
+      // Si después del intento seguimos sin address, falló
+      // Usamos window check por si Freighter no está instalado
+      const hasFreighter = typeof window !== 'undefined' && !!(window as any).freighter;
+      if (!hasFreighter && !connected) {
+        setError("Freighter no está instalado. Instalá la extensión desde freighter.app");
+        setLoading(false);
+        return;
+      }
+
+      // Avanzamos al step de AURA visual
       setStep("CREATING_AURA");
       setLoading(false);
-      
-      // Simular final de onboarding y redirigir a /app
+
+      // Tras la animación, redirigimos a /workspaces (selector de entorno)
       setTimeout(() => {
-         router.push("/app");
-      }, 3500);
-    }, 1500);
+        router.push("/workspaces");
+      }, 3000);
+
+    } catch (err: any) {
+      console.error("Error conectando wallet:", err);
+      // El usuario cerró el popup de Freighter o rechazó
+      if (err?.message?.toLowerCase().includes("user rejected") || err?.message?.toLowerCase().includes("denied")) {
+        setError("Conexión rechazada. Aprobá la solicitud en Freighter para continuar.");
+      } else {
+        setError(err?.message || "Error al conectar la wallet. Intentá de nuevo.");
+      }
+      setLoading(false);
+    }
+  };
+
+  // Google: va a /workspaces también (como flujo Web2)
+  const handleGoogleLogin = () => {
+    router.push("/workspaces");
   };
 
   return (
@@ -85,13 +116,21 @@ export default function AuthGateway() {
 
             {step === "SELECT" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    
+                    {/* Error banner */}
+                    {error && (
+                        <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-300 animate-in fade-in duration-300">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <p>{error}</p>
+                        </div>
+                    )}
+
                     <button 
-                        onClick={() => router.push("/app")}
+                        onClick={handleGoogleLogin}
                         className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group"
                     >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                {/* Simple Google "G" representation */}
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -126,12 +165,24 @@ export default function AuthGateway() {
                                 <Wallet className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-sm text-accent-teal">{loading ? "Conectando..." : "Conectar Wallet (Web3)"}</p>
-                                <p className="text-xs text-accent-teal/70">Identidad inmutable y pagos</p>
+                                <p className="font-bold text-sm text-accent-teal">
+                                    {loading ? "Abriendo Freighter..." : connected ? "Continuar con Wallet conectada" : "Conectar Wallet (Web3)"}
+                                </p>
+                                <p className="text-xs text-accent-teal/70">
+                                    {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Identidad inmutable y pagos"}
+                                </p>
                             </div>
                         </div>
                         <ChevronRight className={`w-5 h-5 text-accent-teal transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
                     </button>
+
+                    {/* Freighter install hint */}
+                    <p className="text-center text-xs text-muted mt-2">
+                        ¿No tenés Freighter?{" "}
+                        <a href="https://freighter.app" target="_blank" rel="noreferrer" className="text-accent-teal hover:underline">
+                            Instalala gratis
+                        </a>
+                    </p>
                 </div>
             )}
 
@@ -163,6 +214,8 @@ export default function AuthGateway() {
                     <div className="mt-8 text-xs font-mono text-accent-teal/80 bg-accent-teal/10 px-4 py-2 rounded-lg border border-accent-teal/20 w-full text-center truncate">
                         {address ? address : "Gxxxxxxxxxxxxxxxxxxxxx..."}
                     </div>
+
+                    <p className="text-xs text-muted mt-4">Redirigiendo a tu selector de entorno...</p>
                 </div>
             )}
 
