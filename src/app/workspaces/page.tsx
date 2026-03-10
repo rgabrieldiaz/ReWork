@@ -232,6 +232,9 @@ export default function WorkspacesHub() {
                 }
               </div>
               <div className="flex items-center gap-2">
+                <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
+                  {loadingWorkspace ? "Cargando..." : myWorkspace ? "Pro Environment" : "Sin Workspace"}
+                </span>
                 {isAdmin && myWorkspace && !editingWorkspace && (
                   <button
                     onClick={e => { e.stopPropagation(); setEditingWorkspace(true); }}
@@ -250,9 +253,6 @@ export default function WorkspacesHub() {
                     <XIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
-                <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-                  {loadingWorkspace ? "Cargando..." : myWorkspace ? "Pro Environment" : "Sin Workspace"}
-                </span>
               </div>
             </div>
 
@@ -315,13 +315,7 @@ export default function WorkspacesHub() {
                     </div>
                   )}
 
-                  {myWorkspace.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {myWorkspace.tags.map(tag => (
-                        <span key={tag} className="text-xs px-2 py-0.5 bg-accent-teal/10 text-accent-teal rounded-full border border-accent-teal/20">#{tag}</span>
-                      ))}
-                    </div>
-                  )}
+
                   <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
                     <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {myWorkspace.member_count} Miembros</span>
                     <span className="flex items-center gap-1.5"><Hexagon className="w-4 h-4 text-accent-teal" /> {myWorkspace.squad_count} Squads</span>

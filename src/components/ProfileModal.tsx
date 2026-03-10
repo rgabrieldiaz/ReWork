@@ -111,7 +111,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-card/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-card w-full max-w-md p-6 relative shadow-2xl border border-border-subtle rounded-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-card w-full max-w-3xl p-6 relative shadow-2xl border border-border-subtle rounded-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors"
@@ -119,210 +119,172 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="mb-8 text-center mt-2">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleImageSelect}
-                        disabled={isUploading}
-                    />
-                    <div className="flex flex-col items-center justify-center mb-6">
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="w-24 h-24 rounded-full bg-muted/10 flex items-center justify-center border-2 border-accent-teal shadow-[0_0_15px_rgba(0,242,255,0.3)] mb-3 relative group overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-deep-navy focus:ring-accent-teal transition-all disabled:opacity-50"
-                            title="Cambiar foto de perfil"
-                        >
-                            {isUploading ? (
-                                <Loader2 className="w-8 h-8 text-accent-teal animate-spin" />
-                            ) : avatarUrl ? (
-                                <>
-                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                                    <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Upload className="w-6 h-6 text-foreground" />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="font-bold text-accent-teal text-xl group-hover:opacity-0 transition-opacity">
-                                        {firstName ? firstName.charAt(0).toUpperCase() : "U"}
-                                    </span>
-                                    <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Upload className="w-6 h-6 text-foreground" />
-                                    </div>
-                                </>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="text-xs font-semibold text-accent-teal hover:text-foreground transition-colors flex items-center gap-1"
-                        >
-                            <Upload className="w-3 h-3" /> {t.profile.photoChange}
-                        </button>
-                    </div>
-                    <h2 className="text-xl font-bold text-foreground mt-2">{t.profile.editProfile}</h2>
-                    {address && (
-                        <button
-                            onClick={handleCopyAddress}
-                            className="flex items-center gap-1.5 mt-1 text-xs font-mono text-muted hover:text-foreground transition-colors group"
-                            title="Copiar dirección completa"
-                        >
-                            {addressCopied
-                                ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                                : <Copy className="w-3.5 h-3.5 group-hover:text-accent-teal transition-colors" />
-                            }
-                            <span className={addressCopied ? 'text-emerald-400' : ''}>
-                                {addressCopied ? 'Copiado!' : `${address.slice(0, 8)}...${address.slice(-6)}`}
-                            </span>
-                        </button>
-                    )}
-                    <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase border ${
-                        profile?.role?.toLowerCase() === 'admin'
-                            ? 'text-accent-teal bg-accent-teal/10 border-accent-teal/30'
-                            : 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20'
-                    }`}>
-                        {profile?.role || t.profile.role}
-                    </span>
-                </div>
+                {/* ═══════════ LAYOUT 2 COLUMNAS ═══════════ */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
 
-                <div className="space-y-4">
-                    {/* First + Last name on the same row */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.firstName}</label>
+                    {/* ─── COLUMNA IZQUIERDA: Avatar + Datos personales ─── */}
+                    <div className="space-y-4">
+                        {/* Avatar */}
+                        <div className="flex flex-col items-center pb-4 border-b border-border-subtle">
                             <input
-                                type="text"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                onBlur={(e) => handleAutoSave('first_name', e.target.value)}
-                                className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                                placeholder={t.profile.firstNamePlaceholder}
-                                required
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                ref={fileInputRef}
+                                onChange={handleImageSelect}
+                                disabled={isUploading}
                             />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.lastName}</label>
-                            <input
-                                type="text"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                onBlur={(e) => handleAutoSave('last_name', e.target.value)}
-                                className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all"
-                                placeholder={t.profile.lastNamePlaceholder}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.birthDate}</label>
-                        <input
-                            type="date"
-                            value={birthDate}
-                            onChange={(e) => setBirthDate(e.target.value)}
-                            onBlur={(e) => handleAutoSave('birth_date', e.target.value)}
-                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
-                        />
-                    </div>
-
-                    {/* Workspace Settings — solo admin */}
-                    {isAdmin && wsId && (
-                        <div className="pt-5 border-t border-border-subtle mt-5">
-                            <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-accent-teal" />
-                                Workspace
-                            </h3>
-                            <div className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Nombre</label>
-                                    <input
-                                        type="text"
-                                        value={wsName}
-                                        onChange={e => setWsName(e.target.value)}
-                                        className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
-                                        placeholder="Nombre del workspace"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Descripción</label>
-                                    <textarea
-                                        value={wsDesc}
-                                        onChange={e => setWsDesc(e.target.value)}
-                                        rows={3}
-                                        className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all resize-none"
-                                        placeholder="Descripción del workspace"
-                                    />
-                                </div>
-                                <button
-                                    onClick={handleSaveWorkspace}
-                                    disabled={savingWs}
-                                    className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
-                                >
-                                    {savingWs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                    {savingWs ? 'Guardando...' : 'Guardar Workspace'}
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                                className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center border-2 border-accent-teal shadow-[0_0_15px_rgba(0,242,255,0.3)] mb-2 relative group overflow-hidden focus:outline-none transition-all disabled:opacity-50"
+                                title="Cambiar foto de perfil"
+                            >
+                                {isUploading ? (
+                                    <Loader2 className="w-8 h-8 text-accent-teal animate-spin" />
+                                ) : avatarUrl ? (
+                                    <>
+                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                                        <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Upload className="w-5 h-5 text-foreground" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-bold text-accent-teal text-xl group-hover:opacity-0 transition-opacity">
+                                            {firstName ? firstName.charAt(0).toUpperCase() : "U"}
+                                        </span>
+                                        <div className="absolute inset-0 bg-foreground/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Upload className="w-5 h-5 text-foreground" />
+                                        </div>
+                                    </>
+                                )}
+                            </button>
+                            <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="text-xs font-semibold text-accent-teal hover:text-foreground transition-colors flex items-center gap-1 mb-2">
+                                <Upload className="w-3 h-3" /> {t.profile.photoChange}
+                            </button>
+                            <h2 className="text-lg font-bold text-foreground">{t.profile.editProfile}</h2>
+                            {address && (
+                                <button onClick={handleCopyAddress} className="flex items-center gap-1.5 mt-1 text-xs font-mono text-muted hover:text-foreground transition-colors group" title="Copiar dirección completa">
+                                    {addressCopied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 group-hover:text-accent-teal transition-colors" />}
+                                    <span className={addressCopied ? 'text-emerald-400' : ''}>{addressCopied ? 'Copiado!' : `${address.slice(0, 8)}...${address.slice(-6)}`}</span>
                                 </button>
-                            </div>
+                            )}
+                            <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase border ${
+                                profile?.role?.toLowerCase() === 'admin'
+                                    ? 'text-accent-teal bg-accent-teal/10 border-accent-teal/30'
+                                    : 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20'
+                            }`}>
+                                {profile?.role || t.profile.role}
+                            </span>
                         </div>
-                    )}
 
-                    {/* Interface Settings */}
-                    <div className="pt-6 border-t border-border-subtle mt-6">
-                        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                            <Monitor className="w-4 h-4 text-accent-teal" />
-                            {t.profile.interfaceSettings}
-                        </h3>
-
-                        {/* Language Selector */}
-                        <div className="mb-5">
-                            <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.language}</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div
-                                    onClick={() => setLanguage('es')}
-                                    className={`relative cursor-pointer rounded-xl border p-3 flex items-center gap-3 transition-colors ${language === 'es' ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'}`}
-                                >
-                                    <span className="text-2xl" role="img" aria-label="Español">🇪🇸</span>
-                                    <span className={`font-medium ${language === 'es' ? 'text-accent-teal' : 'text-muted'}`}>Español</span>
-                                    {language === 'es' && <Check className="w-4 h-4 text-accent-teal absolute right-3" />}
-                                </div>
-                                <div
-                                    onClick={() => setLanguage('en')}
-                                    className={`relative cursor-pointer rounded-xl border p-3 flex items-center gap-3 transition-colors ${language === 'en' ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'}`}
-                                >
-                                    <span className="text-2xl" role="img" aria-label="English">🇬🇧</span>
-                                    <span className={`font-medium ${language === 'en' ? 'text-accent-teal' : 'text-muted'}`}>English</span>
-                                    {language === 'en' && <Check className="w-4 h-4 text-accent-teal absolute right-3" />}
-                                </div>
+                        {/* Nombre + Apellido */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.firstName}</label>
+                                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={(e) => handleAutoSave('first_name', e.target.value)}
+                                    className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
+                                    placeholder={t.profile.firstNamePlaceholder} required />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.lastName}</label>
+                                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={(e) => handleAutoSave('last_name', e.target.value)}
+                                    className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
+                                    placeholder={t.profile.lastNamePlaceholder} />
                             </div>
                         </div>
 
-                        {/* Theme Selector */}
+                        {/* Fecha de nacimiento */}
                         <div>
-                            <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.theme}</label>
-                            <div className="flex bg-muted/10 border border-border-subtle rounded-xl p-1">
-                                {[
-                                    { id: 'light', icon: Sun, label: t.profile.themeLight },
-                                    { id: 'dark', icon: Moon, label: t.profile.themeDark },
-                                    { id: 'system', icon: Monitor, label: t.profile.themeSystem }
-                                ].map((tOption) => {
-                                    const Icon = tOption.icon;
-                                    const isActive = theme === tOption.id;
-                                    return (
-                                        <button
-                                            key={tOption.id}
-                                            type="button"
-                                            onClick={() => setTheme(tOption.id as any)}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${isActive ? 'bg-foreground/10 text-foreground shadow-sm' : 'text-muted hover:text-muted'}`}
-                                        >
-                                            <Icon className="w-4 h-4" />
-                                            {tOption.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">{t.profile.birthDate}</label>
+                            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} onBlur={(e) => handleAutoSave('birth_date', e.target.value)}
+                                className="w-full bg-muted/10 border border-border-subtle rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
                         </div>
                     </div>
 
+                    {/* ─── COLUMNA DERECHA: Workspace (admin) + Ajustes de interfaz ─── */}
+                    <div className="space-y-5">
+
+                        {/* Workspace Settings — solo admin */}
+                        {isAdmin && wsId && (
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-accent-teal" /> Workspace
+                                </h3>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Nombre</label>
+                                        <input type="text" value={wsName} onChange={e => setWsName(e.target.value)}
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
+                                            placeholder="Nombre del workspace" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Descripción</label>
+                                        <textarea value={wsDesc} onChange={e => setWsDesc(e.target.value)} rows={3}
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all resize-none"
+                                            placeholder="Descripción del workspace" />
+                                    </div>
+                                    <button onClick={handleSaveWorkspace} disabled={savingWs}
+                                        className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50">
+                                        {savingWs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                        {savingWs ? 'Guardando...' : 'Guardar Workspace'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Divider only if admin has workspace section */}
+                        {isAdmin && wsId && <div className="border-t border-border-subtle" />}
+
+                        {/* Ajustes de interfaz */}
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                                <Monitor className="w-4 h-4 text-accent-teal" /> {t.profile.interfaceSettings}
+                            </h3>
+
+                            {/* Idioma */}
+                            <div className="mb-4">
+                                <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.language}</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['es', 'en'].map(lang => (
+                                        <div key={lang} onClick={() => setLanguage(lang as any)}
+                                            className={`relative cursor-pointer rounded-xl border p-2.5 flex items-center gap-2 transition-colors ${
+                                                language === lang ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'
+                                            }`}>
+                                            <span className="text-xl">{lang === 'es' ? '🇪🇸' : '🇬🇧'}</span>
+                                            <span className={`text-sm font-medium ${language === lang ? 'text-accent-teal' : 'text-muted'}`}>{lang === 'es' ? 'Español' : 'English'}</span>
+                                            {language === lang && <Check className="w-3.5 h-3.5 text-accent-teal absolute right-2" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tema */}
+                            <div>
+                                <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.theme}</label>
+                                <div className="flex bg-muted/10 border border-border-subtle rounded-xl p-1">
+                                    {[
+                                        { id: 'light', icon: Sun, label: t.profile.themeLight },
+                                        { id: 'dark', icon: Moon, label: t.profile.themeDark },
+                                        { id: 'system', icon: Monitor, label: t.profile.themeSystem }
+                                    ].map((tOption) => {
+                                        const Icon = tOption.icon;
+                                        const isActive = theme === tOption.id;
+                                        return (
+                                            <button key={tOption.id} type="button" onClick={() => setTheme(tOption.id as any)}
+                                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-lg transition-all ${
+                                                    isActive ? 'bg-foreground/10 text-foreground shadow-sm' : 'text-muted hover:text-foreground'
+                                                }`}>
+                                                <Icon className="w-3.5 h-3.5" />{tOption.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
