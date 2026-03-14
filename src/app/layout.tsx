@@ -9,6 +9,7 @@ import { ProfileProvider } from "@/hooks/useProfile";
 import { SettingsProvider } from "@/hooks/useSettings";
 import { MainLayout } from "@/components/MainLayout";
 import { BalanceProvider } from "@/hooks/useSharedBalances";
+import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -31,12 +32,14 @@ export default function RootLayout({
           <FreighterProvider>
             <ProfileProvider>
               <BalanceProvider>
+              <WorkspaceProvider>
                 <TWProvider>
                   <MainLayout>
                     {children}
                   </MainLayout>
                 </TWProvider>
-              </BalanceProvider>
+              </WorkspaceProvider>
+            </BalanceProvider>
             </ProfileProvider>
           </FreighterProvider>
         </SettingsProvider>

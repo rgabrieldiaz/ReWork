@@ -9,11 +9,13 @@ import { useInitializeEscrow, useSendTransaction, useReleaseFunds } from "@trust
 import { InitializeMultiReleaseEscrowPayload, MultiReleaseReleaseFundsPayload } from "@trustless-work/escrow/types";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function SquadGoalsPage() {
     const { t } = useSettings();
     const { connected, address: publicKey, sign } = useFreighter();
     const { createNotification } = useNotifications();
+    const { activeWorkspace } = useWorkspace();
     const [activeTab, setActiveTab] = useState<"activas" | "propuestas">("propuestas");
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,11 +39,12 @@ export default function SquadGoalsPage() {
     const { sendTransaction } = useSendTransaction();
 
     const fetchAllData = async () => {
+        if (!activeWorkspace?.id) return;
         setLoading(true);
         try {
             const [usersRes, goalsRes, votesRes] = await Promise.all([
                 supabase.from("users").select("wallet_address, first_name, last_name, avatar_url"),
-                supabase.from("squad_goals").select("*").eq("workspace_id", localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000').order("created_at", { ascending: false }),
+                supabase.from("squad_goals").select("*").eq("workspace_id", activeWorkspace.id).order("created_at", { ascending: false }),
                 supabase.from("squad_goal_votes").select("*")
             ]);
 
@@ -57,7 +60,7 @@ export default function SquadGoalsPage() {
 
     useEffect(() => {
         fetchAllData();
-    }, []);
+    }, [activeWorkspace?.id]);
 
     const totalSquadSize = squadMembers.length || 1;
     const requiredVotes = Math.ceil(totalSquadSize * 0.7);

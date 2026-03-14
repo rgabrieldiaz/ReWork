@@ -8,6 +8,7 @@ import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
 import { ColectaDetailModal } from "@/components/ColectaDetailModal";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 
 // Utils
@@ -17,6 +18,7 @@ export default function ColectasPage() {
     const { t } = useSettings();
     const { connected, address: publicKey } = useFreighter();
     const { createNotification } = useNotifications();
+    const { activeWorkspace } = useWorkspace();
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [donations, setDonations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,10 +55,10 @@ export default function ColectasPage() {
 
     // Fetch data
     const fetchCampaigns = async () => {
+        if (!activeWorkspace?.id) return;
         setLoading(true);
         try {
-            const currentWorkspace = localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000';
-            const { data, error } = await supabase.from("crowdfunds").select("*").eq("workspace_id", currentWorkspace).order("created_at", { ascending: false });
+            const { data, error } = await supabase.from("crowdfunds").select("*").eq("workspace_id", activeWorkspace.id).order("created_at", { ascending: false });
             if (error) throw error;
             setCampaigns(data || []);
 
@@ -107,7 +109,7 @@ export default function ColectasPage() {
     useEffect(() => {
         fetchCampaigns();
         fetchTeamWallets();
-    }, [publicKey]);
+    }, [activeWorkspace?.id, publicKey]);
 
     // Derived Data
     const allTags = useMemo(() => {

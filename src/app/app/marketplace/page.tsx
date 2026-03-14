@@ -11,6 +11,7 @@ import { UserBadge } from "@/components/UserBadge";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 // Dummy addresses for demo purposes
 const DUMMY_PLATFORM_ADDRESS = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
@@ -94,6 +95,7 @@ export default function MarketplacePage() {
     const { addPoints } = useProfile();
     const { t } = useSettings();
     const { createNotification } = useNotifications();
+    const { activeWorkspace } = useWorkspace();
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -105,15 +107,15 @@ export default function MarketplacePage() {
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
     const fetchAuctions = async () => {
-        const currentWorkspace = localStorage.getItem("rework_current_workspace") || '00000000-0000-0000-0000-000000000000';
-        const { data, error } = await supabase.from("auctions").select("*").eq("workspace_id", currentWorkspace).order("id", { ascending: false });
+        if (!activeWorkspace?.id) return;
+        const { data, error } = await supabase.from("auctions").select("*").eq("workspace_id", activeWorkspace.id).order("id", { ascending: false });
         if (data) setAuctions(data);
         if (error) console.error("Error fetching auctions:", error);
     };
 
     useEffect(() => {
         fetchAuctions();
-    }, []);
+    }, [activeWorkspace?.id]);
 
     // Filter and Sort Logic
     const displayedAuctions = useMemo(() => {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useFreighter } from '@/hooks/useFreighter';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
 export interface Squad {
     id: string;
@@ -30,6 +31,7 @@ export interface SquadMember {
 
 export function useSquads() {
     const { address: walletAddress } = useFreighter();
+    const { activeWorkspace } = useWorkspace();
     const [squads, setSquads] = useState<Squad[]>([]);
     const [squadMembers, setSquadMembers] = useState<Record<string, SquadMember[]>>({});
     const [loading, setLoading] = useState(true);
@@ -39,10 +41,17 @@ export function useSquads() {
         setLoading(true);
         setError(null);
         try {
-            // First fetch all squads
+            if (!activeWorkspace?.id) {
+                setSquads([]);
+                setLoading(false);
+                return;
+            }
+
+            // First fetch all squads for current workspace
             const { data: squadsData, error: squadsError } = await supabase
                 .from('squads')
                 .select('*')
+                .eq('workspace_id', activeWorkspace.id)
                 .order('created_at', { ascending: false });
 
             if (squadsError) throw squadsError;
@@ -88,7 +97,7 @@ export function useSquads() {
 
     useEffect(() => {
         fetchSquads();
-    }, [fetchSquads]);
+    }, [fetchSquads, activeWorkspace?.id]);
 
     const createSquad = async (squadData: Partial<Squad>) => {
         if (!walletAddress) throw new Error("Wallet not connected");
@@ -100,7 +109,7 @@ export function useSquads() {
 
         const { data: newSquad, error: squadError } = await supabase
             .from('squads')
-            .insert([{ ...squadData, leader_id: user.id }])
+            .insert([{ ...squadData, leader_id: user.id, workspace_id: activeWorkspace?.id }])
             .select()
             .single();
 

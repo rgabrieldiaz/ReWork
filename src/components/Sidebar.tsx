@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { ChevronDown, Plus } from "lucide-react";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const pathname = usePathname();
@@ -24,14 +26,18 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
     const navItems = [
         { name: t.nav.dashboard, href: "/app", icon: Home },
+        { name: "Red Global", href: "/app/global-network", icon: Globe },
         { name: t.nav.squadGoals, href: "/app/squad-goals", icon: Target },
         { name: t.nav.crowdfunding, href: "/app/crowdfunding", icon: TrendingUp },
         { name: t.nav.marketplace, href: "/app/marketplace", icon: ShoppingBag },
         { name: t.nav.people, href: "/app/teams", icon: Users },
         { name: t.nav.learning, href: "/app/learn", icon: Lightbulb },
         { name: t.nav.helpDesk, href: "/app/help-desk", icon: LifeBuoy },
-        { name: t.nav.web3Identity, href: "/app/web3-identity", icon: Globe },
+        { name: "Identidad", href: "/app/web3-identity", icon: ShieldCheck },
     ];
+
+    const { workspaces, activeWorkspace, setActiveWorkspaceId } = useWorkspace();
+    const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
 
     return (
         <>
@@ -76,6 +82,77 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
+                </div>
+
+                {/* Workspace Selector */}
+                <div className={`px-4 mb-4 transition-all duration-300 ${isSidebarCollapsed ? 'lg:px-2' : ''}`}>
+                    <div className="relative">
+                        <button
+                            onClick={() => !isSidebarCollapsed && setIsWorkspaceOpen(!isWorkspaceOpen)}
+                            className={`w-full flex items-center bg-foreground/5 border border-border-subtle rounded-xl hover:bg-foreground/10 transition-all overflow-hidden ${isSidebarCollapsed ? 'justify-center p-2' : 'p-3 gap-3'}`}
+                        >
+                            <div className="w-8 h-8 rounded-lg bg-accent-teal/20 border border-accent-teal/30 flex items-center justify-center flex-shrink-0">
+                                {activeWorkspace?.logo_url ? (
+                                    <img src={activeWorkspace.logo_url} alt="" className="w-full h-full object-cover rounded-lg" />
+                                ) : (
+                                    <span className="text-accent-teal font-bold text-xs">{activeWorkspace?.name?.charAt(0) || "W"}</span>
+                                )}
+                            </div>
+                            {!isSidebarCollapsed && (
+                                <>
+                                    <div className="flex-1 text-left min-w-0">
+                                        <p className="text-sm font-bold truncate text-foreground">
+                                            {activeWorkspace?.name || "Seleccionar..."}
+                                        </p>
+                                        <p className="text-[10px] text-muted uppercase tracking-widest font-semibold truncate leading-none mt-0.5">
+                                            Workspace Activo
+                                        </p>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-muted transition-transform ${isWorkspaceOpen ? 'rotate-180' : ''}`} />
+                                </>
+                            )}
+                        </button>
+
+                        {/* Dropdown */}
+                        {isWorkspaceOpen && !isSidebarCollapsed && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border-subtle rounded-xl shadow-2xl z-50 py-2 animate-in fade-in slide-in-from-top-2">
+                                <p className="px-4 py-2 text-[10px] font-bold text-muted uppercase tracking-widest border-b border-border-subtle mb-1">
+                                    Tus Entornos
+                                </p>
+                                {workspaces.map((ws) => (
+                                    <button
+                                        key={ws.id}
+                                        onClick={() => {
+                                            setActiveWorkspaceId(ws.id);
+                                            setIsWorkspaceOpen(false);
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors ${activeWorkspace?.id === ws.id ? 'bg-accent-teal/5 text-accent-teal' : 'text-foreground'}`}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-muted/10 border border-border-subtle flex items-center justify-center flex-shrink-0">
+                                            {ws.logo_url ? (
+                                                <img src={ws.logo_url} alt="" className="w-full h-full object-cover rounded-lg" />
+                                            ) : (
+                                                <span className="font-bold text-xs">{ws.name.charAt(0)}</span>
+                                            )}
+                                        </div>
+                                        <span className="text-sm font-medium truncate">{ws.name}</span>
+                                    </button>
+                                ))}
+                                <div className="border-t border-border-subtle mt-1 pt-1">
+                                    <Link
+                                        href="/workspaces"
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-muted hover:text-foreground hover:bg-foreground/5 transition-colors"
+                                        onClick={() => setIsWorkspaceOpen(false)}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-muted/5 border border-dashed border-border-subtle flex items-center justify-center flex-shrink-0">
+                                            <Plus className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-sm font-medium">Gestionar</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-2">

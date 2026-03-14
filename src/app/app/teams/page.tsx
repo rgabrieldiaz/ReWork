@@ -9,12 +9,14 @@ import { useSquads, Squad } from "@/hooks/useSquads";
 import CreateSquadModal from "@/components/CreateSquadModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useFreighter } from "@/hooks/useFreighter";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function ColaboradoresPage() {
     const { t } = useSettings();
     const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad } = useSquads();
     const { createNotification } = useNotifications();
     const { address: publicKey } = useFreighter();
+    const { activeWorkspace } = useWorkspace();
     const [collaborators, setCollaborators] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -30,9 +32,12 @@ export default function ColaboradoresPage() {
 
     useEffect(() => {
         const fetchCollaborators = async () => {
+            if (!activeWorkspace?.id) return;
+            setLoading(true);
             const { data, error } = await supabase
                 .from("users")
                 .select("*")
+                .eq("workspace_id", activeWorkspace.id)
                 .order("first_name", { ascending: true });
 
             if (error) {
@@ -44,7 +49,7 @@ export default function ColaboradoresPage() {
         };
 
         fetchCollaborators();
-    }, []);
+    }, [activeWorkspace?.id]);
 
     // Derived states
     const filteredSquads = squads.filter(s =>

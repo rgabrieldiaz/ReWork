@@ -7,8 +7,10 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
 import * as StellarSdk from "@stellar/stellar-sdk";
+import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
 import { X, Clock, ShieldCheck } from "lucide-react";
 
 interface Auction {
@@ -33,6 +35,7 @@ export default function Home() {
   const { connected, address, network, sign } = useFreighter();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
+  const { activeWorkspace } = useWorkspace();
   const { notifyPointsEarned } = useGamification();
   const { t } = useSettings();
 
@@ -56,23 +59,25 @@ export default function Home() {
   // Bug 7: Fetch real contributors from Supabase
   useEffect(() => {
     const fetchContributors = async () => {
-      const currentWorkspace = localStorage.getItem('rework_current_workspace') || '00000000-0000-0000-0000-000000000000';
+      if (!activeWorkspace?.id) return;
       const { data } = await supabase
         .from('users')
         .select('wallet_address, first_name, last_name, avatar_url, points')
-        .eq('workspace_id', currentWorkspace)
+        .eq('workspace_id', activeWorkspace.id)
         .order('points', { ascending: false })
         .limit(5);
-      if (data && data.length > 0) setContributors(data);
+      if (data) setContributors(data);
     };
     fetchContributors();
-  }, []);
+  }, [activeWorkspace?.id]);
 
   useEffect(() => {
     const fetchAuctions = async () => {
+      if (!activeWorkspace?.id) return;
       const { data, error } = await supabase
         .from("auctions")
         .select("*")
+        .eq('workspace_id', activeWorkspace.id)
         .order("end_time", { ascending: true });
 
       if (error) {
@@ -93,7 +98,7 @@ export default function Home() {
     };
 
     fetchAuctions();
-  }, [conditionFilter]);
+  }, [conditionFilter, activeWorkspace?.id]);
 
   // Bug 2 fix: accept optional direct amount param to avoid async setState race
   const handleBid = async (directAmount?: number) => {
