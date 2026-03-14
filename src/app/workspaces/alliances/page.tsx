@@ -34,16 +34,35 @@ export default function AlliancesGallery() {
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
-      const { data } = await supabase
+      
+      // Fetch public workspaces
+      const { data: wsData } = await supabase
         .from("workspaces")
-        .select("id, name, slug, description, tags, member_count, squad_count, seeking_collaborators, logo_url")
+        .select("id, name, slug, description, tags, member_count, squad_count, seeking_collaborators, logo_url, is_public")
         .eq("is_public", true)
         .order("member_count", { ascending: false });
-      setWorkspaces((data || []) as PublicWorkspace[]);
+
+      const wsList = (wsData || []) as PublicWorkspace[];
+      setWorkspaces(wsList);
+
+      // Fetch existing join requests for this user
+      if (address) {
+        const { data: reqData } = await supabase
+          .from("workspace_join_requests")
+          .select("workspace_id")
+          .eq("requester_wallet", address);
+        
+        const sentMap: Record<string, boolean> = {};
+        reqData?.forEach(r => {
+          sentMap[r.workspace_id] = true;
+        });
+        setRequestSent(sentMap);
+      }
+
       setLoading(false);
     };
     fetch();
-  }, []);
+  }, [address]);
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -63,9 +82,17 @@ export default function AlliancesGallery() {
         message: `Solicitud de ${profile?.first_name || address.slice(0, 8)} con ${profile?.points || 0} pts AURA.`,
         status: "pending",
       });
-      if (error) throw error;
-      setRequestSent(prev => ({ ...prev, [workspace.id]: true }));
-      showToast(`Solicitud enviada a ${workspace.name}. Te notificarán pronto.`);
+      if (error) {
+        if (error.code === '23505') { // Unique constraint
+          showToast("Ya enviaste una solicitud a este espacio.", "error");
+          setRequestSent(prev => ({ ...prev, [workspace.id]: true }));
+        } else {
+          throw error;
+        }
+      } else {
+        setRequestSent(prev => ({ ...prev, [workspace.id]: true }));
+        showToast(`Solicitud enviada a ${workspace.name}. Te notificarán pronto.`);
+      }
     } catch (err: any) {
       showToast(err?.message || "Error al enviar la solicitud.", "error");
     } finally {

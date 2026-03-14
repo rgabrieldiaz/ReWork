@@ -12,6 +12,16 @@ export interface Workspace {
     owner_wallet: string | null;
     is_public: boolean;
     description: string | null;
+    userRole?: 'owner' | 'admin' | 'member';
+    member_count?: number;
+    squad_count?: number;
+}
+
+interface JoinRequest {
+    id: string;
+    workspace_id: string;
+    status: string;
+    workspace_name?: string;
 }
 
 interface WorkspaceContextType {
@@ -19,6 +29,8 @@ interface WorkspaceContextType {
     activeWorkspace: Workspace | null;
     setActiveWorkspaceId: (id: string) => void;
     loading: boolean;
+    joinRequests: JoinRequest[];
+    refreshWorkspaces: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -26,65 +38,103 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { address: walletAddress } = useFreighter();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchWorkspaces = async () => {
         if (!walletAddress) {
             setWorkspaces([]);
+            setJoinRequests([]);
             setActiveWorkspace(null);
             setLoading(false);
             return;
         }
 
-        const fetchWorkspaces = async () => {
-            setLoading(true);
-            try {
-                // Fetch user ID first
-                const { data: userData } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('wallet_address', walletAddress)
-                    .single();
+        setLoading(true);
+        try {
+            // Fetch user ID first to check memberships
+            const { data: userData } = await supabase
+                .from('users')
+                .select('id')
+                .eq('wallet_address', walletAddress)
+                .single();
 
-                if (userData) {
-                    // Fetch workspaces where user is a member or owner
-                    const { data: memberData } = await supabase
-                        .from('workspace_members')
-                        .select('workspace_id, workspaces(*)')
-                        .eq('user_id', userData.id);
+            let memberWorkspaces: Workspace[] = [];
+            if (userData) {
+                const { data: memberData } = await supabase
+                    .from('workspace_members')
+                    .select('workspace_id, role, workspaces(*, workspace_members(count), squads(count))')
+                    .eq('user_id', userData.id);
 
-                    const userWorkspaces = memberData?.map(m => m.workspaces as unknown as Workspace) || [];
-                    
-                    // Also fetch workspaces owned by wallet if not already included
-                    const { data: ownedData } = await supabase
-                        .from('workspaces')
-                        .select('*')
-                        .eq('owner_wallet', walletAddress);
-                    
-                    const ownedWorkspaces = ownedData || [];
-                    
-                    // Combine and remove duplicates by ID
-                    const allWorkspaces = [...userWorkspaces, ...ownedWorkspaces];
-                    const uniqueWorkspaces = Array.from(new Map(allWorkspaces.map(w => [w.id, w])).values());
-
-                    setWorkspaces(uniqueWorkspaces);
-
-                    // Set active workspace from localStorage or default to first
-                    const savedId = localStorage.getItem('rework_active_workspace_id');
-                    const initial = uniqueWorkspaces.find(w => w.id === savedId) || uniqueWorkspaces[0] || null;
-                    setActiveWorkspace(initial);
-                    if (initial) {
-                        localStorage.setItem('rework_active_workspace_id', initial.id);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching workspaces:', err);
-            } finally {
-                setLoading(false);
+                memberWorkspaces = memberData?.map(m => {
+                    const ws = m.workspaces as any;
+                    return {
+                        ...ws,
+                        userRole: m.role as any,
+                        member_count: ws.workspace_members?.[0]?.count ?? 0,
+                        squad_count: ws.squads?.[0]?.count ?? 0
+                    };
+                }) || [];
             }
-        };
 
+            // Fetch workspaces owned directly by wallet
+            const { data: ownedData } = await supabase
+                .from('workspaces')
+                .select('*, workspace_members(count), squads(count)')
+                .eq('owner_wallet', walletAddress);
+
+            const ownedWorkspaces = (ownedData || []).map((w: any) => ({
+                ...w,
+                userRole: 'owner' as const,
+                member_count: w.workspace_members?.[0]?.count ?? 0,
+                squad_count: w.squads?.[0]?.count ?? 0
+            }));
+
+            // Combine and prioritize 'owner' role if duplicate
+            const workspaceMap = new Map<string, Workspace>();
+            
+            memberWorkspaces.forEach(w => workspaceMap.set(w.id, w));
+            ownedWorkspaces.forEach(w => {
+                const existing = workspaceMap.get(w.id);
+                if (!existing || existing.userRole !== 'owner') {
+                    workspaceMap.set(w.id, w);
+                }
+            });
+
+            const uniqueWorkspaces = Array.from(workspaceMap.values());
+            setWorkspaces(uniqueWorkspaces);
+
+            // Fetch Join Requests
+            const { data: requestsData } = await supabase
+                .from('workspace_join_requests')
+                .select('id, workspace_id, status, workspaces(name)')
+                .eq('requester_wallet', walletAddress);
+            
+            const formattedRequests = requestsData?.map(r => ({
+                id: r.id,
+                workspace_id: r.workspace_id,
+                status: r.status,
+                workspace_name: (r.workspaces as any)?.name
+            })) || [];
+
+            setJoinRequests(formattedRequests);
+
+            // Set active workspace
+            const savedId = localStorage.getItem('rework_active_workspace_id');
+            const initial = uniqueWorkspaces.find(w => w.id === savedId) || uniqueWorkspaces[0] || null;
+            setActiveWorkspace(initial);
+            if (initial) {
+                localStorage.setItem('rework_active_workspace_id', initial.id);
+            }
+        } catch (err) {
+            console.error('Error fetching workspaces:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchWorkspaces();
     }, [walletAddress]);
 
@@ -97,7 +147,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <WorkspaceContext.Provider value={{ workspaces, activeWorkspace, setActiveWorkspaceId, loading }}>
+        <WorkspaceContext.Provider value={{ 
+            workspaces, 
+            activeWorkspace, 
+            setActiveWorkspaceId, 
+            loading, 
+            joinRequests,
+            refreshWorkspaces: fetchWorkspaces
+        }}>
             {children}
         </WorkspaceContext.Provider>
     );

@@ -8,29 +8,15 @@ import { useSettings } from "@/hooks/useSettings";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
+import { useWorkspace, Workspace as HookWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
-
-interface Workspace {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url: string | null;
-  description: string | null;
-  owner_wallet: string | null;
-  is_public: boolean;
-  seeking_collaborators: boolean;
-  tags: string[];
-  member_count: number;
-  squad_count: number;
-  created_at: string;
-}
 
 interface GlobalBounty {
   id: string;
   title: string;
   description: string;
-  status: string;
   reward_usdc: number;
+  status: string;
 }
 
 export default function WorkspacesPage() {
@@ -39,9 +25,8 @@ export default function WorkspacesPage() {
   const { address, connected } = useFreighter();
   const { profile } = useProfile();
   const { xlmBalance, usdcBalance } = useBalances(address);
+  const { workspaces, loading: loadingWorkspaces, joinRequests, setActiveWorkspaceId } = useWorkspace();
 
-  const [myWorkspace, setMyWorkspace] = useState<Workspace | null>(null);
-  const [loadingWorkspace, setLoadingWorkspace] = useState(true);
   const [editingWorkspace, setEditingWorkspace] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
@@ -55,45 +40,37 @@ export default function WorkspacesPage() {
 
   const [addressCopied, setAddressCopied] = useState(false);
 
-  // Cargar workspace del usuario conectado
+  // Use the first workspace as the "primary" one for display, or any logic to pick one
+  const primaryWorkspace = workspaces[0] || null;
+
   useEffect(() => {
-    if (!address) {
-      setLoadingWorkspace(false);
-      return;
+    if (primaryWorkspace) {
+      setEditName(primaryWorkspace.name);
+      setEditDesc(primaryWorkspace.description || "");
     }
-    const fetchMyWorkspace = async () => {
-      setLoadingWorkspace(true);
-      const { data, error } = await supabase
-        .from("workspaces")
-        .select(`*, workspace_members(count), squads(count)`)
-        .eq("owner_wallet", address)
-        .order("created_at", { ascending: true });
+  }, [primaryWorkspace]);
 
-      if (error) console.error("Error fetching workspace:", error);
+  const handleSaveWorkspace = async () => {
+    if (!primaryWorkspace || !isAdmin) return;
+    setSavingWorkspace(true);
+    const { error } = await supabase
+      .from("workspaces")
+      .update({ name: editName.trim(), description: editDesc.trim() })
+      .eq("id", primaryWorkspace.id);
+    if (!error) {
+      // Local update is handled by the hook if we refresh, 
+      // but for immediate feedback:
+      setEditingWorkspace(false);
+      window.location.reload(); // Quick refresh to update hook data
+    }
+    setSavingWorkspace(false);
+  };
 
-      const list = ((data || []) as any[]).map(w => ({
-        ...w,
-        member_count: (w.workspace_members?.[0]?.count ?? 0) as number,
-        squad_count: (w.squads?.[0]?.count ?? 0) as number,
-      })) as Workspace[];
+  const enterWorkspace = (ws: HookWorkspace) => {
+    setActiveWorkspaceId(ws.id);
+    router.push("/app");
+  };
 
-      const privateWs = list.find(w => !w.is_public) ?? list[0] ?? null;
-      setMyWorkspace(privateWs);
-      if (privateWs) {
-        setEditName(privateWs.name);
-        setEditDesc(privateWs.description || "");
-      }
-      setLoadingWorkspace(false);
-
-      if (privateWs?.id) {
-        localStorage.setItem("rework_current_workspace", privateWs.id);
-      }
-    };
-    fetchMyWorkspace();
-  }, [address]);
-
-
-  // Cargar bounties globales
   const loadBounties = async () => {
     if (bounties.length > 0) { setShowBounties(true); return; }
     setLoadingBounties(true);
@@ -104,23 +81,9 @@ export default function WorkspacesPage() {
       .eq("status", "open")
       .order("created_at", { ascending: false })
       .limit(5);
-    setBounties((data || []) as GlobalBounty[]);
+    setBounties((data || []) as any[]);
     setLoadingBounties(false);
     setShowBounties(true);
-  };
-
-  const handleSaveWorkspace = async () => {
-    if (!myWorkspace || !isAdmin) return;
-    setSavingWorkspace(true);
-    const { error } = await supabase
-      .from("workspaces")
-      .update({ name: editName.trim(), description: editDesc.trim() })
-      .eq("id", myWorkspace.id);
-    if (!error) {
-      setMyWorkspace({ ...myWorkspace, name: editName.trim(), description: editDesc.trim() });
-      setEditingWorkspace(false);
-    }
-    setSavingWorkspace(false);
   };
 
   const handleCopyAddress = () => {
@@ -215,205 +178,170 @@ export default function WorkspacesPage() {
           </p>
         </div>
 
+        {/* ── SECCIÓN: INVITACIONES PENDIENTES ── */}
+        {joinRequests.some(r => r.status === 'pending') && (
+          <div className="mb-10 animate-in slide-in-from-left-4 duration-500">
+            <h2 className="text-sm font-bold text-accent-teal uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Zap className="w-4 h-4" /> Solicitudes Pendientes
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {joinRequests.filter(r => r.status === 'pending').map(req => (
+                <div key={req.id} className="glass-card p-4 rounded-2xl border border-accent-teal/20 bg-accent-teal/5 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Esperando respuesta de {req.workspace_name}</p>
+                    <p className="text-xs text-muted">Tu AURA está siendo evaluada por el equipo.</p>
+                  </div>
+                  <Loader2 className="w-4 h-4 animate-spin text-accent-teal/50" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
 
-          {/* ── CARD IZQUIERDA: Workspace Privado (dinámico desde Supabase) ── */}
-          <div
-            onClick={() => !isAdmin && myWorkspace && router.push("/app")}
-            className={`glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] ${myWorkspace && !isAdmin ? 'cursor-pointer' : 'cursor-default'} ${!myWorkspace ? 'opacity-80' : ''}`}
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          {/* ── COLUMNA IZQUIERDA: Mis Entornos (Propios y Miembros) ── */}
+          <div className="flex flex-col gap-6">
+            <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+              <Building2 className="w-4 h-4" /> Mis Espacios
+            </h2>
 
-            <div className="flex justify-between items-start mb-8 relative z-10">
-              <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-accent-teal/30 transition-colors overflow-hidden">
-                {myWorkspace?.logo_url
-                  ? <img src={myWorkspace.logo_url} alt={myWorkspace.name} className="w-full h-full object-cover" />
-                  : <Building2 className="w-7 h-7 text-foreground" />
-                }
+            {loadingWorkspaces ? (
+              <div className="glass-card p-8 rounded-3xl border border-border-subtle flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-accent-teal" />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-                  {loadingWorkspace ? t.workspacesPage.loading : myWorkspace ? t.workspacesPage.proEnvironment : t.workspacesPage.noWorkspace}
-                </span>
-                {isAdmin && myWorkspace && !editingWorkspace && (
-                  <button
-                    onClick={e => { e.stopPropagation(); setEditingWorkspace(true); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors"
-                    title={t.workspacesPage.editWorkspace}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                {isAdmin && myWorkspace && editingWorkspace && (
-                  <button
-                    onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-foreground/10 text-muted border border-border-subtle hover:bg-foreground/15 transition-colors"
-                    title={t.workspacesPage.cancelEdit}
-                  >
-                    <XIcon className="w-3.5 h-3.5" />
-                  </button>
-                )}
+            ) : workspaces.length === 0 ? (
+              <div className="glass-card p-8 rounded-3xl border border-border-subtle text-center">
+                <p className="text-muted mb-4">{t.workspacesPage.noOwnWorkspace}</p>
+                <button className="text-sm font-bold text-accent-teal hover:underline flex items-center justify-center gap-1 w-full text-center">
+                  {t.workspacesPage.createWorkspace} <ExternalLink className="w-3 h-3" />
+                </button>
               </div>
-            </div>
+            ) : (
+              workspaces.map((ws) => (
+                <div
+                  key={ws.id}
+                  onClick={() => enterWorkspace(ws)}
+                  className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] flex flex-col cursor-pointer"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
 
-            <div className="relative z-10">
-              {loadingWorkspace ? (
-                <div className="flex items-center gap-3 mb-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-accent-teal" />
-                  <span className="text-muted text-sm">{t.workspacesPage.loadingEnvironment}</span>
-                </div>
-              ) : myWorkspace ? (
-                <>
-                  {/* Nombre editable */}
-                  {editingWorkspace ? (
-                    <input
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      className="w-full text-2xl font-bold bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:border-accent-teal text-foreground"
-                      placeholder={t.workspacesPage.workspaceName}
-                    />
-                  ) : (
-                    <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
-                      {myWorkspace.name}
-                      {!isAdmin && <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />}
-                    </h2>
-                  )}
-
-                  {/* Descripción editable */}
-                  {editingWorkspace ? (
-                    <textarea
-                      value={editDesc}
-                      onChange={e => setEditDesc(e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      rows={3}
-                      className="w-full text-sm bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-3 focus:outline-none focus:border-accent-teal text-foreground resize-none"
-                      placeholder={t.workspacesPage.workspaceDescription}
-                    />
-                  ) : (
-                    <p className="text-muted text-sm mb-4">{myWorkspace.description || t.workspacesPage.privateDesc}</p>
-                  )}
-
-                  {/* Save + Cancel buttons */}
-                  {editingWorkspace && (
-                    <div className="flex items-center gap-2 mb-4">
-                      <button
-                        onClick={e => { e.stopPropagation(); handleSaveWorkspace(); }}
-                        disabled={savingWorkspace}
-                        className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
-                      >
-                        {savingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                        {savingWorkspace ? t.workspacesPage.saving : t.workspacesPage.save}
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
-                        disabled={savingWorkspace}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-foreground/5 text-muted font-bold text-sm rounded-xl border border-border-subtle hover:bg-foreground/10 transition-colors disabled:opacity-50"
-                      >
-                        {t.workspacesPage.cancelEdit}
-                      </button>
+                  <div className="flex justify-between items-start mb-8 relative z-10">
+                    <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-accent-teal/30 transition-colors overflow-hidden">
+                      {ws.logo_url
+                        ? <img src={ws.logo_url} alt={ws.name} className="w-full h-full object-cover" />
+                        : <Building2 className="w-7 h-7 text-foreground" />
+                      }
                     </div>
-                  )}
-
-
-                  <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
-                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {myWorkspace.member_count} {t.workspacesPage.members}</span>
-                    <span className="flex items-center gap-1.5"><Hexagon className="w-4 h-4 text-accent-teal" /> {myWorkspace.squad_count} Squads</span>
-                    {isAdmin && !editingWorkspace && (
-                      <button onClick={e => { e.stopPropagation(); router.push("/app"); }} className="ml-auto text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
-                        {t.workspacesPage.enter} <ArrowRight className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl font-bold mb-2 text-muted">{t.workspacesPage.noOwnWorkspace}</h2>
-                  <p className="text-muted text-sm mb-4">{t.workspacesPage.createWorkspaceDesc}</p>
-                  <button className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
-                    {t.workspacesPage.createWorkspace} <ExternalLink className="w-3 h-3" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* ── CARD DERECHA: Red de Creadores Web3 ── */}
-          <div className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-purple-500/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
-
-            <div className="flex justify-between items-start mb-8 relative z-10">
-              <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-purple-500/30 transition-colors">
-                <Users className="w-7 h-7 text-foreground" />
-              </div>
-              <span className="text-xs font-mono bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full border border-purple-500/20">
-                {t.workspacesPage.communityDAO}
-              </span>
-            </div>
-
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-2 group-hover:text-purple-400 transition-colors">
-                {t.workspacesPage.globalNetwork}
-              </h2>
-              <p className="text-muted text-sm mb-4">
-                {t.workspacesPage.daoDesc}
-              </p>
-
-              {/* Explorar Bounties Toggle */}
-              <button
-                onClick={() => showBounties ? setShowBounties(false) : loadBounties()}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors mb-4 text-sm font-bold text-purple-300"
-              >
-                <span className="flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  {showBounties ? t.workspacesPage.bountiesHide : t.workspacesPage.bountiesShow}
-                </span>
-                {loadingBounties ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className={`w-4 h-4 transition-transform ${showBounties ? 'rotate-90' : ''}`} />}
-              </button>
-
-              {/* Bounties List */}
-              {showBounties && (
-                <div className="space-y-2 mb-4 animate-in slide-in-from-top-2 duration-300">
-                  {bounties.length === 0 ? (
-                    <p className="text-xs text-muted text-center py-3">{t.workspacesPage.noBounties}</p>
-                  ) : bounties.map(b => (
-                    <div key={b.id} className="flex items-center justify-between p-3 bg-foreground/5 rounded-xl border border-border-subtle">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold truncate">{b.title}</p>
-                        <p className="text-xs text-muted truncate">{b.description}</p>
-                      </div>
-                      <span className="shrink-0 ml-3 text-xs font-mono font-bold text-accent-teal bg-accent-teal/10 border border-accent-teal/20 px-2 py-0.5 rounded-full">
-                        {b.reward_usdc} USDC
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                        ws.userRole === 'owner' ? 'bg-accent-teal/10 border-accent-teal/30 text-accent-teal' :
+                        ws.userRole === 'admin' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
+                        'bg-foreground/5 border-border-subtle text-muted'
+                      }`}>
+                        {ws.userRole || 'Collaborator'}
                       </span>
                     </div>
-                  ))}
-                  <Link href="/app/squad-goals" className="block text-xs text-center text-purple-400 hover:text-purple-300 transition-colors pt-1">
-                    {t.workspacesPage.viewAllMissions} →
-                  </Link>
-                </div>
-              )}
+                  </div>
 
-              <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
-                <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> 1,200+ {t.workspacesPage.members}</span>
-                <span className="flex items-center gap-1.5">🟢 {t.workspacesPage.open}</span>
+                  <div className="relative z-10 flex-1 flex flex-col">
+                    <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
+                      {ws.name}
+                      <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
+                    </h2>
+                    <p className="text-muted text-sm mb-4 line-clamp-2">{ws.description || t.workspacesPage.privateDesc}</p>
+
+                    <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4 mt-auto">
+                      <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {ws.member_count || 0} {t.workspacesPage.members}</span>
+                      <span className="flex items-center gap-1.5"><Hexagon className="w-4 h-4 text-accent-teal" /> {ws.squad_count || 0} Squads</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* ── COLUMNA DERECHA: Red Global & Discovery ── */}
+          <div className="flex flex-col gap-6">
+            <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+              <Globe className="w-4 h-4" /> {t.workspacesPage.alliances}
+            </h2>
+
+            <div className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-purple-500/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.1)] flex flex-col">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+
+              <div className="flex justify-between items-start mb-8 relative z-10">
+                <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-purple-500/30 transition-colors">
+                  <Users className="w-7 h-7 text-foreground" />
+                </div>
+                <span className="text-xs font-mono bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full border border-purple-500/20">
+                  {t.workspacesPage.communityDAO}
+                </span>
               </div>
+
+              <div className="relative z-10 flex-1 flex flex-col">
+                <h2 className="text-2xl font-bold mb-2 group-hover:text-purple-400 transition-colors">
+                  {t.workspacesPage.globalNetwork}
+                </h2>
+                <p className="text-muted text-sm mb-4">
+                  {t.workspacesPage.daoDesc}
+                </p>
+
+                {/* Explorar Bounties Toggle */}
+                <button
+                  onClick={() => showBounties ? setShowBounties(false) : loadBounties()}
+                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors mb-4 text-sm font-bold text-purple-300"
+                >
+                  <span className="flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    {showBounties ? t.workspacesPage.bountiesHide : t.workspacesPage.bountiesShow}
+                  </span>
+                  {loadingBounties ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className={`w-4 h-4 transition-transform ${showBounties ? 'rotate-90' : ''}`} />}
+                </button>
+
+                {/* Bounties List */}
+                {showBounties && (
+                  <div className="space-y-2 mb-4 animate-in slide-in-from-top-2 duration-300">
+                    {bounties.length === 0 ? (
+                      <p className="text-xs text-muted text-center py-3">{t.workspacesPage.noBounties}</p>
+                    ) : bounties.map(b => (
+                      <div key={b.id} className="flex items-center justify-between p-3 bg-foreground/5 rounded-xl border border-border-subtle">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold truncate">{b.title}</p>
+                          <p className="text-xs text-muted truncate">{b.description}</p>
+                        </div>
+                        <span className="shrink-0 ml-3 text-xs font-mono font-bold text-accent-teal bg-accent-teal/10 border border-accent-teal/20 px-2 py-0.5 rounded-full">
+                          {b.reward_usdc} USDC
+                        </span>
+                      </div>
+                    ))}
+                    <Link href="/app/squad-goals" className="block text-xs text-center text-purple-400 hover:text-purple-300 transition-colors pt-1">
+                      {t.workspacesPage.viewAllMissions} →
+                    </Link>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4 mt-auto">
+                  <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> 1,200+ {t.workspacesPage.members}</span>
+                  <span className="flex items-center gap-1.5">🟢 {t.workspacesPage.open}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Acceso Global Alliances */}
+            <div className="mt-auto pt-4">
+              <Link
+                href="/workspaces/alliances"
+                className="flex items-center justify-center gap-2.5 w-full py-4 bg-foreground/5 hover:bg-foreground/10 border border-border-subtle hover:border-accent-teal/30 rounded-2xl text-sm font-bold text-foreground hover:text-accent-teal transition-all group shadow-sm"
+              >
+                <Globe className="w-4 h-4" />
+                {t.workspacesPage.exploreAlliances}
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <p className="text-[10px] text-muted text-center mt-3 uppercase tracking-widest">{t.workspacesPage.alliancesDesc}</p>
             </div>
           </div>
         </div>
-
-        {/* ── BOTÓN ALIANZAS ── */}
-        <div className="mt-10 text-center relative z-10">
-          <Link
-            href="/workspaces/alliances"
-            className="inline-flex items-center gap-2.5 px-6 py-3 bg-foreground/5 hover:bg-foreground/10 border border-border-subtle hover:border-accent-teal/30 rounded-2xl text-sm font-bold text-foreground hover:text-accent-teal transition-all group"
-          >
-            <Globe className="w-4 h-4" />
-            {t.workspacesPage.exploreAlliances}
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <p className="text-xs text-muted mt-2">{t.workspacesPage.alliancesDesc}</p>
-        </div>
-
       </div>
     </div>
   );

@@ -12,9 +12,9 @@ export function PublicFooter() {
         <div>
           <h4 className="font-bold mb-4">{t.publicFooter.product}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/caracteristicas" className="hover:text-accent-teal transition-colors">{t.publicFooter.features}</Link></li>
-            <li><Link href="/seguridad" className="hover:text-accent-teal transition-colors">{t.publicFooter.security}</Link></li>
-            <li><Link href="/planes" className="hover:text-accent-teal transition-colors">{t.publicFooter.plans}</Link></li>
+            <li><Link href="/features" className="hover:text-accent-teal transition-colors">{t.publicFooter.features}</Link></li>
+            <li><Link href="/security" className="hover:text-accent-teal transition-colors">{t.publicFooter.security}</Link></li>
+            <li><Link href="/pricing" className="hover:text-accent-teal transition-colors">{t.publicFooter.plans}</Link></li>
           </ul>
         </div>
         <div>
@@ -28,16 +28,16 @@ export function PublicFooter() {
         <div>
           <h4 className="font-bold mb-4">{t.publicFooter.company}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/sobre-nosotros" className="hover:text-accent-teal transition-colors">{t.publicFooter.about}</Link></li>
+            <li><Link href="/about" className="hover:text-accent-teal transition-colors">{t.publicFooter.about}</Link></li>
             <li><Link href="/blog" className="hover:text-accent-teal transition-colors">{t.publicFooter.blog}</Link></li>
-            <li><Link href="/carreras" className="hover:text-accent-teal transition-colors">{t.publicFooter.careers}</Link></li>
+            <li><Link href="/careers" className="hover:text-accent-teal transition-colors">{t.publicFooter.careers}</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="font-bold mb-4">{t.publicFooter.legal}</h4>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/terminos-de-uso" className="hover:text-accent-teal transition-colors">{t.publicFooter.terms}</Link></li>
-            <li><Link href="/privacidad" className="hover:text-accent-teal transition-colors">{t.publicFooter.privacy}</Link></li>
+            <li><Link href="/terms" className="hover:text-accent-teal transition-colors">{t.publicFooter.terms}</Link></li>
+            <li><Link href="/privacy" className="hover:text-accent-teal transition-colors">{t.publicFooter.privacy}</Link></li>
             <li><Link href="/status" className="hover:text-accent-teal transition-colors">{t.publicFooter.status}</Link></li>
           </ul>
         </div>

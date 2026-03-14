@@ -20,9 +20,9 @@ const NavContent = ({ language, setLanguage, t, className = "" }: any) => (
     </div>
     
     <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-sm font-medium text-muted">
-      <Link href="/caracteristicas" className="hover:text-foreground transition-colors">{t.publicNav.infrastructure}</Link>
-      <Link href="/sobre-nosotros" className="hover:text-foreground transition-colors">{t.publicNav.solutions}</Link>
-      <Link href="/planes" className="hover:text-foreground transition-colors">{t.publicNav.plans}</Link>
+      <Link href="/features" className="hover:text-foreground transition-colors">{t.publicNav.infrastructure}</Link>
+      <Link href="/about" className="hover:text-foreground transition-colors">{t.publicNav.solutions}</Link>
+      <Link href="/pricing" className="hover:text-foreground transition-colors">{t.publicNav.plans}</Link>
     </div>
     
     <div className="flex items-center gap-4">

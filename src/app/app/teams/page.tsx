@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { UserProfile } from "@/hooks/useProfile";
+import { useProfile, UserProfile } from "@/hooks/useProfile";
 import { Users, Award, Search, MessageSquare, Plus, Shield, UsersRound, CalendarDays, ExternalLink, ChevronDown, Rocket, UserPlus } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useSquads, Squad } from "@/hooks/useSquads";
@@ -15,6 +15,7 @@ export default function ColaboradoresPage() {
     const { t } = useSettings();
     const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad } = useSquads();
     const { createNotification } = useNotifications();
+    const { profile } = useProfile();
     const { address: publicKey } = useFreighter();
     const { activeWorkspace } = useWorkspace();
     const [collaborators, setCollaborators] = useState<UserProfile[]>([]);
@@ -77,10 +78,10 @@ export default function ColaboradoresPage() {
     const handleJoinSquad = async (squadId: string, leaderId: string) => {
         try {
             await joinSquad(squadId);
-            const leader = collaborators.find(c => c.wallet_address === leaderId);
-            if (leader?.wallet_address && leader.wallet_address !== publicKey) {
+            const leader = collaborators.find(c => c.id === leaderId);
+            if (leader?.id && leader.id !== profile?.id) {
                 await createNotification({
-                    user_profile_id: leader.wallet_address,
+                    user_profile_id: leader.wallet_address || leader.id,
                     title: "Nuevo integrante en tu Squad",
                     message: "Alguien se ha unido a tu Squad o ha solicitado unirse.",
                     type: 'community',
@@ -122,7 +123,8 @@ export default function ColaboradoresPage() {
     // of squad_members where user_id matches. For the demo, we show a calculated or random small number 
     // based on their wallet address to simulate "Common Squads".
     // Alternatively, we can derive it from `squadMembers` if we have full access.
-    const getCommonSquadsStr = (userId: string) => {
+    const getCommonSquadsStr = (userId: string | null) => {
+        if (!userId) return null;
         // Mocking common squads count statically for UI purposes based on string length
         const count = userId.length % 3;
         if (count === 0) return null;
@@ -130,12 +132,12 @@ export default function ColaboradoresPage() {
     };
 
     const handleInvite = async (userToInvite: UserProfile) => {
-        if (!publicKey) return alert("Por favor conecta tu wallet primero.");
-        if (userToInvite.wallet_address === publicKey) return alert("No puedes invitarte a ti mismo.");
+        if (!profile) return alert("Por favor inicia sesión primero.");
+        if (userToInvite.id === profile.id) return alert("No puedes invitarte a ti mismo.");
 
         try {
             await createNotification({
-                user_profile_id: userToInvite.wallet_address,
+                user_profile_id: userToInvite.wallet_address || userToInvite.id,
                 title: "Invitación de Squad",
                 message: "Has sido invitado a unirte a un Squad.",
                 type: 'community',
@@ -276,14 +278,14 @@ export default function ColaboradoresPage() {
                                         </div>
 
                                         <div className="pt-4 border-t border-border-subtle flex gap-3">
-                                            {squad.leader_id === collaborators.find(c => c.wallet_address === publicKey)?.wallet_address ? (
+                                            {squad.leader_id === profile?.id ? (
                                                 <button
                                                     onClick={() => handleDisbandSquad(squad.id)}
                                                     className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
                                                 >
                                                     Desarmar Squad
                                                 </button>
-                                            ) : members.some((sm: any) => sm.user_id === collaborators.find(c => c.wallet_address === publicKey)?.wallet_address) ? (
+                                            ) : members.some((sm: any) => sm.user_id === profile?.id) ? (
                                                 <button
                                                     onClick={() => handleLeaveSquad(squad.id)}
                                                     className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
@@ -327,15 +329,15 @@ export default function ColaboradoresPage() {
                             const auraPercentage = Math.min(100, Math.max(10, (auraPoints / 1000) * 100));
 
                             // Mocking the "Disponibilidad / Open to Work" feature visually
-                            const isAvailableForMissions = user.wallet_address.charCodeAt(0) % 2 === 0;
+                            const isAvailableForMissions = user.wallet_address ? user.wallet_address.charCodeAt(0) % 2 === 0 : false;
 
                             // Identifying squads the user belongs to (mocked by extracting some squads)
-                            const userSquadMemberships = squads.slice(0, (user.wallet_address.length % 3) + 1);
+                            const userSquadMemberships = squads.slice(0, ((user.wallet_address || user.id).length % 3) + 1);
 
-                            const dropdownOpen = openConnectDropdown === user.wallet_address;
+                            const dropdownOpen = openConnectDropdown === user.id;
 
                             return (
-                                <div key={user.wallet_address} className="bg-card rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col shadow-lg relative">
+                                <div key={user.id} className="bg-card rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col shadow-lg relative">
                                     <div className="h-28 bg-neutral-900/50 relative overflow-hidden flex justify-center">
                                         {/* Glassmorphism gradient effect */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-accent-teal/10 via-background to-background"></div>
@@ -405,7 +407,7 @@ export default function ColaboradoresPage() {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setOpenConnectDropdown(dropdownOpen ? null : user.wallet_address);
+                                                            setOpenConnectDropdown(dropdownOpen ? null : user.id);
                                                         }}
                                                         className="px-3 bg-accent-teal/10 text-accent-teal hover:bg-accent-teal/20 transition-colors flex items-center"
                                                     >
