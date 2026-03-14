@@ -60,10 +60,11 @@ export default function Home() {
   useEffect(() => {
     const fetchContributors = async () => {
       if (!activeWorkspace?.id) return;
+      // Fix: Filter by workspace using join
       const { data } = await supabase
         .from('users')
-        .select('wallet_address, first_name, last_name, avatar_url, points')
-        .eq('workspace_id', activeWorkspace.id)
+        .select('wallet_address, first_name, last_name, avatar_url, points, workspace_members!inner(workspace_id)')
+        .eq('workspace_members.workspace_id', activeWorkspace.id)
         .order('points', { ascending: false })
         .limit(5);
       if (data) setContributors(data);

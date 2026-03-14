@@ -34,10 +34,12 @@ export default function ColaboradoresPage() {
         const fetchCollaborators = async () => {
             if (!activeWorkspace?.id) return;
             setLoading(true);
+            
+            // Fix: Use inner join with workspace_members since users table doesn't have workspace_id
             const { data, error } = await supabase
                 .from("users")
-                .select("*")
-                .eq("workspace_id", activeWorkspace.id)
+                .select("*, workspace_members!inner(workspace_id)")
+                .eq("workspace_members.workspace_id", activeWorkspace.id)
                 .order("first_name", { ascending: true });
 
             if (error) {
