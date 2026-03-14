@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, AlertCircle, Building2 } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
-export default function JoinWorkspacePage({ params }: { params: { slug: string } }) {
+export default function JoinWorkspacePage({ params: paramsProp }: { params: any }) {
+  const params = React.use(paramsProp) as { slug: string };
   const { slug } = params;
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+  const { t } = useSettings();
   
   const [workspace, setWorkspace] = useState<any>(null);
   const [error, setError] = useState("");
@@ -24,7 +27,7 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
         .single();
 
       if (error || !data) {
-        setError("Workspace no encontrado o slug inválido.");
+        setError(t.joinPage.notFound);
       } else {
         setWorkspace(data);
       }
@@ -52,7 +55,7 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
     setJoining(false);
 
     if (joinError && joinError.code !== "23505") { // 23505 is unique violation (already joined)
-      setError("Error al unirse al workspace: " + joinError.message);
+      setError(t.joinPage.joinError + joinError.message);
     } else {
       localStorage.setItem("rework_current_workspace", workspace.id);
       router.push("/app");
@@ -82,9 +85,9 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
         <div className="glass-card p-8 rounded-2xl max-w-md w-full text-center border-red-500/30">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Ups, algo salió mal</h2>
+          <h2 className="text-xl font-bold mb-2">{t.joinPage.errorTitle}</h2>
           <p className="text-muted mb-6">{error}</p>
-          <button onClick={() => router.push("/")} className="bg-foreground text-background font-bold py-2 px-6 rounded-xl hover:bg-muted transition-colors">Volver al Inicio</button>
+          <button onClick={() => router.push("/")} className="bg-foreground text-background font-bold py-2 px-6 rounded-xl hover:bg-muted transition-colors">{t.joinPage.back}</button>
         </div>
       </div>
     );
@@ -99,9 +102,9 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
         <div className="w-20 h-20 bg-foreground/5 border border-border-subtle rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Building2 className="w-10 h-10 text-accent-teal" />
         </div>
-        <h1 className="text-3xl font-bold mb-3">Únete a {workspace.name}</h1>
+        <h1 className="text-3xl font-bold mb-3">{t.joinPage.title} {workspace.name}</h1>
         <p className="text-muted mb-8 leading-relaxed">
-          Has sido invitado a colaborar en este ecosistema descentralizado. Construye tu Aura y cumple misiones junto a este equipo.
+          {t.joinPage.desc}
         </p>
 
         <button 
@@ -110,9 +113,9 @@ export default function JoinWorkspacePage({ params }: { params: { slug: string }
           className="w-full bg-accent-teal text-black font-bold text-lg py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-accent-teal/90 transition-colors shadow-[0_0_20px_rgba(0,242,255,0.2)] disabled:opacity-70"
         >
           {joining ? (
-             <><Loader2 className="w-5 h-5 animate-spin"/> Conectando...</>
+             <><Loader2 className="w-5 h-5 animate-spin"/> {t.joinPage.joining}</>
           ) : (
-            profile ? "Ingresar al Workspace" : "Conectar Wallet para Unirse"
+            profile ? t.joinPage.enter : t.joinPage.connect
           )}
         </button>
       </div>

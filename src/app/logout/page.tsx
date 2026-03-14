@@ -2,23 +2,33 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { useSettings } from "@/hooks/useSettings";
 import { useFreighter } from "@/hooks/useFreighter";
 import { LogOut, ShieldCheck } from "lucide-react";
 
 export default function LogoutPage() {
+  const { t } = useSettings();
   const router = useRouter();
   const { disconnect } = useFreighter();
 
   useEffect(() => {
-    // 1. Ejecutar desconexión de Wallet y Contextos
-    disconnect();
-    
-    // 2. Limpiar Storage local excepto cosas puramente estéticas si se desea
-    localStorage.removeItem("rework_current_workspace");
-    
-    // 3. Redirigir al Bridge (Auth) tras 2.5 segundos para mostrar el mensaje
-    const timer = setTimeout(() => {
+    const logout = async () => {
+      // 1. Ejecutar desconexión de Wallet y Contextos
+      disconnect();
+      
+      // 2. Limpiar Supabase Auth
+      await supabase.auth.signOut();
+
+      // 3. Limpiar Storage local
+      localStorage.removeItem("rework_current_workspace");
+      
+      // 4. Redirigir al Bridge (Auth) tras 2.5 segundos
       router.push("/auth");
+    };
+
+    const timer = setTimeout(() => {
+      logout();
     }, 2500);
 
     return () => clearTimeout(timer);
@@ -38,17 +48,15 @@ export default function LogoutPage() {
           </div>
         </div>
         
-        <h1 className="text-3xl font-bold mb-4">Cerrando Sesión Segura</h1>
+        <h1 className="text-3xl font-bold mb-3">{t.logoutPage.title}</h1>
         
-        <p className="text-muted mb-8 leading-relaxed">
-          Estamos desconectando tu billetera Stellar y limpiando tu entorno de trabajo. Tu Aura y tus datos organizacionales permanecen seguros Off-Chain y protegidos por Trustless Work.
+        <p className="text-muted mb-8 leading-relaxed max-w-sm">
+            {t.logoutPage.desc}
         </p>
 
-        <div className="flex flex-col items-center gap-3">
-           <div className="w-full h-1 bg-foreground/10 rounded-full overflow-hidden">
-              <div className="h-full bg-accent-teal animate-[loading_2.5s_ease-in-out_forwards]"></div>
-           </div>
-           <span className="text-xs text-muted uppercase tracking-widest font-bold">Redirigiendo al Bridge...</span>
+        <div className="flex flex-col items-center gap-4">
+            <div className="w-6 h-6 border-2 border-accent-teal border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs text-muted font-mono">{t.logoutPage.redirecting}</p>
         </div>
       </div>
     </div>

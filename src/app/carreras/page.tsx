@@ -29,17 +29,17 @@ export default function CarrerasPage() {
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <div className="glass-card p-6 rounded-2xl border border-border-subtle flex flex-col items-center text-center">
             <Building2 className="w-10 h-10 text-accent-teal mb-4" />
-            <h3 className="text-lg font-bold mb-2">1. Impacto</h3>
+            <h3 className="text-lg font-bold mb-2">{t.carrerasPage.reason1Title}</h3>
             <p className="text-sm text-muted">{t.carrerasPage.reason1Desc}</p>
           </div>
           <div className="glass-card p-6 rounded-2xl border border-border-subtle flex flex-col items-center text-center">
             <Globe className="w-10 h-10 text-accent-teal mb-4" />
-            <h3 className="text-lg font-bold mb-2">2. Flexibilidad</h3>
+            <h3 className="text-lg font-bold mb-2">{t.carrerasPage.reason2Title}</h3>
             <p className="text-sm text-muted">{t.carrerasPage.reason2Desc}</p>
           </div>
           <div className="glass-card p-6 rounded-2xl border border-border-subtle flex flex-col items-center text-center">
             <Coins className="w-10 h-10 text-accent-teal mb-4" />
-            <h3 className="text-lg font-bold mb-2">3. Web3 Nativo</h3>
+            <h3 className="text-lg font-bold mb-2">{t.carrerasPage.reason3Title}</h3>
             <p className="text-sm text-muted">{t.carrerasPage.reason3Desc}</p>
           </div>
         </div>

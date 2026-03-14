@@ -5,12 +5,17 @@ import { Server, Activity, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicBackground } from "@/components/PublicBackground";
 import { PublicFooter } from "@/components/PublicFooter";
+import { useSettings } from "@/hooks/useSettings";
+import { translations } from "@/lib/translations";
 
 type ServiceStatus = "loading" | "operational" | "down";
 
 export default function StatusPage() {
+  const { language } = useSettings();
+  const t = translations[language].statusPage;
+
   const [horizonStatus, setHorizonStatus] = useState<ServiceStatus>("loading");
-  const [horizonPing, setHorizonPing] = useState<string>("Conectando...");
+  const [horizonPing, setHorizonPing] = useState<string>(language === 'es' ? "Conectando..." : "Connecting...");
   
   const [coreStatus, setCoreStatus] = useState<ServiceStatus>("loading");
   const [trustlessStatus, setTrustlessStatus] = useState<ServiceStatus>("loading");
@@ -24,13 +29,13 @@ export default function StatusPage() {
         const latency = Date.now() - start;
         if (res.ok) {
           setHorizonStatus("operational");
-          setHorizonPing(`${latency}ms latencia`);
+          setHorizonPing(`${latency}ms ${language === 'es' ? 'latencia' : 'latency'}`);
         } else {
           setHorizonStatus("down");
         }
       } catch (error) {
         setHorizonStatus("down");
-        setHorizonPing("Fallo de conexión");
+        setHorizonPing(language === 'es' ? "Fallo de conexión" : "Connection failed");
       }
     };
 
@@ -54,7 +59,7 @@ export default function StatusPage() {
     }, 10000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [language]);
 
   const getStatusColor = (status: ServiceStatus) => {
     if (status === "loading") return "text-yellow-400";
@@ -69,9 +74,9 @@ export default function StatusPage() {
   };
 
   const getStatusText = (status: ServiceStatus) => {
-    if (status === "loading") return "Verificando...";
-    if (status === "operational") return "Operacional";
-    return "Interrupción";
+    if (status === "loading") return t.loading;
+    if (status === "operational") return t.operational;
+    return t.down;
   };
 
   const StatusIndicator = ({ status }: { status: ServiceStatus }) => (
@@ -96,9 +101,9 @@ export default function StatusPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-teal-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.15)] animate-pulse-slow">
              <Activity className="w-8 h-8 text-green-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">System Status</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">{t.title}</h1>
           <p className="text-lg text-muted max-w-2xl mx-auto leading-relaxed">
-            Monitor en tiempo real de la conectividad de la plataforma e infraestructura Blockchain.
+            {t.subtitle}
           </p>
         </div>
 
@@ -107,8 +112,8 @@ export default function StatusPage() {
              <div className="flex items-center gap-4">
                 <Server className="w-6 h-6 text-foreground" />
                 <div>
-                   <h3 className="font-bold text-lg">ReWork Core APIs</h3>
-                   <p className="text-sm text-muted">Aislamiento RLS en Edge y conectividad DB</p>
+                   <h3 className="font-bold text-lg">{t.coreTitle}</h3>
+                   <p className="text-sm text-muted">{t.coreDesc}</p>
                 </div>
              </div>
              <StatusIndicator status={coreStatus} />
@@ -121,8 +126,8 @@ export default function StatusPage() {
                    <path d="M12 2v20M2 12h20" strokeDasharray="4 4"></path>
                 </svg>
                 <div>
-                   <h3 className="font-bold text-lg">Stellar Horizon Network & RPC</h3>
-                   <p className="text-sm text-muted">Mainnet Node: {horizonPing}</p>
+                   <h3 className="font-bold text-lg">{t.stellarTitle}</h3>
+                   <p className="text-sm text-muted">{t.stellarDesc} {horizonPing}</p>
                 </div>
              </div>
              <StatusIndicator status={horizonStatus} />
@@ -134,8 +139,8 @@ export default function StatusPage() {
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
                 <div>
-                   <h3 className="font-bold text-lg">Trustless Work Smart Contracts</h3>
-                   <p className="text-sm text-muted">Firmas Escrow de Soroban Virtual Machine</p>
+                   <h3 className="font-bold text-lg">{t.trustlessTitle}</h3>
+                   <p className="text-sm text-muted">{t.trustlessDesc}</p>
                 </div>
              </div>
              <StatusIndicator status={trustlessStatus} />
@@ -143,8 +148,8 @@ export default function StatusPage() {
         </div>
         
         <div className="mt-12 text-center text-sm text-muted">
-           <p>Los datos de la red Stellar se actualizan en vivo conectando directamente con el Horizon public node.</p>
-           <p className="mt-2">ReWork opera sobre un modelo Non-Custodial; las interrupciones temporales en nuestro Core UI no afectan los fondos ni los contratos Escrow ya firmados que residen garantizados en la Blockchain.</p>
+           <p>{t.footer1}</p>
+           <p className="mt-2">{t.footer2}</p>
         </div>
       </div>
       <PublicFooter />

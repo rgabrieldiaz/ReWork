@@ -6,7 +6,9 @@ import { useFreighter } from '@/hooks/useFreighter';
 import { useGamification } from '@/hooks/useGamification';
 
 export interface UserProfile {
-    wallet_address: string;
+    id: string; // UUID from Supabase Auth
+    wallet_address: string | null;
+    email: string | null;
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
@@ -32,27 +34,68 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!walletAddress) {
-            setProfile(null);
-            setLoading(false);
-            return;
-        }
-
         const fetchProfile = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('wallet_address', walletAddress)
-                    .single();
+                // 1. Get Supabase Auth Session
+                const { data: { session } } = await supabase.auth.getSession();
+                const authUser = session?.user;
+
+                let query = supabase.from('users').select('*');
+                
+                if (authUser) {
+                    // Fetch by UUID if logged in via Google/Email
+                    query = query.eq('id', authUser.id);
+                } else if (walletAddress) {
+                    // Fetch by wallet if NOT logged in but wallet is connected
+                    query = query.eq('wallet_address', walletAddress);
+                } else {
+                    setProfile(null);
+                    setLoading(false);
+                    return;
+                }
+
+                const { data, error } = await query.single();
 
                 if (error && error.code !== 'PGRST116') {
                     console.error('Error fetching profile:', error);
                 }
 
                 if (data) {
-                    setProfile(data as UserProfile);
+                    const currentProfile = data as UserProfile;
+                    
+                    // 2. Auto-link logic: If logged in via Auth but wallet is new/not linked
+                    if (authUser && walletAddress && currentProfile.wallet_address !== walletAddress) {
+                        const { data: updatedData } = await supabase
+                            .from('users')
+                            .update({ wallet_address: walletAddress, updated_at: new Date().toISOString() })
+                            .eq('id', authUser.id)
+                            .select()
+                            .single();
+                        
+                        if (updatedData) {
+                            setProfile(updatedData as UserProfile);
+                        } else {
+                            setProfile(currentProfile);
+                        }
+                    } else {
+                        setProfile(currentProfile);
+                    }
+                } else if (authUser) {
+                    // This shouldn't normally happen due to the trigger, but as a fallback:
+                    // Create profile if it doesn't exist but user is authenticated
+                     const { data: newData } = await supabase
+                        .from('users')
+                        .insert({
+                            id: authUser.id,
+                            email: authUser.email,
+                            first_name: authUser.user_metadata?.full_name || '',
+                            avatar_url: authUser.user_metadata?.avatar_url || '',
+                            points: 0
+                        })
+                        .select()
+                        .single();
+                    if (newData) setProfile(newData as UserProfile);
                 }
             } catch (err) {
                 console.error('Error in fetchProfile:', err);
@@ -63,29 +106,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         fetchProfile();
 
-        const channel = supabase
-            .channel(`public:users:wallet_address=eq.${walletAddress}`)
-            .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'users', filter: `wallet_address=eq.${walletAddress}` },
-                (payload) => {
-                    setProfile(payload.new as UserProfile);
-                }
-            )
-            .subscribe();
+        // Listen for Auth changes (login/logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+            fetchProfile();
+        });
 
         return () => {
-            supabase.removeChannel(channel);
+            subscription.unsubscribe();
         };
     }, [walletAddress]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
-        if (!walletAddress) return { error: 'No wallet connected' };
+        const identifier = profile?.id;
+        if (!identifier) return { error: 'No profile found' };
 
         const { data, error } = await supabase
             .from('users')
             .update({ ...updates, updated_at: new Date().toISOString() })
-            .eq('wallet_address', walletAddress)
+            .eq('id', identifier)
             .select()
             .single();
 
@@ -99,13 +137,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     };
 
     const addPoints = async (amount: number, reason: string = "¡Puntos extra!") => {
-        if (!walletAddress || !profile) return;
+        if (!profile?.id) return;
         const newPoints = (profile.points || 0) + amount;
 
         const { data, error } = await supabase
             .from('users')
             .update({ points: newPoints, updated_at: new Date().toISOString() })
-            .eq('wallet_address', walletAddress)
+            .eq('id', profile.id)
             .select()
             .single();
 

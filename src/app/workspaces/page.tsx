@@ -33,9 +33,9 @@ interface GlobalBounty {
   reward_usdc: number;
 }
 
-export default function WorkspacesHub() {
+export default function WorkspacesPage() {
+  const { t, language, setLanguage } = useSettings();
   const router = useRouter();
-  const { language, setLanguage } = useSettings();
   const { address, connected } = useFreighter();
   const { profile } = useProfile();
   const { xlmBalance, usdcBalance } = useBalances(address);
@@ -190,15 +190,15 @@ export default function WorkspacesHub() {
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 min-w-[160px] justify-end">
           <button
             onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle transition-colors text-xs font-bold text-muted hover:text-foreground"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle transition-colors text-xs font-bold text-muted hover:text-foreground shrink-0"
           >
             {language === 'es' ? 'ES' : 'EN'}
           </button>
-          <Link href="/" className="flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm font-medium">
-            <LogOut className="w-4 h-4" /> Salir
+          <Link href="/logout" className="flex items-center gap-2 text-muted hover:text-foreground transition-colors text-sm font-medium shrink-0">
+            <LogOut className="w-4 h-4" /> <span>{t.workspacesPage.logout}</span>
           </Link>
         </div>
       </div>
@@ -208,10 +208,10 @@ export default function WorkspacesHub() {
 
         <div className="mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Tus Entornos <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-teal to-blue-500">ReWork</span>
+            {t.workspacesPage.title} <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-teal to-blue-500">ReWork</span>
           </h1>
           <p className="text-muted text-lg max-w-2xl">
-            Seleccioná el espacio de trabajo al que deseás acceder. Tu Identidad (AURA) y tu Wallet son globales en todos tus entornos.
+            {t.workspacesPage.subtitle}
           </p>
         </div>
 
@@ -233,13 +233,13 @@ export default function WorkspacesHub() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-                  {loadingWorkspace ? "Cargando..." : myWorkspace ? "Pro Environment" : "Sin Workspace"}
+                  {loadingWorkspace ? t.workspacesPage.loading : myWorkspace ? t.workspacesPage.proEnvironment : t.workspacesPage.noWorkspace}
                 </span>
                 {isAdmin && myWorkspace && !editingWorkspace && (
                   <button
                     onClick={e => { e.stopPropagation(); setEditingWorkspace(true); }}
                     className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors"
-                    title="Editar workspace"
+                    title={t.workspacesPage.editWorkspace}
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -248,7 +248,7 @@ export default function WorkspacesHub() {
                   <button
                     onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
                     className="w-8 h-8 flex items-center justify-center rounded-lg bg-foreground/10 text-muted border border-border-subtle hover:bg-foreground/15 transition-colors"
-                    title="Cancelar edición"
+                    title={t.workspacesPage.cancelEdit}
                   >
                     <XIcon className="w-3.5 h-3.5" />
                   </button>
@@ -260,7 +260,7 @@ export default function WorkspacesHub() {
               {loadingWorkspace ? (
                 <div className="flex items-center gap-3 mb-4">
                   <Loader2 className="w-5 h-5 animate-spin text-accent-teal" />
-                  <span className="text-muted text-sm">Cargando tu entorno...</span>
+                  <span className="text-muted text-sm">{t.workspacesPage.loadingEnvironment}</span>
                 </div>
               ) : myWorkspace ? (
                 <>
@@ -271,7 +271,7 @@ export default function WorkspacesHub() {
                       onChange={e => setEditName(e.target.value)}
                       onClick={e => e.stopPropagation()}
                       className="w-full text-2xl font-bold bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:border-accent-teal text-foreground"
-                      placeholder="Nombre del workspace"
+                      placeholder={t.workspacesPage.workspaceName}
                     />
                   ) : (
                     <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
@@ -288,10 +288,10 @@ export default function WorkspacesHub() {
                       onClick={e => e.stopPropagation()}
                       rows={3}
                       className="w-full text-sm bg-foreground/5 border border-accent-teal/30 rounded-xl px-3 py-2 mb-3 focus:outline-none focus:border-accent-teal text-foreground resize-none"
-                      placeholder="Descripción del workspace"
+                      placeholder={t.workspacesPage.workspaceDescription}
                     />
                   ) : (
-                    <p className="text-muted text-sm mb-4">{myWorkspace.description || "Entorno corporativo privado."}</p>
+                    <p className="text-muted text-sm mb-4">{myWorkspace.description || t.workspacesPage.privateDesc}</p>
                   )}
 
                   {/* Save + Cancel buttons */}
@@ -303,35 +303,35 @@ export default function WorkspacesHub() {
                         className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
                       >
                         {savingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                        {savingWorkspace ? "Guardando..." : "Guardar"}
+                        {savingWorkspace ? t.workspacesPage.saving : t.workspacesPage.save}
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); setEditingWorkspace(false); setEditName(myWorkspace.name); setEditDesc(myWorkspace.description || ""); }}
                         disabled={savingWorkspace}
                         className="flex items-center gap-1.5 px-4 py-2 bg-foreground/5 text-muted font-bold text-sm rounded-xl border border-border-subtle hover:bg-foreground/10 transition-colors disabled:opacity-50"
                       >
-                        Cancelar
+                        {t.workspacesPage.cancelEdit}
                       </button>
                     </div>
                   )}
 
 
                   <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
-                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {myWorkspace.member_count} Miembros</span>
+                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {myWorkspace.member_count} {t.workspacesPage.members}</span>
                     <span className="flex items-center gap-1.5"><Hexagon className="w-4 h-4 text-accent-teal" /> {myWorkspace.squad_count} Squads</span>
                     {isAdmin && !editingWorkspace && (
                       <button onClick={e => { e.stopPropagation(); router.push("/app"); }} className="ml-auto text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
-                        Ingresar <ArrowRight className="w-3 h-3" />
+                        {t.workspacesPage.enter} <ArrowRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
                 </>
               ) : (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-muted">No tenés un Workspace propio</h2>
-                  <p className="text-muted text-sm mb-4">Creá tu workspace organizacional o uníte a uno existente desde la galería de alianzas.</p>
+                  <h2 className="text-xl font-bold mb-2 text-muted">{t.workspacesPage.noOwnWorkspace}</h2>
+                  <p className="text-muted text-sm mb-4">{t.workspacesPage.createWorkspaceDesc}</p>
                   <button className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
-                    Crear Workspace <ExternalLink className="w-3 h-3" />
+                    {t.workspacesPage.createWorkspace} <ExternalLink className="w-3 h-3" />
                   </button>
                 </>
               )}
@@ -347,16 +347,16 @@ export default function WorkspacesHub() {
                 <Users className="w-7 h-7 text-foreground" />
               </div>
               <span className="text-xs font-mono bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full border border-purple-500/20">
-                Community DAO
+                {t.workspacesPage.communityDAO}
               </span>
             </div>
 
             <div className="relative z-10">
               <h2 className="text-2xl font-bold mb-2 group-hover:text-purple-400 transition-colors">
-                Red de Creadores Web3
+                {t.workspacesPage.globalNetwork}
               </h2>
               <p className="text-muted text-sm mb-4">
-                Comunidad abierta. Participá en proyectos open-source y ganá recompensas (Bounties) de la tesorería global.
+                {t.workspacesPage.daoDesc}
               </p>
 
               {/* Explorar Bounties Toggle */}
@@ -366,7 +366,7 @@ export default function WorkspacesHub() {
               >
                 <span className="flex items-center gap-2">
                   <Zap className="w-4 h-4" />
-                  {showBounties ? "Ocultar Bounties Globales" : "Explorar Bounties Globales"}
+                  {showBounties ? t.workspacesPage.bountiesHide : t.workspacesPage.bountiesShow}
                 </span>
                 {loadingBounties ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className={`w-4 h-4 transition-transform ${showBounties ? 'rotate-90' : ''}`} />}
               </button>
@@ -375,7 +375,7 @@ export default function WorkspacesHub() {
               {showBounties && (
                 <div className="space-y-2 mb-4 animate-in slide-in-from-top-2 duration-300">
                   {bounties.length === 0 ? (
-                    <p className="text-xs text-muted text-center py-3">No hay bounties disponibles ahora.</p>
+                    <p className="text-xs text-muted text-center py-3">{t.workspacesPage.noBounties}</p>
                   ) : bounties.map(b => (
                     <div key={b.id} className="flex items-center justify-between p-3 bg-foreground/5 rounded-xl border border-border-subtle">
                       <div className="min-w-0">
@@ -388,14 +388,14 @@ export default function WorkspacesHub() {
                     </div>
                   ))}
                   <Link href="/app/squad-goals" className="block text-xs text-center text-purple-400 hover:text-purple-300 transition-colors pt-1">
-                    Ver todas las misiones →
+                    {t.workspacesPage.viewAllMissions} →
                   </Link>
                 </div>
               )}
 
               <div className="flex items-center gap-4 text-xs font-mono text-muted border-t border-border-subtle pt-4">
-                <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> 1,200+ Miembros</span>
-                <span className="flex items-center gap-1.5">🟢 Abierto</span>
+                <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> 1,200+ {t.workspacesPage.members}</span>
+                <span className="flex items-center gap-1.5">🟢 {t.workspacesPage.open}</span>
               </div>
             </div>
           </div>
@@ -408,10 +408,10 @@ export default function WorkspacesHub() {
             className="inline-flex items-center gap-2.5 px-6 py-3 bg-foreground/5 hover:bg-foreground/10 border border-border-subtle hover:border-accent-teal/30 rounded-2xl text-sm font-bold text-foreground hover:text-accent-teal transition-all group"
           >
             <Globe className="w-4 h-4" />
-            Explorar Nuevas Alianzas Públicas
+            {t.workspacesPage.exploreAlliances}
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
-          <p className="text-xs text-muted mt-2">Descubrí workspaces que buscan colaboradores con tu perfil AURA</p>
+          <p className="text-xs text-muted mt-2">{t.workspacesPage.alliancesDesc}</p>
         </div>
 
       </div>

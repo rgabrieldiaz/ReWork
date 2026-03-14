@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Wallet, Fingerprint, Key, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
+import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthGateway() {
   const router = useRouter();
-  const { connected, connect, address } = useFreighter();
-  const { language, setLanguage } = useSettings();
+  const { t, language, setLanguage } = useSettings();
+  const { connected, connect, address } = useFreighter(); // Simplified as loading might not be exported
+  const { profile, loading: profileLoading } = useProfile();
   const [step, setStep] = useState<"SELECT" | "CREATING_AURA">("SELECT");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +53,26 @@ export default function AuthGateway() {
     }
   };
 
-  // Google: va a /workspaces también (como flujo Web2)
-  const handleGoogleLogin = () => {
-    router.push("/workspaces");
+  // Google: functional implementation
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/workspaces`,
+        },
+      });
+
+      if (error) throw error;
+      
+      // The browser will redirect to Google's consent screen
+    } catch (err: any) {
+      console.error("Error with Google Login:", err);
+      setError(err?.message || "Error al iniciar sesión con Google.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,22 +83,22 @@ export default function AuthGateway() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
 
       {/* Top Navigation */}
-      <div className="absolute top-0 w-full p-6 flex items-center justify-between z-10 max-w-7xl">
-        <Link href="/" className="flex items-center gap-2 text-muted hover:text-foreground transition-colors group">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full p-6 flex items-center justify-between z-10 max-w-7xl">
+        <Link href="/" className="flex items-center gap-2 text-muted hover:text-foreground transition-colors group min-w-[140px]">
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium text-sm">Volver a ReWork</span>
+          <span className="font-medium text-sm">{t.authPage.back}</span>
         </Link>
-        <div className="flex items-center gap-2">
-            <button 
-                onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle transition-colors text-xs font-bold text-muted hover:text-foreground"
-                title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-            >
-                {language === 'es' ? 'ES' : 'EN'}
-            </button>
-            <span className="text-xs font-mono text-muted bg-foreground/5 px-3 py-1 rounded-full border border-border-subtle backdrop-blur-md">
-                Stellar Network V2
-            </span>
+        <div className="flex items-center gap-3 shrink-0 min-w-[160px] justify-end">
+          <button
+            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle transition-colors text-xs font-bold text-muted hover:text-foreground shrink-0"
+            title={language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+          >
+            {language === 'es' ? 'ES' : 'EN'}
+          </button>
+          <span className="text-xs font-mono text-muted bg-foreground/5 px-3 py-1 rounded-full border border-border-subtle backdrop-blur-md whitespace-nowrap">
+            {t.authPage.network}
+          </span>
         </div>
       </div>
 
@@ -92,10 +112,10 @@ export default function AuthGateway() {
                 <Fingerprint className="w-8 h-8 text-accent-teal relative z-10" />
             </div>
             <h1 className="text-3xl font-bold mb-2">
-                {step === "SELECT" ? "The Bridge" : "Creando tu AURA"}
+                {step === "SELECT" ? t.authPage.title : t.authPage.titleCreating}
             </h1>
             <p className="text-muted">
-                {step === "SELECT" ? "Elegí tu método para acceder a ReWork" : "Asegurando tu identidad soberana..."}
+                {step === "SELECT" ? t.authPage.subtitle : t.authPage.subtitleCreating}
             </p>
         </div>
 
@@ -129,8 +149,8 @@ export default function AuthGateway() {
                                 </svg>
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-sm">Continuar con Google</p>
-                                <p className="text-xs text-muted">Acceso rápido Web2</p>
+                                <p className="font-bold text-sm">{t.authPage.google}</p>
+                                <p className="text-xs text-muted">{t.authPage.googleDesc}</p>
                             </div>
                         </div>
                         <ChevronRight className="w-5 h-5 text-muted group-hover:text-foreground transition-colors" />
@@ -138,7 +158,7 @@ export default function AuthGateway() {
 
                     <div className="relative flex items-center py-2">
                         <div className="flex-grow border-t border-border-subtle"></div>
-                        <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">Recomendado</span>
+                        <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">{t.authPage.recommended}</span>
                         <div className="flex-grow border-t border-border-subtle"></div>
                     </div>
 
@@ -156,10 +176,10 @@ export default function AuthGateway() {
                             </div>
                             <div className="text-left">
                                 <p className="font-bold text-sm text-accent-teal">
-                                    {loading ? "Abriendo Freighter..." : connected ? "Continuar con Wallet conectada" : "Conectar Wallet (Web3)"}
+                                    {loading ? t.authPage.walletOpening : connected ? t.authPage.walletConnected : t.authPage.wallet}
                                 </p>
                                 <p className="text-xs text-accent-teal/70">
-                                    {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Identidad inmutable y pagos"}
+                                    {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : t.authPage.walletDesc}
                                 </p>
                             </div>
                         </div>
@@ -168,9 +188,9 @@ export default function AuthGateway() {
 
                     {/* Freighter install hint */}
                     <p className="text-center text-xs text-muted mt-2">
-                        ¿No tenés Freighter?{" "}
+                        {t.authPage.noFreighter}{" "}
                         <a href="https://freighter.app" target="_blank" rel="noreferrer" className="text-accent-teal hover:underline">
-                            Instalala gratis
+                            {t.authPage.installFree}
                         </a>
                     </p>
                 </div>
@@ -192,11 +212,11 @@ export default function AuthGateway() {
 
                     <div className="space-y-2 w-full">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted flex items-center gap-2"><Key className="w-4 h-4" /> Generando Llave Stellar</span>
+                            <span className="text-muted flex items-center gap-2"><Key className="w-4 h-4" /> {t.authPage.stepKey}</span>
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted flex items-center gap-2"><Fingerprint className="w-4 h-4" /> Vinculando Reputación (AURA)</span>
+                            <span className="text-muted flex items-center gap-2"><Fingerprint className="w-4 h-4" /> {t.authPage.stepAura}</span>
                             <div className="w-4 h-4 border-2 border-accent-teal border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     </div>
@@ -205,7 +225,7 @@ export default function AuthGateway() {
                         {address ? address : "Gxxxxxxxxxxxxxxxxxxxxx..."}
                     </div>
 
-                    <p className="text-xs text-muted mt-4">Redirigiendo a tu selector de entorno...</p>
+                    <p className="text-xs text-muted mt-4">{t.authPage.redirecting}</p>
                 </div>
             )}
 
