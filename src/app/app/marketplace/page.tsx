@@ -14,7 +14,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 // Dummy addresses for demo purposes
-const DUMMY_PLATFORM_ADDRESS = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
+const DUMMY_PLATFORM_ADDRESS = "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI";
 const XLM_TESTNET_CONTRACT = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
 interface Auction {
@@ -32,6 +32,11 @@ interface Auction {
     is_direct_buy: boolean;
     currency: string;
     condition?: 'nuevo' | 'usado';
+    creator_profile?: {
+        first_name: string;
+        last_name: string;
+        avatar_url: string;
+    };
 }
 export type { Auction };
 
@@ -105,17 +110,114 @@ export default function MarketplacePage() {
     const [hideFinished, setHideFinished] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+    const [userSquadIds, setUserSquadIds] = useState<string[]>([]);
+    const [isFetchingSquads, setIsFetchingSquads] = useState(false);
+
+    // Fetch user squads to handle private auctions
+    useEffect(() => {
+        if (!address) {
+            setUserSquadIds([]);
+            return;
+        }
+
+        const fetchUserSquads = async () => {
+            setIsFetchingSquads(true);
+            try {
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("id")
+                    .eq("wallet_address", address)
+                    .single();
+
+                if (user) {
+                    const { data: memberOf } = await supabase
+                        .from("squad_members")
+                        .select("squad_id")
+                        .eq("user_id", user.id);
+
+                    if (memberOf) {
+                        setUserSquadIds(memberOf.map(m => m.squad_id));
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching user squads for privacy:", err);
+            } finally {
+                setIsFetchingSquads(false);
+            }
+        };
+
+        fetchUserSquads();
+    }, [address]);
 
     const fetchAuctions = async () => {
         if (!activeWorkspace?.id) return;
-        const { data, error } = await supabase.from("auctions").select("*").eq("workspace_id", activeWorkspace.id).order("id", { ascending: false });
-        if (data) setAuctions(data);
-        if (error) console.error("Error fetching auctions:", error);
+        
+        // Base query: auctions in the active workspace
+        let query = supabase
+            .from("auctions")
+            .select("*")
+            .eq("workspace_id", activeWorkspace.id);
+
+        // Privacy filtering:
+        // 1. Public auctions (squad_id is null)
+        // 2. Auctions for squads the user belongs to
+        // 3. Auctions where the user is the seller
+        if (address) {
+            // Include seller comparison and squad membership
+            const squadFilter = userSquadIds.length > 0 
+                ? `squad_id.in.(${userSquadIds.join(",")})` 
+                : "squad_id.is.null"; // fallback if no squads
+                
+            query = query.or(`squad_id.is.null,${squadFilter},seller.eq.${address}`);
+        } else {
+            // Unauthenticated users only see public auctions
+            query = query.is("squad_id", null);
+        }
+
+        const { data, error } = await query.order("id", { ascending: false });
+        
+        if (error) {
+            console.error("Error fetching auctions:", error);
+            return;
+        }
+
+        if (data) {
+            // Manually fetch creator profiles to avoid join issues
+            const sellerAddresses = Array.from(new Set(data.map((a: any) => a.seller))).filter(Boolean);
+            
+            if (sellerAddresses.length > 0) {
+                const { data: profiles, error: pError } = await supabase
+                    .from("users")
+                    .select("wallet_address, first_name, last_name, avatar_url")
+                    .in("wallet_address", sellerAddresses);
+                
+                if (profiles) {
+                    const profileMap = profiles.reduce((acc: any, p: any) => {
+                        acc[p.wallet_address] = p;
+                        return acc;
+                    }, {});
+                    
+                    const enrichedData = data.map((a: any) => ({
+                        ...a,
+                        creator_profile: profileMap[a.seller] || null
+                    }));
+                    setAuctions(enrichedData);
+                } else {
+                    if (pError) console.error("Error fetching creator profiles:", pError);
+                    setAuctions(data);
+                }
+            } else {
+                setAuctions(data);
+            }
+        }
     };
 
     useEffect(() => {
+        // Wait for squads fetching if user is logged in
+        if (address && userSquadIds.length === 0 && isFetchingSquads) return;
+        
         fetchAuctions();
-    }, [activeWorkspace?.id]);
+    }, [activeWorkspace?.id, address, userSquadIds.length, isFetchingSquads]);
 
     // Filter and Sort Logic
     const displayedAuctions = useMemo(() => {
@@ -142,7 +244,6 @@ export default function MarketplacePage() {
                 filtered = filtered.filter(a => a.is_direct_buy);
             }
 
-            // Implicit/Explicit hideFinished logic for active tabs
             if (hideFinished) {
                 filtered = filtered.filter(a => {
                     if (a.status === 'finished' || a.status === 'cancelled') return false;
@@ -150,6 +251,15 @@ export default function MarketplacePage() {
                     return true;
                 });
             }
+        }
+
+        // Apply Pills Filtering (activeFilter)
+        if (activeFilter === 'new') {
+            filtered = filtered.filter(a => a.condition === 'nuevo');
+        } else if (activeFilter === 'used') {
+            filtered = filtered.filter(a => a.condition === 'usado');
+        } else if (activeFilter === 'myBids' && address) {
+            filtered = filtered.filter(a => a.current_winner_address === address);
         }
 
         filtered.sort((a, b) => {
@@ -185,29 +295,36 @@ export default function MarketplacePage() {
             const assetSymbol = auction.currency || "USDC";
 
             // 1. Prepare Payload for Trustless Work Escrow
+            const sellerAddress = auction.seller.length > 20 ? auction.seller : DUMMY_PLATFORM_ADDRESS;
+            
             const payload: any = {
                 signer: address,
                 engagementId: `rework-auction-${auction.id}-${Date.now()}`,
                 title: `Puja para ${auction.title}`,
                 description: `Bloqueando fondos para oferta de ${bidAmount} ${assetSymbol} en Marketplace ReWork.`,
                 roles: {
-                    approver: address, // En uso real sería una cuenta multi-firma o backend
-                    serviceProvider: auction.seller.length > 20 ? auction.seller : DUMMY_PLATFORM_ADDRESS,
+                    approver: address,
+                    serviceProvider: sellerAddress,
                     platformAddress: DUMMY_PLATFORM_ADDRESS,
                     releaseSigner: address,
                     disputeResolver: DUMMY_PLATFORM_ADDRESS,
-                    receiver: auction.seller.length > 20 ? auction.seller : DUMMY_PLATFORM_ADDRESS,
+                    receiver: sellerAddress,
                 },
                 amount: bidAmount,
                 platformFee: 0.5,
                 milestones: [
-                    { description: "Aprobación y entrega del artículo por el vendedor" }
+                    { 
+                        description: "Aprobación y entrega del artículo por el vendedor",
+                        amount: bidAmount
+                    }
                 ],
                 trustline: {
-                    address: XLM_TESTNET_CONTRACT,
-                    symbol: assetSymbol // TW uses this for display
+                    address: DUMMY_PLATFORM_ADDRESS,
+                    symbol: assetSymbol
                 }
             };
+
+            console.log("[Marketplace] Sending TW Payload:", JSON.stringify(payload, null, 2));
 
             // 2. Proxy deploy
             const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
@@ -217,7 +334,12 @@ export default function MarketplacePage() {
             });
             const deployData = await deployRes.json();
 
-            if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow en el servidor.");
+            if (!deployRes.ok) {
+                if (deployRes.status === 401) {
+                    throw new Error("Error de Autenticación: La API Key de Trustless Work es inválida. Por favor, revisá tu .env.local y generá una nueva en el Dashboard de TW.");
+                }
+                throw new Error(deployData.error || deployData.message || "Error al crear el Escrow en el servidor.");
+            }
 
             const { unsignedTransaction } = deployData;
             if (!unsignedTransaction) throw new Error("No XDR proveniente de Trustless Work.");
@@ -402,13 +524,13 @@ export default function MarketplacePage() {
                     {t.marketplace.tabAll}
                 </button>
                 <button
-                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'auction' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'auction' ? 'border-purple-500 text-purple-400' : 'border-transparent text-muted hover:text-foreground'}`}
                     onClick={() => setActiveTab('auction')}
                 >
                     {t.marketplace.tabAuctions}
                 </button>
                 <button
-                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'direct' ? 'border-accent-teal text-foreground' : 'border-transparent text-muted hover:text-foreground'}`}
+                    className={`pb-3 border-b-2 font-medium transition-colors text-sm ${activeTab === 'direct' ? 'border-accent-teal text-accent-teal' : 'border-transparent text-muted hover:text-foreground'}`}
                     onClick={() => setActiveTab('direct')}
                 >
                     {t.marketplace.tabDirect}
@@ -492,7 +614,6 @@ export default function MarketplacePage() {
                             item={item}
                             currentAddress={address}
                             onSelect={() => setSelectedAuction(item)}
-                            onCancel={(e: any) => { e.stopPropagation(); handleCancelAuction(item); }}
                             onClaim={(e: any) => { e.stopPropagation(); handleClaimBack(item.id); }}
                             t={t}
                         />
@@ -513,6 +634,7 @@ export default function MarketplacePage() {
                 auction={selectedAuction}
                 currentAddress={address}
                 onBid={handleBid}
+                onCancel={handleCancelAuction}
                 loadingBids={loadingIds}
                 t={t}
             />
@@ -564,13 +686,24 @@ export default function MarketplacePage() {
 }
 
 // Subcomponent para manejar la tarjeta y el countdown local
-function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: any) {
+function AuctionCard({ item, currentAddress, onSelect, onClaim, t }: any) {
     const { str: timeLeftStr, isEnded } = useCountdown(item.end_time);
 
     const isOwner = currentAddress === item.seller;
     const isFinished = item.status === 'finished' || isEnded;
     const isCancelled = item.status === 'cancelled';
     const currency = item.currency || 'USDC';
+
+    // Theme logic: Auction = Violet, Direct Buy = Cyan
+    const themeColor = item.is_direct_buy ? 'accent-teal' : 'purple-500';
+    const themeBorder = item.is_direct_buy ? 'hover:border-accent-teal/30' : 'hover:border-purple-500/30';
+    const themeGlow = item.is_direct_buy ? 'hover:shadow-[0_0_20px_rgba(0,242,255,0.15)]' : 'hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]';
+    const themeText = item.is_direct_buy ? 'text-accent-teal' : 'text-purple-400';
+    const themeBg = item.is_direct_buy ? 'bg-accent-teal/10' : 'bg-purple-500/10';
+
+    const creatorName = item.creator_profile 
+        ? `${item.creator_profile.first_name} ${item.creator_profile.last_name || ""}`.trim()
+        : truncateAddress(item.seller);
 
     useEffect(() => {
         // Auto-actualizar BD si el front detecta fin de tiempo
@@ -580,7 +713,10 @@ function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: a
     }, [isEnded, item.status, item.id]);
 
     return (
-        <div onClick={onSelect} className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-60 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : 'border-border-subtle hover:border-accent-teal/30 cursor-pointer'} overflow-hidden group transition-all flex flex-col shadow-lg`}>
+        <div 
+            onClick={onSelect} 
+            className={`bg-card rounded-2xl border ${isFinished || isCancelled ? 'border-neutral-800 opacity-60 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : `border-border-subtle ${themeBorder} ${themeGlow} cursor-pointer`} overflow-hidden group transition-all flex flex-col shadow-lg`}
+        >
             <div className={`h-48 ${isFinished || isCancelled ? 'bg-neutral-900/50' : 'bg-neutral-900'} border-b border-border-subtle flex items-center relative justify-center text-7xl flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500`}>
                 {item.image.length < 5 ? item.image : (
                     <img src={item.image} alt="Auction Image" className="w-full h-full object-cover" />
@@ -596,11 +732,18 @@ function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: a
                         <div className="bg-neutral-500/10 text-muted border border-neutral-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
                             {t.marketplace.finished}
                         </div>
-                    ) : item.end_time ? (
+                    ) : (item.end_time || item.is_direct_buy) ? (
                         <div className="flex flex-col items-end gap-1">
-                            <div className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(0,242,255,0.1)]">
-                                <Clock className="w-3.5 h-3.5" /> {timeLeftStr}
-                            </div>
+                            {!item.is_direct_buy && item.end_time && (
+                                <div className={`bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(168,85,247,0.1)]`}>
+                                    <Clock className="w-3.5 h-3.5" /> {timeLeftStr}
+                                </div>
+                            )}
+                            {item.is_direct_buy && (
+                                <div className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(0,242,255,0.1)]">
+                                    <ShieldCheck className="w-3.5 h-3.5" /> {t.marketplace.itemDirectBuy}
+                                </div>
+                            )}
                             <div className="bg-foreground/10 text-foreground border border-border-subtle px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-md backdrop-blur-md">
                                 {(item.condition === 'nuevo' ? t.marketplace.new : item.condition === 'usado' ? t.marketplace.used : item.condition || t.marketplace.new)}
                             </div>
@@ -611,32 +754,36 @@ function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: a
 
             <div className="flex-1 p-5 flex flex-col">
                 <div className="flex justify-between items-start mb-1.5">
-                    <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-accent-teal transition-colors">{item.title}</h3>
+                    <h3 className={`font-semibold text-lg line-clamp-1 group-hover:${themeText} transition-colors`}>{item.title}</h3>
                 </div>
-                <div className="text-xs text-muted mb-3 flex justify-between items-center bg-foreground/5 py-1.5 px-2.5 rounded-lg border border-border-subtle">
+                <div className={`text-xs text-muted mb-3 flex justify-between items-center ${themeBg} py-1.5 px-2.5 rounded-lg border ${item.is_direct_buy ? 'border-accent-teal/15' : 'border-purple-500/15'}`}>
                     <span className="truncate mr-2 flex items-center gap-1.5">
-                        <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-purple-500 to-accent-teal shrink-0" />
-                        {truncateAddress(item.seller)}
+                        {item.creator_profile?.avatar_url ? (
+                            <img src={item.creator_profile.avatar_url} className="w-4 h-4 rounded-full object-cover shrink-0" alt="" />
+                        ) : (
+                            <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${item.is_direct_buy ? 'from-accent-teal to-blue-500' : 'from-purple-500 to-indigo-500'} shrink-0`} />
+                        )}
+                        <span className={`font-medium ${themeText}`}>{creatorName}</span>
                     </span>
                     <span className="text-muted font-medium font-mono whitespace-nowrap bg-card px-2 py-0.5 rounded-md border border-border-subtle">{item.bid_count} {t.marketplace.bidsCount}</span>
                 </div>
 
                 <div className="text-sm text-muted font-medium mb-4 flex items-center justify-between">
-                    <span>{t.marketplace.basePrice}</span>
-                    <span className="text-foreground font-mono">{item.base_price} {currency}</span>
+                    <span>{item.is_direct_buy ? t.marketplace.fixedPrice : t.marketplace.basePrice}</span>
+                    <span className="text-foreground font-mono font-bold">{item.base_price} {currency}</span>
                 </div>
 
                 <div className="mt-auto space-y-4">
                     <div className="flex justify-between items-end bg-[#050505] p-3 rounded-xl border border-border-subtle">
                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1">{item.is_direct_buy ? t.marketplace.fixedPrice : t.marketplace.currentWinner}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1">{item.is_direct_buy ? t.marketplace.buyNow : t.marketplace.currentWinner}</span>
                             {item.current_winner_address ? (
                                 <UserBadge address={item.current_winner_address} />
                             ) : (
                                 <span className="text-xs text-neutral-600 font-mono mt-1">{t.marketplace.noOneYet}</span>
                             )}
                         </div>
-                        <span className={`text-xl font-mono font-bold tracking-tight ${isFinished ? 'text-muted' : 'text-accent-teal'}`}>
+                        <span className={`text-xl font-mono font-bold tracking-tight ${isFinished ? 'text-muted' : themeText}`}>
                             {item.current_bid.toLocaleString()} {currency}
                         </span>
                     </div>
@@ -646,7 +793,7 @@ function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: a
                         <div className="flex flex-col gap-2 pt-1">
                             {item.current_winner_address ? (
                                 <>
-                                    <div className="w-full bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between">
+                                    <div className={`${themeBg} ${themeText} border ${item.is_direct_buy ? 'border-accent-teal/20' : 'border-purple-500/20'} px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between`}>
                                         <span>{t.marketplace.soldTo}</span>
                                         <span className="font-mono">{truncateAddress(item.current_winner_address)}</span>
                                     </div>
@@ -663,19 +810,6 @@ function AuctionCard({ item, currentAddress, onSelect, onCancel, onClaim, t }: a
                         </div>
                     )}
 
-                    {/* VISTA PARA OWNER - Cancelar Subasta (Solo si no hay pujas) */}
-                    {isOwner && !isFinished && !isCancelled && (
-                        <div className="pt-1">
-                            <button
-                                onClick={onCancel}
-                                disabled={item.bid_count > 0}
-                                className="w-full py-2.5 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-foreground disabled:opacity-40 disabled:hover:bg-red-500/5 disabled:hover:text-red-500 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
-                            >
-                                <XCircle className="w-4 h-4" />
-                                {item.bid_count > 0 ? t.marketplace.lockedBids : t.marketplace.cancelListing}
-                            </button>
-                        </div>
-                    )}
 
                     {/* VISTA PARA OWNER - Retirar activos si no se vendió */}
                     {(isFinished || isCancelled) && item.bid_count === 0 && isOwner && (

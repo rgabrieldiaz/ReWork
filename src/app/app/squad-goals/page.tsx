@@ -135,13 +135,13 @@ export default function SquadGoalsPage() {
                 roles: {
                     approver: publicKey, // Funder/Empresa
                     serviceProvider: goal.creator_id, // Creator is representative
-                    platformAddress: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW",
+                    platformAddress: "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI",
                     releaseSigner: publicKey,
-                    disputeResolver: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW"
+                    disputeResolver: "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI"
                 },
                 trustline: {
-                    address: "GBBD47IF6LWK7P7MDEVSCWT7FC4JFMTWHWXIGPN6BMTWSQNEPW2H3F2P", // USDC Testnet issuer
-                    symbol: "USDC" // Assuming USDC for this instance as per payload UI
+                    address: "CAV77QB3YSS6GUK4X54N7H2N5L2F3X2I2D6MNCXNC6R74ZZVNDP4N7F2", // USDC Testnet contract
+                    symbol: "USDC"
                 },
                 milestones: memberWallets.map((wallet, index) => ({
                     description: `Pago a colaborador ${index + 1}`,

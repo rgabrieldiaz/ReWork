@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { X, Loader2, Smile, ShieldCheck, Image as ImageIcon, UserCircle } from "lucide-react";
+import { X, Loader2, Smile, ShieldCheck, Image as ImageIcon, UserCircle, Wallet, Globe, Users, ChevronDown, ChevronUp } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
@@ -10,6 +10,11 @@ interface CreateCrowdfundModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+}
+
+interface Squad {
+    id: string;
+    name: string;
 }
 
 export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: CreateCrowdfundModalProps) {
@@ -23,10 +28,69 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
     const [image, setImage] = useState("🎯");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
-    const [tagsInput, setTagsInput] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
+    const [currentTag, setCurrentTag] = useState("");
     const [destinationAccount, setDestinationAccount] = useState(publicKey || "");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isEscrowExpanded, setIsEscrowExpanded] = useState(false);
+    const [selectedSquadId, setSelectedSquadId] = useState<string>("");
+    const [userSquads, setUserSquads] = useState<Squad[]>([]);
+
+    // Emoji suggestion logic based on keywords
+    useEffect(() => {
+        const lowerTitle = title.toLowerCase();
+        const emojiMap: Record<string, string> = {
+            'fiesta': '🥳',
+            'party': '🥳',
+            'cerveza': '🍺',
+            'beer': '🍺',
+            'comida': '🍕',
+            'food': '🍕',
+            'asado': '🥩',
+            'bbq': '🥩',
+            'viaje': '✈️',
+            'travel': '✈️',
+            'regalo': '🎁',
+            'gift': '🎁',
+            'cumple': '🎂',
+            'birthday': '🎂',
+            'servidor': '🖥️',
+            'server': '🖥️',
+            'gaming': '🎮',
+            'juego': '🎮',
+            'deporte': '⚽',
+            'sport': '⚽',
+            'cafe': '☕',
+            'coffee': '☕',
+            'salud': '🏥',
+            'health': '🏥',
+            'ayuda': '🆘',
+            'help': '🆘',
+            'fundacion': '🏢',
+            'donacion': '🤲',
+            'proyecto': '🚀',
+            'project': '🚀',
+            'equipo': '👥',
+            'team': '👥',
+            'musica': '🎸',
+            'music': '🎸',
+            'cine': '🍿',
+            'movie': '🍿',
+            'laptop': '💻',
+            'computadora': '💻',
+            'moneda': '🪙',
+            'cripto': '₿',
+            'crypto': '₿',
+        };
+
+        for (const [key, val] of Object.entries(emojiMap)) {
+            if (lowerTitle.includes(key)) {
+                setImage(val);
+                break;
+            }
+        }
+    }, [title]);
 
     // Derived states
     const isUrl = image.startsWith("http");
@@ -44,6 +108,33 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Fetch user squads when modal opens
+    useEffect(() => {
+        if (isOpen && publicKey) {
+            const fetchSquads = async () => {
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("id")
+                    .eq("wallet_address", publicKey)
+                    .single();
+
+                if (user) {
+                    const { data: memberOf } = await supabase
+                        .from("squad_members")
+                        .select("squad_id, squads(id, name)")
+                        .eq("user_id", user.id);
+
+                    if (memberOf) {
+                        const squads = memberOf.map(m => (m as any).squads as Squad);
+                        setUserSquads(squads);
+                        if (squads.length > 0) setSelectedSquadId(squads[0].id);
+                    }
+                }
+            };
+            fetchSquads();
+        }
+    }, [isOpen, publicKey]);
 
     // Sync destination account if publicKey changes
     useEffect(() => {
@@ -68,11 +159,15 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
             return;
         }
 
+        if (privacy === "private" && !selectedSquadId) {
+            setError("Por favor selecciona un equipo para la colecta privada.");
+            return;
+        }
+
         setLoading(true);
 
         try {
             const deadline = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
-            const tags = tagsInput.split(",").map(t => t.trim()).filter(t => t !== "");
 
             // Get current max id for crowdfunds (optional but helpful if table is manual sequence)
             const { data: maxIdData } = await supabase.from('crowdfunds').select('id').order('id', { ascending: false }).limit(1);
@@ -92,6 +187,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                 deadline: deadline.toISOString(),
                 status: "active",
                 privacy: privacy,
+                squad_id: privacy === "private" ? selectedSquadId : null
             };
 
             // Si la db lo tiene lo inserta, sino fallará y habria que quitarlo en un cleanup. 
@@ -110,13 +206,13 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
             if (err.message?.includes("currency")) {
                 try {
                     const deadline = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
-                    const tags = tagsInput.split(",").map(t => t.trim()).filter(t => t !== "");
                     const { data: maxIdData } = await supabase.from('crowdfunds').select('id').order('id', { ascending: false }).limit(1);
                     const nextId = (maxIdData?.[0]?.id || 0) + 1;
                     const { error: retryError } = await supabase.from("crowdfunds").insert([{
                         id: nextId, title, description, organizer: publicKey, destination_account: destinationAccount,
                         goal_amount: parseInt(goalAmount), current_amount: 0, donor_count: 0, tags: tags,
-                        image: image || "🎯", deadline: deadline.toISOString(), status: "active", privacy: privacy
+                        image: image || "🎯", deadline: deadline.toISOString(), status: "active", privacy: privacy,
+                        squad_id: privacy === "private" ? selectedSquadId : null
                     }]);
                     if (retryError) throw new Error(retryError.message);
                     onSuccess();
@@ -210,21 +306,37 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                     </div>
 
                     {/* Trustless Work Info Box */}
-                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3 items-start isolate relative overflow-hidden mt-auto">
+                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-3 isolate relative overflow-hidden mt-auto">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
-                        <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
-                            <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
-                                Al publicar, se creará un Smart Escrow no custodial en <strong>Trustless Work</strong>.
-                                <br />
-                                Los aportes estarán seguros y el creador podrá liquidarlos según las reglas del contrato.
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                Fee estimado de red: ~0.00001 XLM
+                        <button 
+                            type="button"
+                            onClick={() => setIsEscrowExpanded(!isEscrowExpanded)}
+                            className="flex items-center justify-between w-full text-left group/escrow"
+                        >
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0" />
+                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
                             </div>
-                        </div>
+                            {isEscrowExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
+                            ) : (
+                                <ChevronDown className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
+                            )}
+                        </button>
+                        
+                        {isEscrowExpanded && (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                <p className="text-xs text-blue-200/70 mb-3 leading-relaxed">
+                                    Al publicar, se creará un Smart Escrow no custodial en <strong>Trustless Work</strong>.
+                                    <br />
+                                    Los aportes estarán seguros y el creador podrá liquidarlos según las reglas del contrato.
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                    Fee estimado de red: ~0.00001 XLM
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -249,27 +361,6 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                             </div>
                         )}
 
-                        {/* Privacy Selector */}
-                        <div className="bg-neutral-900/50 border border-border-subtle rounded-2xl p-1.5 flex relative">
-                            <div
-                                className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-neutral-800 rounded-xl transition-all duration-300 ease-out shadow-sm border border-white/5"
-                                style={{ left: privacy === 'public' ? '6px' : 'calc(50% + 0px)' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setPrivacy('public')}
-                                className={`flex-1 relative z-10 font-bold text-[13px] sm:text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${privacy === 'public' ? 'text-white' : 'text-muted hover:text-white'}`}
-                            >
-                                Pública (Toda la empresa)
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setPrivacy('private')}
-                                className={`flex-1 relative z-10 font-bold text-[13px] sm:text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${privacy === 'private' ? 'text-white' : 'text-muted hover:text-white'}`}
-                            >
-                                Privada (Solo mi Equipo)
-                            </button>
-                        </div>
 
                         {/* Title */}
                         <div className="space-y-2">
@@ -294,6 +385,50 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                                 onChange={e => setDescription(e.target.value)}
                                 placeholder="Explica brevemente para qué son los fondos..."
                             />
+                        </div>
+
+                        {/* Privacy Selection */}
+                        <div className="space-y-3">
+                            <label className="block text-sm font-bold text-foreground">Visibilidad <span className="text-accent-teal">*</span></label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setPrivacy('public')}
+                                    className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'public' ? 'bg-accent-teal/10 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.05)]' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                >
+                                    <Globe className="w-4 h-4" /> Público
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPrivacy('private')}
+                                    className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'private' ? 'bg-orange-500/10 border-orange-500 text-white shadow-[0_0_15px_rgba(255,165,0,0.05)]' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                >
+                                    <Users className="w-4 h-4" /> Solo Equipo
+                                </button>
+                            </div>
+
+                            {privacy === 'private' && (
+                                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <select
+                                        value={selectedSquadId}
+                                        onChange={(e) => setSelectedSquadId(e.target.value)}
+                                        className="w-full bg-neutral-900/50 border border-orange-500/30 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors appearance-none cursor-pointer mt-3"
+                                    >
+                                        <option value="" disabled>Selecciona tu equipo...</option>
+                                        {userSquads.map((squad) => (
+                                            <option key={squad.id} value={squad.id} className="bg-neutral-900">
+                                                {squad.name}
+                                            </option>
+                                        ))}
+                                        {userSquads.length === 0 && (
+                                            <option value="" disabled>No estás en ningún equipo</option>
+                                        )}
+                                    </select>
+                                    <p className="text-[10px] text-muted mt-2 px-1">
+                                        Solo los miembros del equipo seleccionado podrán ver y aportar a esta colecta.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Goal & Currency */}
@@ -366,7 +501,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                                 <input
                                     required
                                     type="text"
-                                    className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-5 pr-32 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/60"
+                                    className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-5 pr-14 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/60"
                                     value={destinationAccount}
                                     onChange={e => setDestinationAccount(e.target.value)}
                                     placeholder="GCABC...XYZ"
@@ -374,24 +509,53 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                                 <button
                                     type="button"
                                     onClick={() => publicKey && setDestinationAccount(publicKey)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-accent-teal/10 hover:bg-accent-teal/20 text-accent-teal border border-accent-teal/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-accent-teal/10 hover:bg-accent-teal/20 text-accent-teal border border-accent-teal/20 rounded-xl transition-all group/wallet"
+                                    title="Usar mi wallet"
                                 >
-                                    <UserCircle className="w-3.5 h-3.5" />
-                                    Usar mi wallet
+                                    <Wallet className="w-5 h-5 group-hover/wallet:scale-110 transition-transform" />
+                                    <span className="sr-only">Usar mi wallet</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Tags */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Etiquetas (Opcional)</label>
-                            <input
-                                type="text"
-                                className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all placeholder:text-muted/60"
-                                value={tagsInput}
-                                onChange={e => setTagsInput(e.target.value)}
-                                placeholder="Ej. Equipo, Sorprendelo, Despedida..."
-                            />
+                            <label className="block text-sm font-bold text-foreground">Etiquetas</label>
+                            <div className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl p-2 focus-within:border-accent-teal transition-all min-h-[56px] flex flex-wrap gap-2 items-center">
+                                {tags.map((tag, idx) => (
+                                    <div key={idx} className="flex items-center gap-1.5 bg-accent-teal/10 border border-accent-teal/30 text-accent-teal px-3 py-1.5 rounded-xl text-xs font-bold animate-in zoom-in duration-200">
+                                        <span>{tag}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setTags(tags.filter((_, i) => i !== idx))}
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <input
+                                    type="text"
+                                    className="flex-1 bg-transparent border-none outline-none py-2 px-3 text-sm placeholder:text-muted/60 min-w-[120px]"
+                                    value={currentTag}
+                                    onChange={e => setCurrentTag(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === ',' || e.key === 'Enter' || e.key === 'Tab') {
+                                            if (currentTag.trim()) {
+                                                e.preventDefault();
+                                                const val = currentTag.trim().replace(/,$/, "");
+                                                if (val && !tags.includes(val)) {
+                                                    setTags([...tags, val]);
+                                                    setCurrentTag("");
+                                                }
+                                            }
+                                        } else if (e.key === 'Backspace' && !currentTag && tags.length > 0) {
+                                            setTags(tags.slice(0, -1));
+                                        }
+                                    }}
+                                    placeholder={tags.length === 0 ? "Ej. Equipo, Sorprendelo..." : "Sigue sumando..."}
+                                />
+                            </div>
                         </div>
 
                         {/* Actions */}

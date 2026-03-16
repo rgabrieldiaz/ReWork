@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, ShieldCheck, Clock, History, AlertCircle } from "lucide-react";
+import { X, ShieldCheck, Clock, History, AlertCircle, XCircle } from "lucide-react";
 import { UserBadge } from "@/components/UserBadge";
 
 interface Auction {
@@ -27,6 +27,7 @@ interface AuctionDetailModalProps {
     auction: Auction | null;
     currentAddress: string | null;
     onBid: (auction: Auction, bidAmount: number) => Promise<void>;
+    onCancel: (auction: Auction) => Promise<void>;
     loadingBids: Record<number, boolean>;
     t: any; // Translations
 }
@@ -66,7 +67,7 @@ function useCountdown(endTime: string | null) {
     return timeLeft;
 }
 
-export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, onBid, loadingBids, t }: AuctionDetailModalProps) {
+export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, onBid, onCancel, loadingBids, t }: AuctionDetailModalProps) {
     const [bidAmount, setBidAmount] = useState<number>(0);
     const { str: timeLeftStr, isEnded } = useCountdown(auction?.end_time || null);
 
@@ -284,9 +285,23 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
 
                         {isOwner && !isFinished && !isCancelled && (
                             <div className="pt-2">
-                                <div className="flex items-center gap-2 p-3 bg-foreground/5 border border-border-subtle rounded-xl text-muted text-sm">
-                                    <AlertCircle className="w-4 h-4 text-accent-teal shrink-0" />
-                                    Eres el vendedor de este artículo.
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-2 p-3 bg-foreground/5 border border-border-subtle rounded-xl text-muted text-sm">
+                                        <AlertCircle className="w-4 h-4 text-accent-teal shrink-0" />
+                                        Eres el vendedor de este artículo.
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            await onCancel(auction);
+                                            // Optional: Close modal after cancel
+                                            if (auction.bid_count === 0) onClose();
+                                        }}
+                                        disabled={auction.bid_count > 0}
+                                        className="w-full py-3 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-foreground disabled:opacity-40 disabled:hover:bg-red-500/5 disabled:hover:text-red-500 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <XCircle className="w-4 h-4" />
+                                        {auction.bid_count > 0 ? t.marketplace.lockedBids : t.marketplace.cancelListing}
+                                    </button>
                                 </div>
                             </div>
                         )}

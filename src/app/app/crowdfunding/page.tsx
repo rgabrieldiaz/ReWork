@@ -185,6 +185,9 @@ export default function ColectasPage() {
         setProcessingId(camp.id);
         try {
             // 1. Deploy escrow via server proxy (same pattern as Marketplace)
+            const USDC_CONTRACT = "CAV77QB3YSS6GUK4X54N7H2N5L2F3X2I2D6MNCXNC6R74ZZVNDP4N7F2";
+            const PLATFORM_ADDR = "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI";
+
             const payload: any = {
                 signer: publicKey,
                 engagementId: `rework-crowdfund-${camp.id}-${Date.now()}`,
@@ -193,19 +196,24 @@ export default function ColectasPage() {
                 roles: {
                     approver: camp.organizer,
                     serviceProvider: camp.organizer,
-                    platformAddress: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW",
+                    platformAddress: PLATFORM_ADDR,
                     releaseSigner: camp.organizer,
-                    disputeResolver: "GA4H24E2U264D4GBH2TYRDEJ2PNTKSY2PGLTYJ3CBL7QXYXOMJED74BW",
+                    disputeResolver: PLATFORM_ADDR,
                     receiver: camp.organizer,
                 },
                 amount: amountToDonate,
                 platformFee: 0.5,
-                milestones: [{ description: `Colecta: ${camp.title}` }],
+                milestones: [{ 
+                    description: `Colecta: ${camp.title}`,
+                    amount: amountToDonate
+                }],
                 trustline: {
-                    address: "GBBD47IF6LWK7P7MDEVSCWT7FC4JFMTWHWXIGPN6BMTWSQNEPW2H3F2P",
+                    address: PLATFORM_ADDR,
                     symbol: "USDC"
                 }
             };
+
+            console.log("[Crowdfunding] Sending TW Payload:", JSON.stringify(payload, null, 2));
 
             const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
                 method: 'POST',

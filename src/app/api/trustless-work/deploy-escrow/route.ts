@@ -4,6 +4,11 @@ import https from "https";
 
 export async function POST(request: Request) {
     try {
+        const apiKey = process.env.NEXT_PUBLIC_TW_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({ error: "Trustless Work API Key is missing in environment variables." }, { status: 500 });
+        }
+
         const payload = await request.json();
 
         // Creamos un agente HTTPS que ignore errores de certificado SSL en Node.js (unable to verify the first certificate)
@@ -12,22 +17,24 @@ export async function POST(request: Request) {
         });
 
         const response = await axios.post(
-            "https://api.trustlesswork.com/deployer/single-release",
+            "https://dev.api.trustlesswork.com/deployer/single-release",
             payload,
             {
                 headers: {
                     "Content-Type": "application/json",
-                    "x-api-key": process.env.NEXT_PUBLIC_TW_API_KEY!,
+                    "x-api-key": apiKey,
                 },
-                httpsAgent, // Node.js bypass for SSL
+                httpsAgent,
             }
         );
-
         return NextResponse.json(response.data);
     } catch (error: any) {
-        const data = error.response?.data || { message: error.message };
         const status = error.response?.status || 500;
-        console.error("Error deploying escrow:", data);
-        return NextResponse.json(data, { status });
+        const errorData = error.response?.data || { message: error.message };
+        
+        // Log expanded error to server console
+        console.error(`[TW-API-ERROR] deploy-escrow (${status}):`, JSON.stringify(errorData, null, 2));
+
+        return NextResponse.json(errorData, { status });
     }
 }

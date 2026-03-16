@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { X, Image as ImageIcon, ShieldCheck, Smile } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { X, Image as ImageIcon, ShieldCheck, Smile, Lock, Globe, Users, ChevronDown, ChevronUp } from "lucide-react";
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 interface CreateAuctionModalProps {
     isOpen: boolean;
@@ -13,11 +14,18 @@ interface CreateAuctionModalProps {
     onCreated: () => void;
 }
 
+interface Squad {
+    id: string;
+    name: string;
+}
+
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
     const { connected, address } = useFreighter();
     const { addPoints } = useProfile();
+    const { activeWorkspace } = useWorkspace();
     const [loading, setLoading] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [isEscrowExpanded, setIsEscrowExpanded] = useState(false);
 
     const [title, setTitle] = useState("");
     const [image, setImage] = useState("📦");
@@ -26,6 +34,69 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     const [currency, setCurrency] = useState<"USDC" | "XLM">("USDC");
     const [condition, setCondition] = useState<"nuevo" | "usado">("nuevo");
     const [isDirectBuy, setIsDirectBuy] = useState(false);
+    const [privacy, setPrivacy] = useState<"public" | "private">("public");
+    const [selectedSquadId, setSelectedSquadId] = useState<string>("");
+    const [userSquads, setUserSquads] = useState<Squad[]>([]);
+
+    // Emoji suggestion logic based on keywords
+    useEffect(() => {
+        if (!title) {
+            setImage("📦");
+            return;
+        }
+
+        // Only suggest if not a URL
+        const isCurrentlyUrl = image.startsWith("http");
+        if (isCurrentlyUrl) return;
+
+        const lowerTitle = title.toLowerCase();
+        const emojiMap: Record<string, string> = {
+            'fiesta': '🥳', 'party': '🥳', 'cerveza': '🍺', 'beer': '🍺',
+            'comida': '🍕', 'food': '🍕', 'asado': '🥩', 'bbq': '🥩',
+            'viaje': '✈️', 'travel': '✈️', 'regalo': '🎁', 'gift': '🎁',
+            'cumple': '🎂', 'birthday': '🎂', 'servidor': '🖥️', 'server': '🖥️',
+            'gaming': '🎮', 'juego': '🎮', 'deporte': '⚽', 'sport': '⚽',
+            'cafe': '☕', 'coffee': '☕', 'salud': '🏥', 'health': '🏥',
+            'ayuda': '🆘', 'help': '🆘', 'fundacion': '🏢', 'donacion': '🤲',
+            'proyecto': '🚀', 'project': '🚀', 'equipo': '👥', 'team': '👥',
+            'musica': '🎸', 'music': '🎸', 'cine': '🍿', 'movie': '🍿',
+            'laptop': '💻', 'computadora': '💻', 'monitor': '🖥️', 'teclado': '⌨️'
+        };
+
+        for (const [key, val] of Object.entries(emojiMap)) {
+            if (lowerTitle.includes(key)) {
+                setImage(val);
+                break;
+            }
+        }
+    }, [title]);
+
+    // Fetch user squads when modal opens
+    useEffect(() => {
+        if (isOpen && address) {
+            const fetchSquads = async () => {
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("id")
+                    .eq("wallet_address", address)
+                    .single();
+
+                if (user) {
+                    const { data: memberOf } = await supabase
+                        .from("squad_members")
+                        .select("squad_id, squads(id, name)")
+                        .eq("user_id", user.id);
+
+                    if (memberOf) {
+                        const squads = memberOf.map(m => (m as any).squads as Squad);
+                        setUserSquads(squads);
+                        if (squads.length > 0) setSelectedSquadId(squads[0].id);
+                    }
+                }
+            };
+            fetchSquads();
+        }
+    }, [isOpen, address]);
 
     // Derived states
     const isUrl = image.startsWith("http");
@@ -49,17 +120,17 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             return;
         }
 
+        if (privacy === "private" && !selectedSquadId) {
+            alert("Por favor selecciona un equipo para la subasta privada.");
+            return;
+        }
+
         setLoading(true);
         try {
             const basePriceNum = Number(basePrice);
             const endTimeIso = isDirectBuy ? null : new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
-            // Get current max id
-            const { data: maxIdData } = await supabase.from('auctions').select('id').order('id', { ascending: false }).limit(1);
-            const nextId = (maxIdData?.[0]?.id || 0) + 1;
-
             const { error } = await supabase.from("auctions").insert({
-                id: nextId,
                 title: title,
                 seller: address,
                 image: image,
@@ -70,7 +141,9 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 end_time: endTimeIso,
                 is_direct_buy: isDirectBuy,
                 currency: currency,
-                condition: condition
+                condition: condition,
+                workspace_id: activeWorkspace?.id,
+                squad_id: privacy === "private" ? selectedSquadId : null
             });
 
             if (error) throw error;
@@ -79,8 +152,14 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             onCreated();
             onClose();
         } catch (err: any) {
-            console.error(err);
-            alert("Error creando la subasta: " + (err.message || "Desconocido"));
+            console.error("Error al crear subasta:", err);
+            
+            // Supabase/Postgrest error details
+            const errMsg = err?.message || "Error desconocido";
+            const errDetails = err?.details ? ` (${err.details})` : "";
+            const errHint = err?.hint ? ` Pista: ${err.hint}` : "";
+            
+            alert(`Error creando la subasta: ${errMsg}${errDetails}${errHint}`);
         } finally {
             setLoading(false);
         }
@@ -91,26 +170,35 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             <div className="bg-gradient-to-br from-neutral-900 to-black border border-border-subtle rounded-3xl w-full max-w-5xl md:max-h-[95vh] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row shadow-accent-teal/10">
 
                 {/* Left Column: Preview & Image Selection */}
-                <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 flex flex-col gap-5 relative">
+                <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 flex flex-col gap-5 relative overflow-y-auto">
                     <div>
                         <h3 className="text-xl font-bold tracking-tight mb-1 text-white">Previsualización</h3>
                         <p className="text-sm text-muted">Así se verá tu artículo en el mercado P2P.</p>
                     </div>
 
-                    <div className="aspect-square w-full bg-neutral-900/50 border border-border-subtle rounded-3xl flex items-center justify-center overflow-hidden shadow-inner relative group isolate">
+                    <div className={`aspect-square w-full bg-neutral-900/50 border ${isDirectBuy ? 'border-accent-teal/30' : 'border-purple-500/30'} rounded-3xl flex items-center justify-center overflow-hidden shadow-inner relative group isolate shrink-0`}>
                         {/* Decorative background glow */}
-                        <div className="absolute inset-0 bg-accent-teal/5 rounded-3xl -z-10 group-hover:bg-accent-teal/10 transition-colors duration-500" />
+                        <div className={`absolute inset-0 ${isDirectBuy ? 'bg-accent-teal/5 group-hover:bg-accent-teal/10' : 'bg-purple-500/5 group-hover:bg-purple-500/10'} rounded-3xl -z-10 transition-colors duration-500`} />
 
                         {isUrl ? (
                             <img src={image} alt="Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={() => setImage("📦")} />
                         ) : (
                             <span className="text-[120px] filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-transform duration-500 group-hover:scale-110">{image}</span>
                         )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-10">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 pt-10 text-left">
                             <h4 className="font-bold text-lg text-white leading-tight line-clamp-1">{title || "Nombre del artículo"}</h4>
                             <div className="flex justify-between items-end mt-2">
-                                <span className="text-accent-teal font-black text-xl tracking-tight">{basePrice ? `${basePrice} ${currency}` : (isDirectBuy ? "PRECIO FIJO" : "Precio base")}</span>
-                                <span className="text-[10px] text-white/90 uppercase font-black tracking-widest bg-white/10 px-2.5 py-1 rounded border border-white/20 backdrop-blur-md">{condition}</span>
+                                <div className="flex flex-col">
+                                    <span className={`${isDirectBuy ? 'text-accent-teal' : 'text-purple-400'} font-black text-xl tracking-tight`}>
+                                        {basePrice ? `${basePrice} ${currency}` : (isDirectBuy ? "COMPRA DIRECTA" : "SUBASTA")}
+                                    </span>
+                                    {privacy === "private" && (
+                                        <span className="text-[10px] text-orange-400 font-bold flex items-center gap-1 mt-1">
+                                            <Lock className="w-3 h-3" /> Solo Squad
+                                        </span>
+                                    )}
+                                </div>
+                                <span className={`text-[10px] text-white/90 uppercase font-black tracking-widest ${isDirectBuy ? 'bg-accent-teal/20 border-accent-teal/30' : 'bg-purple-500/20 border-purple-500/30'} px-2.5 py-1 rounded border backdrop-blur-md`}>{condition}</span>
                             </div>
                         </div>
                     </div>
@@ -151,29 +239,45 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </div>
                     </div>
 
-                    {/* Trustless Work Info Box MOVED HERE */}
-                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex gap-3 items-start isolate relative overflow-hidden mt-auto">
+                    {/* Trustless Work Info Box */}
+                    <div className="bg-blue-900/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-3 isolate relative overflow-hidden mt-auto">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
-                        <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
-                            <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
-                                Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
-                                <br />
-                                {isDirectBuy
-                                    ? "El pago se libera apenas el comprador confirma."
-                                    : "El pago se libera al finalizar el plazo de la subasta."}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                Fee estimado de red: ~0.00001 XLM
+                        <button 
+                            type="button"
+                            onClick={() => setIsEscrowExpanded(!isEscrowExpanded)}
+                            className="flex items-center justify-between w-full text-left group/escrow"
+                        >
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0" />
+                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
                             </div>
-                        </div>
+                            {isEscrowExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
+                            ) : (
+                                <ChevronDown className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
+                            )}
+                        </button>
+                        
+                        {isEscrowExpanded && (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                <p className="text-xs text-blue-200/70 mb-3 leading-relaxed">
+                                    Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
+                                    <br />
+                                    {isDirectBuy
+                                        ? "El pago se libera apenas el comprador confirma."
+                                        : "El pago se libera al finalizar el plazo de la subasta."}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                    Fee estimado de red: ~0.00001 XLM
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Right Column: Data Inputs */}
-                <div className="w-full md:w-[55%] p-6 flex flex-col relative bg-gradient-to-br from-card/30 to-black">
+                <div className="w-full md:w-[55%] p-6 flex flex-col relative bg-gradient-to-br from-card/30 to-black overflow-y-auto">
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
@@ -205,7 +309,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </button>
                     </div>
 
-                    <form id="create-auction-form" onSubmit={handleSubmit} className="space-y-8 flex-1">
+                    <form id="create-auction-form" onSubmit={handleSubmit} className="space-y-6 flex-1">
                         {/* Title */}
                         <div className="space-y-2">
                             <label className="block text-sm font-bold text-foreground">Título de la Publicación <span className="text-accent-teal">*</span></label>
@@ -213,7 +317,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                 required
                                 type="text"
                                 maxLength={60}
-                                className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
+                                className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-3 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
                                 placeholder="Ej. Lentes VR Oculus Quest 3, Licencia Figma..."
@@ -232,7 +336,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                         required
                                         type="number"
                                         min="1"
-                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-10 pr-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
+                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-10 pr-5 py-3 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
                                         value={basePrice}
                                         onChange={e => setBasePrice(e.target.value)}
                                         placeholder="0.00"
@@ -243,7 +347,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                     <button
                                         type="button"
                                         onClick={() => setCurrency('USDC')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'USDC' ? 'text-white' : 'text-muted hover:text-white'}`}
+                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center gap-2 transition-colors ${currency === 'USDC' ? 'text-white' : 'text-muted hover:text-white'}`}
                                     >
                                         <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-[10px] text-blue-400">U</div>
                                         USDC
@@ -251,13 +355,57 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                     <button
                                         type="button"
                                         onClick={() => setCurrency('XLM')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'XLM' ? 'text-white' : 'text-muted hover:text-white'}`}
+                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center gap-2 transition-colors ${currency === 'XLM' ? 'text-white' : 'text-muted hover:text-white'}`}
                                     >
                                         <div className="w-5 h-5 rounded-full bg-neutral-100/10 border border-neutral-400/50 flex items-center justify-center text-[10px] text-neutral-300">X</div>
                                         XLM
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Privacy Selection */}
+                        <div className="space-y-3">
+                            <label className="block text-sm font-bold text-foreground">Visibilidad <span className="text-accent-teal">*</span></label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setPrivacy('public')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'public' ? 'bg-accent-teal/10 border-accent-teal text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                >
+                                    <Globe className="w-4 h-4" /> Público
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPrivacy('private')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'private' ? 'bg-orange-500/10 border-orange-500 text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                >
+                                    <Users className="w-4 h-4" /> Solo Equipo
+                                </button>
+                            </div>
+
+                            {privacy === 'private' && (
+                                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <select
+                                        value={selectedSquadId}
+                                        onChange={(e) => setSelectedSquadId(e.target.value)}
+                                        className="w-full bg-neutral-900/50 border border-orange-500/30 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors appearance-none cursor-pointer"
+                                    >
+                                        <option value="" disabled>Selecciona tu equipo...</option>
+                                        {userSquads.map((squad) => (
+                                            <option key={squad.id} value={squad.id} className="bg-neutral-900">
+                                                {squad.name}
+                                            </option>
+                                        ))}
+                                        {userSquads.length === 0 && (
+                                            <option value="" disabled>No estás en ningún equipo</option>
+                                        )}
+                                    </select>
+                                    <p className="text-[10px] text-muted mt-2 px-1">
+                                        Solo los miembros del equipo seleccionado podrán ver y pujar por este artículo.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Duration Group */}
@@ -276,7 +424,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                             key={days}
                                             type="button"
                                             onClick={() => setDurationDays(days)}
-                                            className={`flex-1 min-w-[50px] py-3.5 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                            className={`flex-1 min-w-[50px] py-3 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                         >
                                             {days}{days === 1 ? 'd' : 'd'}
                                         </button>
@@ -292,14 +440,14 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                 <button
                                     type="button"
                                     onClick={() => setCondition('nuevo')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'nuevo' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                    className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'nuevo' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                 >
                                     ✨ Nuevo
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setCondition('usado')}
-                                    className={`flex-1 py-4 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'usado' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
+                                    className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'usado' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                 >
                                     ♻️ Usado
                                 </button>
@@ -307,15 +455,15 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         </div>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-border-subtle pb-4">
+                    <div className="mt-6 pt-4 border-t border-border-subtle pb-4">
                         <div className="flex flex-col sm:flex-row justify-end gap-3 lg:gap-4">
-                            <button type="button" onClick={onClose} className="px-6 py-4 text-sm font-bold text-muted hover:text-white transition-colors border border-border-subtle bg-transparent rounded-2xl">
+                            <button type="button" onClick={onClose} className="px-6 py-3 text-sm font-bold text-muted hover:text-white transition-colors border border-border-subtle bg-transparent rounded-2xl">
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 form="create-auction-form"
-                                disabled={loading || !title || !basePrice}
+                                disabled={loading || !title || !basePrice || (privacy === 'private' && !selectedSquadId)}
                                 className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap disabled:opacity-50 disabled:shadow-none disabled:hover:bg-accent-teal relative overflow-hidden group min-w-[180px]"
                             >
                                 {loading && (

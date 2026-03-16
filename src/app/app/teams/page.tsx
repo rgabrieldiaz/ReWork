@@ -45,6 +45,10 @@ export default function ColaboradoresPage() {
 
             if (error) {
                 console.error("Error fetching collaborators:", error);
+                // Also log more context if available
+                if (typeof error === 'object') {
+                    console.log("Error details:", JSON.stringify(error, null, 2));
+                }
             } else if (data) {
                 setCollaborators(data as UserProfile[]);
             }
