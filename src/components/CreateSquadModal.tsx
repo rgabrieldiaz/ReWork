@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { X, Loader2, Smile, Shield, UsersRound } from "lucide-react";
+import { X, Loader2, Smile, Shield, UsersRound, ArrowRight } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useSquads } from "@/hooks/useSquads";
@@ -52,7 +52,8 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
             await createSquad({
                 name,
                 description,
-                specialty: `${image} ${specialty}`, // store emoji in specialty
+                specialty,
+                emoji: image,
                 is_open: true
             });
             onCreated();
@@ -74,38 +75,46 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                     <div className="relative z-10">
                         <h3 className="text-muted text-sm font-semibold uppercase tracking-wider mb-6">
-                            {(t.colaboradores?.squads as any)?.preview || "Vista Previa del Squad"}
+                            {(t.colaboradores?.squads as any)?.preview || "Vista Previa del Equipo"}
                         </h3>
-
                         {/* Squad Card Preview */}
-                        <div className="bg-card rounded-2xl border border-border-subtle overflow-hidden hover:border-accent-teal/30 transition-all flex flex-col shadow-lg">
-                            <div className="p-6 flex-1 flex flex-col relative">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-bold text-xl text-foreground mb-1 break-words">
-                                            {image} {name || "Nombre del Squad"}
-                                        </h3>
-                                        <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-xs font-semibold rounded-md border border-accent-teal/20 mt-1 max-w-full truncate">
-                                            {specialty || "Especialidad"}
+                        <div className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] flex flex-col">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-accent-teal/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                            
+                            <div className="flex justify-between items-start mb-8 relative z-10">
+                                <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-accent-teal/30 transition-colors text-2xl">
+                                    {image && image !== "🛡️" ? (
+                                        <span>{image}</span>
+                                    ) : (
+                                        <Shield className="w-6 h-6 text-accent-teal/50" />
+                                    )}
+                                </div>
+                                {specialty && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-[10px] font-bold uppercase rounded-md border border-accent-teal/20 tracking-wider">
+                                            {specialty}
                                         </span>
                                     </div>
-                                    <div className="bg-neutral-800/50 p-2 rounded-xl border border-border-subtle shrink-0">
-                                        <Shield className="w-5 h-5 text-accent-teal opacity-80" />
-                                    </div>
-                                </div>
+                                )}
+                            </div>
 
-                                <p className="text-sm text-muted mb-6 flex-1 break-words min-h-[4rem]">
+                            <div className="relative z-10 flex-1 flex flex-col">
+                                <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
+                                    {name || "Nombre del Equipo"}
+                                    <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
+                                </h2>
+                                <p className="text-muted text-sm mb-6 line-clamp-2 min-h-[2.5rem]">
                                     {description || "Agrega una descripción para contarle a la empresa el propósito y la cultura del equipo..."}
                                 </p>
 
                                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-border-subtle">
                                     <div className="flex items-center">
                                         <div className="flex -space-x-3">
-                                            <div className="w-8 h-8 rounded-full border-2 border-card bg-accent-teal flex items-center justify-center overflow-hidden z-20">
+                                            <div className="w-8 h-8 rounded-full border-2 border-card bg-accent-teal flex items-center justify-center overflow-hidden z-20 shadow-sm">
                                                 <span className="text-[10px] font-bold text-black border-accent-teal">TÚ</span>
                                             </div>
                                         </div>
-                                        <span className="ml-3 text-xs text-muted font-medium">1 {(t.colaboradores?.squads as any)?.members || "Miembros"}</span>
+                                        <span className="ml-3 text-xs text-muted font-mono font-bold tracking-tight uppercase">1 {(t.colaboradores?.squads as any)?.members || "Miembros"}</span>
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +126,7 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
                             <Shield className="w-6 h-6 text-accent-teal shrink-0 mt-0.5" />
                             <div>
                                 <h4 className="font-semibold text-sm mb-1">{(t.colaboradores?.squads as any)?.leaderRole || "Mando y Control"}</h4>
-                                <p className="text-xs text-muted">Aparecerás automáticamente como líder del Escuadrón ("Leader") y podrás invitar a otros compañeros.</p>
+                                <p className="text-xs text-muted">Aparecerás automáticamente como líder del Equipo ("Leader") y podrás invitar a otros compañeros.</p>
                             </div>
                         </div>
                     </div>
@@ -134,7 +143,7 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                     <div className="max-w-md mx-auto relative z-10">
                         <h2 className="text-2xl font-bold tracking-tight mb-2">
-                            {(t.colaboradores?.squads as any)?.create || "Crear Nuevo Squad"}
+                            {(t.colaboradores?.squads as any)?.create || "Crear Nuevo Equipo"}
                         </h2>
                         <p className="text-muted mb-8 text-sm">Organiza misiones, comparte fondos y lidera iniciativas.</p>
 
@@ -197,13 +206,13 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                             {/* Description */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Propósito del Squad</label>
+                                <label className="text-sm font-semibold text-foreground">Propósito del Equipo</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={4}
                                     className="w-full bg-neutral-900 border border-border-subtle rounded-xl p-4 text-foreground focus:outline-none focus:border-accent-teal transition-colors resize-none"
-                                    placeholder="Describe la cultura, el objetivo a largo plazo o las reglas para sumarse a este escuadrón..."
+                                    placeholder="Describe la cultura, el objetivo a largo plazo o las reglas para sumarse a este equipo..."
                                     required
                                     maxLength={300}
                                 />
@@ -229,10 +238,10 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Creando Squad...
+                                            Creando Equipo...
                                         </>
                                     ) : (
-                                        "Crear Squad"
+                                        "Crear Equipo"
                                     )}
                                 </button>
                             </div>

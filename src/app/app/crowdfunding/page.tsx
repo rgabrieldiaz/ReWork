@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck, RefreshCw, ArrowRight, Users, UserCircle } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useSettings } from "@/hooks/useSettings";
@@ -58,17 +58,58 @@ export default function ColectasPage() {
         if (!activeWorkspace?.id) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase.from("crowdfunds").select("*").eq("workspace_id", activeWorkspace.id).order("created_at", { ascending: false });
-            if (error) throw error;
-            setCampaigns(data || []);
+            // 1. Fetch campaigns first without joins
+            const { data: campaignData, error: campaignError } = await supabase
+                .from("crowdfunds")
+                .select("*")
+                .eq("workspace_id", activeWorkspace.id)
+                .order("created_at", { ascending: false });
 
+            if (campaignError) throw campaignError;
+
+            let finalCampaigns = campaignData || [];
+
+            // 2. Fetch organizer profiles in a second step to avoid join relationship issues
+            if (finalCampaigns.length > 0) {
+                const organizerAddresses = Array.from(new Set(finalCampaigns.map(c => c.organizer).filter(Boolean)));
+                
+                if (organizerAddresses.length > 0) {
+                    const { data: profileData, error: profileError } = await supabase
+                        .from("users")
+                        .select("wallet_address, first_name, last_name, avatar_url")
+                        .in("wallet_address", organizerAddresses);
+
+                    if (!profileError && profileData) {
+                        // Create a map for quick lookup
+                        const profileMap = new Map();
+                        profileData.forEach(profile => {
+                            profileMap.set(profile.wallet_address, profile);
+                        });
+
+                        // Attach profiles to campaigns
+                        finalCampaigns = finalCampaigns.map(campaign => ({
+                            ...campaign,
+                            organizer_profile: profileMap.get(campaign.organizer) || null
+                        }));
+                    } else if (profileError) {
+                        console.error("Error fetching organizer profiles:", profileError);
+                    }
+                }
+            }
+
+            setCampaigns(finalCampaigns);
+
+            // Fetch user donations
             if (publicKey) {
                 const { data: donData } = await supabase.from("crowdfund_donations").select("*").eq("donor_public_key", publicKey);
                 setDonations(donData || []);
             }
         } catch (err: any) {
-            console.error("Error fetching", err);
-            console.error("Error details:", JSON.stringify(err));
+            console.error("Error fetching campaigns:", err);
+            if (err && typeof err === 'object') {
+                console.error("Error message:", err.message);
+                console.error("Error code:", err.code);
+            }
         } finally {
             setLoading(false);
         }
@@ -478,80 +519,111 @@ export default function ColectasPage() {
                         const isOrganizer = camp.organizer === publicKey;
                         const isProcessing = processingId === camp.id;
 
+                        const organizerName = camp.organizer_profile 
+                            ? `${camp.organizer_profile.first_name} ${camp.organizer_profile.last_name || ''}`.trim()
+                            : truncateKey(camp.organizer);
+
                         return (
                             <div
                                 key={camp.id}
                                 onClick={() => setSelectedColecta(camp)}
-                                className="bg-card cursor-pointer rounded-2xl border border-border-subtle overflow-hidden group hover:border-accent-teal/30 transition-all flex flex-col md:flex-row shadow-lg"
+                                className="glass-card p-5 sm:p-6 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col sm:flex-row gap-6 cursor-pointer items-center min-h-0"
                             >
-                                <div className="w-full md:w-48 xl:w-64 min-h-[200px] bg-neutral-900/40 md:border-r border-border-subtle flex-shrink-0 relative overflow-hidden group/img">
-                                    {isGoalMet && <div className="absolute inset-0 bg-accent-teal/5 z-0"></div>}
+                                {/* Decorative orb */}
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-accent-teal/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
 
-                                    <div className="absolute inset-0 z-10 transition-transform duration-700 group-hover/img:scale-110">
+                                {/* Thumbnail left column */}
+                                <div className="relative z-10 shrink-0">
+                                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-background/50 backdrop-blur-sm border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-accent-teal/30 transition-colors overflow-hidden relative">
                                         {camp.image && camp.image.startsWith('http') ? (
                                             <img src={camp.image} alt={camp.title} className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-6xl">{camp.image || '🎁'}</div>
+                                            <span className="text-4xl filter drop-shadow-sm">{camp.image || '🎁'}</span>
                                         )}
-                                        {/* Gradient to ensure text readability */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/10 to-transparent"></div>
+                                        {isGoalMet && (
+                                            <div className="absolute inset-0 bg-accent-teal/10 flex items-center justify-center">
+                                                <div className="w-full h-full bg-accent-teal/5 animate-pulse" />
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {/* Status Badge Top Right */}
-                                    <div className="absolute top-4 right-4 z-20">
-                                        {isGoalMet ? (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-teal/20 backdrop-blur-md rounded-full text-xs font-bold text-accent-teal border border-accent-teal/40 shadow-[0_0_10px_var(--accent-teal)30]">
-                                                <CheckCircle className="w-3.5 h-3.5" /> Meta
-                                            </span>
-                                        ) : isExpired ? (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/20 backdrop-blur-md rounded-full text-xs font-bold text-red-400 border border-red-500/40">
-                                                <X className="w-3.5 h-3.5" /> Fin
-                                            </span>
+                                    
+                                    {/* Organizer Avatar overlap */}
+                                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full border-2 border-background overflow-hidden shadow-md bg-card">
+                                        {camp.organizer_profile?.avatar_url ? (
+                                            <img src={camp.organizer_profile.avatar_url} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 backdrop-blur-md rounded-full text-xs font-bold text-blue-400 border border-blue-500/40">
-                                                <Activity className="w-3.5 h-3.5" /> Activa
-                                            </span>
+                                            <div className="w-full h-full bg-accent-teal/20 flex items-center justify-center">
+                                                <UserCircle className="w-4 h-4 text-accent-teal" />
+                                            </div>
                                         )}
-                                    </div>
-
-                                    <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2 z-20">
-                                        {camp.tags?.map((tag: string) => (
-                                            <span key={tag} className="text-[10px] uppercase font-bold tracking-wider text-foreground bg-card/60 backdrop-blur-md px-2 py-1 rounded-md border border-border-subtle" title={tag}>{tag}</span>
-                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="p-6 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h3 className="font-semibold text-xl leading-tight text-foreground mb-1 group-hover:text-accent-teal transition-colors">{camp.title}</h3>
-                                            <p className="text-xs text-muted flex items-center gap-1">
-                                                <Clock className="w-3 h-3" /> {t.colectas.endsOn} {new Date(camp.deadline).toLocaleDateString()}
-                                            </p>
+                                <div className="relative z-10 flex-1 flex flex-col min-w-0">
+                                    <div className="flex justify-between items-start mb-1 gap-4">
+                                        <h3 className="text-xl font-bold group-hover:text-accent-teal transition-colors flex items-center gap-2 truncate">
+                                            {camp.title}
+                                            <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all text-accent-teal hidden sm:block" />
+                                        </h3>
+                                        
+                                        <div className="shrink-0 flex flex-col items-end gap-1">
+                                            {isGoalMet ? (
+                                                <span className="px-2 py-0.5 bg-accent-teal/10 border border-accent-teal/30 rounded-full text-[9px] font-bold text-accent-teal uppercase tracking-widest flex items-center gap-1 shadow-[0_0_10px_rgba(0,242,255,0.1)]">
+                                                    <CheckCircle className="w-2.5 h-2.5" /> Meta
+                                                </span>
+                                            ) : isExpired ? (
+                                                <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded-full text-[9px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1">
+                                                    <Clock className="w-2.5 h-2.5" /> Fin
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                                                    <Activity className="w-2.5 h-2.5" /> Activa
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
-                                    <p className="text-sm text-muted mb-6 flex-1">{camp.description || `Apoya esta colecta con tus ${camp.goal_amount === 150 ? 'USDC' : 'XLM'}.`}</p>
 
-                                    <div className="mt-auto">
-                                        {/* Barra de Progreso */}
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="font-bold text-foreground tracking-wide">{camp.current_amount.toLocaleString()} <span className="text-muted font-normal">/ {camp.goal_amount.toLocaleString()} {camp.goal_amount === 150 ? 'USDC' : 'XLM'}</span></span>
-                                                <span className="font-medium flex items-center gap-1.5" style={{ color: isGoalMet ? 'var(--accent-teal)' : '#fff' }}>
-                                                    {isGoalMet && <CheckCircle className="w-3.5 h-3.5" />} {progress}%
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-neutral-900 rounded-full h-3 overflow-hidden shadow-inner border border-border-subtle">
-                                                <div
-                                                    className={`h-full rounded-full relative transition-all duration-1000 ${isGoalMet ? 'bg-accent-teal shadow-[0_0_15px_var(--accent-teal)40]' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-accent-teal'}`}
-                                                    style={{ width: `${progress}%` }}
-                                                >
-                                                    <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-white/20 to-transparent"></div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] text-muted font-bold uppercase tracking-tight truncate">Por {organizerName}</span>
+                                        <div className="h-1 w-1 rounded-full bg-muted/30" />
+                                        <div className="flex gap-1">
+                                            {camp.tags?.slice(0, 1).map((tag: string) => (
+                                                <span key={tag} className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground/60">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <p className="text-muted text-sm mb-4 line-clamp-1 sm:line-clamp-2 leading-relaxed">
+                                        {camp.description || `Apoya esta iniciativa aportando ${camp.currency || 'USDC'}.`}
+                                    </p>
+
+                                    <div className="mt-auto space-y-2">
+                                        <div className="flex justify-between items-end text-sm">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] text-muted uppercase font-bold tracking-widest mb-0.5">Recaudado</span>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="font-mono font-bold text-foreground">
+                                                        {camp.current_amount.toLocaleString()}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted font-medium italic">/ {camp.goal_amount.toLocaleString()} {camp.currency || 'USDC'}</span>
                                                 </div>
                                             </div>
-                                            <div className="text-xs text-muted flex justify-between">
-                                                <span>{t.colectas.organizer} {truncateKey(camp.organizer)}</span>
-                                                <span>{camp.donor_count} {t.colectas.contributions}</span>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[9px] text-muted uppercase font-bold tracking-widest mb-0.5">Donantes</span>
+                                                <span className="text-sm font-bold text-foreground flex items-center gap-1">
+                                                    <Users className="w-3 h-3 text-accent-teal" /> {camp.donor_count}
+                                                </span>
+                                            </div>
+                                            <span className={`font-black text-lg italic ${isGoalMet ? 'text-accent-teal' : 'text-foreground'}`}>
+                                                {progress}%
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-foreground/5 rounded-full h-2 overflow-hidden border border-border-subtle p-0.5">
+                                            <div
+                                                className={`h-full rounded-full relative transition-all duration-1000 ${isGoalMet ? 'bg-accent-teal shadow-[0_0_8px_rgba(0,242,255,0.3)]' : 'bg-gradient-to-r from-blue-500 to-accent-teal'}`}
+                                                style={{ width: `${progress}%` }}
+                                            >
+                                                {isGoalMet && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
                                             </div>
                                         </div>
                                     </div>
@@ -566,6 +638,7 @@ export default function ColectasPage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={fetchCampaigns}
+                workspaceId={activeWorkspace?.id}
             />
 
             <ColectaDetailModal

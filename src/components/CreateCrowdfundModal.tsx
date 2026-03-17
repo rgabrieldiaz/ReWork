@@ -10,6 +10,7 @@ interface CreateCrowdfundModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    workspaceId?: string;
 }
 
 interface Squad {
@@ -17,7 +18,7 @@ interface Squad {
     name: string;
 }
 
-export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: CreateCrowdfundModalProps) {
+export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, workspaceId }: CreateCrowdfundModalProps) {
     const { address: publicKey } = useFreighter();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -169,12 +170,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
         try {
             const deadline = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
-            // Get current max id for crowdfunds (optional but helpful if table is manual sequence)
-            const { data: maxIdData } = await supabase.from('crowdfunds').select('id').order('id', { ascending: false }).limit(1);
-            const nextId = (maxIdData?.[0]?.id || 0) + 1;
-
-            const insertData: any = {
-                id: nextId,
+            const { error: dbError } = await supabase.from("crowdfunds").insert([{
                 title,
                 description,
                 organizer: publicKey,
@@ -187,14 +183,10 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
                 deadline: deadline.toISOString(),
                 status: "active",
                 privacy: privacy,
-                squad_id: privacy === "private" ? selectedSquadId : null
-            };
-
-            // Si la db lo tiene lo inserta, sino fallará y habria que quitarlo en un cleanup. 
-            // Añadiendo try para currency por si acaso:
-            insertData.currency = currency;
-
-            const { error: dbError } = await supabase.from("crowdfunds").insert([insertData]);
+                squad_id: privacy === "private" ? selectedSquadId : null,
+                currency: currency,
+                workspace_id: workspaceId
+            }]);
 
             if (dbError) throw new Error(dbError.message);
 
@@ -202,28 +194,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess }: Cre
             onClose();
         } catch (err: any) {
             console.error("Create crowdfund error:", err);
-            // Intentamos reintento sin currency si falló por Schema.
-            if (err.message?.includes("currency")) {
-                try {
-                    const deadline = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
-                    const { data: maxIdData } = await supabase.from('crowdfunds').select('id').order('id', { ascending: false }).limit(1);
-                    const nextId = (maxIdData?.[0]?.id || 0) + 1;
-                    const { error: retryError } = await supabase.from("crowdfunds").insert([{
-                        id: nextId, title, description, organizer: publicKey, destination_account: destinationAccount,
-                        goal_amount: parseInt(goalAmount), current_amount: 0, donor_count: 0, tags: tags,
-                        image: image || "🎯", deadline: deadline.toISOString(), status: "active", privacy: privacy,
-                        squad_id: privacy === "private" ? selectedSquadId : null
-                    }]);
-                    if (retryError) throw new Error(retryError.message);
-                    onSuccess();
-                    onClose();
-                    return;
-                } catch (retryErr: any) {
-                    setError(retryErr.message || "Error al crear la colecta.");
-                }
-            } else {
-                setError(err.message || "Error al crear la colecta.");
-            }
+            setError(err.message || "Error al crear la colecta.");
         } finally {
             setLoading(false);
         }

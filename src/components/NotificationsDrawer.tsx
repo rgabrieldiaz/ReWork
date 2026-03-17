@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, CheckCircle, Bell, UserCircle, Trophy, Target, TrendingUp, ShoppingBag } from "lucide-react";
+import { X, CheckCircle, Bell, UserCircle, Trophy, Target, TrendingUp, ShoppingBag, UserPlus, XCircle } from "lucide-react";
 import { useNotifications, AppNotification } from "@/hooks/useNotifications";
+import { useSquads } from "@/hooks/useSquads";
 import Link from "next/link";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -14,6 +15,7 @@ interface NotificationsDrawerProps {
 
 export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProps) {
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+    const { respondToJoinRequest, respondToMissionProposal } = useSquads();
     const [activeTab, setActiveTab] = useState<'activity' | 'community'>('activity');
     const { t } = useSettings();
 
@@ -31,6 +33,9 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
             case 'UserCircle': return <UserCircle className="w-5 h-5 text-indigo-400" />;
             case 'TrendingUp': return <TrendingUp className="w-5 h-5 text-emerald-400" />;
             case 'ShoppingBag': return <ShoppingBag className="w-5 h-5 text-accent-teal" />;
+            case 'UserPlus': return <UserPlus className="w-5 h-5 text-accent-teal" />;
+            case 'XCircle': return <XCircle className="w-5 h-5 text-red-400" />;
+            case 'CheckCircle': return <CheckCircle className="w-5 h-5 text-emerald-400" />;
             default:
                 if (i.length <= 4) {
                     return <span className="text-xl">{i}</span>;
@@ -128,18 +133,104 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                     {new Date(notif.created_at).toLocaleDateString()}
                                                 </span>
 
-                                                {notif.action_url && notif.action_text && (
-                                                    <Link
-                                                        href={notif.action_url}
-                                                        onClick={(e) => {
-                                                            markAsRead(notif.id);
-                                                            onClose();
-                                                        }}
-                                                        className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1"
-                                                    >
-                                                        {notif.action_text}
-                                                    </Link>
-                                                )}
+                                                <div className="flex items-center gap-3">
+                                                    {notif.payload?.type === 'join_request' && notif.action_status === 'pending' ? (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    await respondToJoinRequest(notif.id, notif.payload.squadId, notif.payload.userId, 'accept');
+                                                                }}
+                                                                className="px-3 py-1 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
+                                                            >
+                                                                Aceptar
+                                                            </button>
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    await respondToJoinRequest(notif.id, notif.payload.squadId, notif.payload.userId, 'reject');
+                                                                }}
+                                                                className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded hover:bg-red-500/20 transition-colors uppercase tracking-wider"
+                                                            >
+                                                                Rechazar
+                                                            </button>
+                                                        </div>
+                                                    ) : notif.payload?.type === 'team_mission_proposal' && notif.action_status === 'pending' ? (
+                                                        <div className="w-full space-y-3 mt-1">
+                                                            <div className="bg-foreground/5 rounded-lg p-3 border border-border-subtle">
+                                                                <h5 className="text-[11px] font-bold text-accent-teal uppercase mb-1">{notif.payload.missionTitle}</h5>
+                                                                <p className="text-[10px] text-muted leading-tight">{notif.payload.missionDescription}</p>
+                                                                {notif.payload.missionReward && (
+                                                                    <div className="mt-2 flex items-center gap-1.5">
+                                                                        <Trophy className="w-3 h-3 text-amber-500/70" />
+                                                                        <span className="text-[10px] font-bold text-amber-500/90">{notif.payload.missionReward}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        // userId logic here: we need the current user's ID
+                                                                        // Since we are in the notification drawer, we assume the user seeing it is the target
+                                                                        // We'll need to fetch user profile or use a stable ID from the notification
+                                                                        // Most reliable is to use the user_profile_id from the notification table which is the target
+                                                                        // But respondToMissionProposal needs the internal UUID
+                                                                        await respondToMissionProposal(notif.id, notif.payload.squadId, notif.payload.targetUserId, 'accept');
+                                                                    }}
+                                                                    className="flex-1 px-3 py-2 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
+                                                                >
+                                                                    Aceptar Misión
+                                                                </button>
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        await respondToMissionProposal(notif.id, notif.payload.squadId, notif.payload.targetUserId, 'reject');
+                                                                    }}
+                                                                    className="px-3 py-2 bg-foreground/10 text-muted text-[10px] font-bold rounded hover:bg-foreground/20 transition-colors uppercase tracking-wider"
+                                                                >
+                                                                    Ignorar
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : notif.payload?.type === 'team_invite' && notif.action_status === 'pending' ? (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    await respondToMissionProposal(notif.id, notif.payload.squadId, notif.payload.targetUserId, 'accept');
+                                                                }}
+                                                                className="px-3 py-1 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
+                                                            >
+                                                                Aceptar Invitación
+                                                            </button>
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    await respondToMissionProposal(notif.id, notif.payload.squadId, notif.payload.targetUserId, 'reject');
+                                                                }}
+                                                                className="px-3 py-1 bg-foreground/10 text-muted text-[10px] font-bold rounded hover:bg-foreground/20 transition-colors uppercase tracking-wider"
+                                                            >
+                                                                Ignorar
+                                                            </button>
+                                                        </div>
+                                                    ) : (notif.payload?.type === 'join_request' || notif.payload?.type === 'team_mission_proposal' || notif.payload?.type === 'team_invite') && notif.action_status !== 'pending' ? (
+                                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${notif.action_status === 'accepted' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                            {notif.action_status === 'accepted' ? 'Aceptada' : 'Rechazada'}
+                                                        </span>
+                                                    ) : notif.action_url && notif.action_text && (
+                                                        <Link
+                                                            href={notif.action_url}
+                                                            onClick={(e) => {
+                                                                markAsRead(notif.id);
+                                                                onClose();
+                                                            }}
+                                                            className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1"
+                                                        >
+                                                            {notif.action_text}
+                                                        </Link>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

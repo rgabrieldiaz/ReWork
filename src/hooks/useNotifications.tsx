@@ -13,6 +13,8 @@ export interface AppNotification {
     icon?: string;
     action_url?: string;
     action_text?: string;
+    payload?: any;
+    action_status?: string;
     is_read: boolean;
     created_at: string;
 }
@@ -124,6 +126,23 @@ export function useNotifications() {
         }
     };
 
+    const updateNotificationStatus = async (id: string, status: string) => {
+        try {
+            const { error } = await supabase
+                .from('notifications')
+                .update({ action_status: status })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setNotifications(prev =>
+                prev.map(notif => notif.id === id ? { ...notif, action_status: status } : notif)
+            );
+        } catch (err) {
+            console.error('Error updating notification status:', err);
+        }
+    };
+
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
     return {
@@ -133,6 +152,7 @@ export function useNotifications() {
         fetchNotifications,
         markAsRead,
         markAllAsRead,
-        createNotification
+        createNotification,
+        updateNotificationStatus
     };
 }

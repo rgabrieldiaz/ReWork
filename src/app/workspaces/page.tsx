@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, Users, Hexagon, ChevronRight, LogOut, Globe, Zap, Loader2, Copy, CheckCircle2, ExternalLink, Pencil, X as XIcon } from "lucide-react";
+import { ArrowRight, Building2, Users, Hexagon, ChevronRight, LogOut, Globe, Zap, Loader2, Copy, CheckCircle2, ExternalLink, Pencil, X as XIcon, Settings } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
@@ -241,6 +241,20 @@ export default function WorkspacesPage() {
                       }`}>
                         {ws.userRole || 'Collaborator'}
                       </span>
+                      {(ws.is_premium && (ws.userRole === 'admin' || ws.userRole === 'owner')) && (
+                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                // We don't need to manually set active here as the link should handle it 
+                                                // but for safety we use the existing pattern
+                                                router.push('/app/admin');
+                                            }}
+                                            className="p-2 rounded-full bg-foreground/5 border border-border-subtle hover:bg-accent-teal/10 hover:text-accent-teal transition-all"
+                                            title="Configuración"
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                        </button>
+                      )}
                     </div>
                   </div>
 

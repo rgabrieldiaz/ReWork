@@ -5,7 +5,7 @@ export const translations = {
             squadGoals: "Misiones de Equipo",
             crowdfunding: "Colectas",
             marketplace: "Mercado",
-            people: "Colaboradores",
+            people: "Equipos",
             learning: "Capacitación",
             helpDesk: "Soporte",
             web3Identity: "Red Web3"
@@ -39,7 +39,7 @@ export const translations = {
                 title: "¿Para Quién es ReWork?",
                 desc: "Un entorno dual diseñado para impulsar tanto a estructuras tradicionales como a nuevas formas organizacionales.",
                 s1Title: "Corporaciones y PyMEs",
-                s1Desc: "Moderniza la retención de talento mediante un ecosistema interno (Squad Goals) para incentivos, bonos garantizados por código y un mercado peer-to-peer exclusivo para tu equipo.",
+                s1Desc: "Moderniza la retención de talento mediante un ecosistema interno (Misiones de Equipo) para incentivos, bonos garantizados por código y un mercado peer-to-peer exclusivo para tu equipo.",
                 s1Bullets: ["Retención de Talento", "Bonos Transparentes", "Marketplace Interno"],
                 s2Title: "Comunidades y Alianzas (DAOs)",
                 s2Desc: "Infraestructura perfecta para coordinar trabajo descentralizado, manejar presupuestos conjuntos (Treasury) y repartir pagos de recompensas (Bounties) de forma justa y trustless.",
@@ -248,9 +248,9 @@ export const translations = {
             start: "Iniciar Curso"
         },
         colaboradores: {
-            title: "El Centro de Squads",
-            subtitle: "Tu ecosistema de talento. Unité a un Squad o conectá con colaboradores de la red.",
-            searchPlaceholder: "Buscar squad o persona...",
+            title: "El Centro de Equipos",
+            subtitle: "Tu ecosistema de talento. Unité a un Equipo o conectá con colaboradores de la red.",
+            searchPlaceholder: "Buscar equipo o persona...",
             loading: "Cargando ecosistema...",
             noResults: "No se encontraron coincidencias.",
             anonymous: "Usuario Anónimo",
@@ -258,17 +258,17 @@ export const translations = {
             pointsContributed: "PTS Aportados",
             connect: "Conectar",
             tabs: {
-                squads: "Equipos",
+                squads: "Equipo",
                 people: "Personas"
             },
             squads: {
-                create: "Crear Squad",
-                join: "Unirse al Squad",
+                create: "Crear Equipo",
+                join: "Unirse al Equipo",
                 requestInvite: "Solicitar Invitación",
                 members: "miembros",
                 open: "Abierto",
                 private: "Privado",
-                commonSquads: "Comparten {count} squads"
+                commonSquads: "Comparten {count} equipos"
             }
         },
         colectas: {
@@ -312,7 +312,7 @@ export const translations = {
             notAvailable: "El centro de ayuda estará disponible en la próxima versión."
         },
         squadGoals: {
-            title: "Squad Goals",
+            title: "Misiones de Equipo",
             subtitle: "Proponé objetivos de equipo. Cuando alcanzan un 70% de aprobación, la empresa los fondea vía <strong className=\"text-foreground\">Trustless Work</strong> y el pago se divide automáticamente entre todos los miembros al completarse.",
             propose: "Proponer Misión",
             tabProposed: "Propuestas en Votación",
@@ -323,7 +323,7 @@ export const translations = {
             funding: "Fondeando...",
             signProposal: "Firmar Propuesta",
             voted: "Votado",
-            noProposals: "No hay propuestas activas en el Squad.",
+            noProposals: "No hay propuestas activas en el Equipo.",
             funded: "FONDEADO",
             trustlessReward: "Recompensa Trustless",
             missionCompleted: "Misión Completada",
@@ -336,7 +336,7 @@ export const translations = {
         },
         createSquadGoal: {
             title: "Proponer Nueva Misión",
-            description: "Proponé un objetivo para el equipo. Si el 70% del Squad lo aprueba, la misión será fondeada en USDC o XLM.",
+            description: "Proponé un objetivo para el equipo. Si el 70% del Equipo lo aprueba, la misión será fondeada en USDC o XLM.",
             missionTitle: "Título de la Misión",
             missionTitlePlaceholder: "Ej: Migración de base de datos...",
             missionDesc: "Descripción",
@@ -347,7 +347,7 @@ export const translations = {
             creating: "Creando...",
             connectWallet: "Debes conectar tu billetera para proponer una misión.",
             fillFields: "Por favor, completá todos los campos correctamente.",
-            success: "Propuesta de misión enviada al Squad.",
+            success: "Propuesta de misión enviada al Equipo.",
             error: "Error al crear propuesta:"
         },
         carrerasPage: {
@@ -378,7 +378,7 @@ export const translations = {
             article1Title: "¿Qué es una Colecta Trustless?",
             article1Desc: "Una colecta trustless retiene fondos en un smart contract hasta cumplirse la meta. Garantiza que el dinero no pueda ser usado para otro fin.",
             article2Title: "Entendiendo las Misiones de Equipo",
-            article2Desc: "Los Squad Goals son contratos multi-firma donde la comunidad aprueba la liberación de recompensas USDC de forma distribuida.",
+            article2Desc: "Las Misiones de Equipo son contratos multi-firma donde la comunidad aprueba la liberación de recompensas USDC de forma distribuida.",
             article3Title: "Tu Reputación (AURA)",
             article3Desc: "El AURA es inmutable y vive en la cadena. Aprende cómo ganar AURA y llevarlo contigo."
         },
@@ -392,8 +392,8 @@ export const translations = {
             subtitle: "Descubre las herramientas fundamentales que impulsan el talento descentralizado y los incentivos automatizados.",
             dashTitle: "Dashboard Global",
             dashDesc: "El panel de control actúa como tu hub financiero y laboral privado dentro del Workspace. Visualiza en tiempo real tu liquidez en billeteras Stellar (XLM y USDC), monitorea las subastas donde tienes pujas ganadoras, y examina las colectas de equipo. Todo consolidado con gráficas dinámicas de Aura y el feed de actividad On-Chain, filtrado para asegurar la privacidad del tenant organizacional.",
-            squadsTitle: "Squad Goals y Autonomía",
-            squadsDesc: "Los equipos de trabajo horizontales (Squads) proponen sus propias misiones, recompensas y OKRs. El módulo de Squad Goals fomenta la verdadera autonomía: una vez aprobada una misión por la organización, el presupuesto queda asegurado en un Escrow de Trustless Work. Ningún manager puede revertir el pago arbitrariamente una vez que el equipo logre los hitos consensuados, dándole a los colaboradores la certidumbre técnica de pago que merecen.",
+            squadsTitle: "Misiones de Equipo y Autonomía",
+            squadsDesc: "Los equipos de trabajo horizontales proponen sus propias misiones, recompensas y OKRs. El módulo de Misiones de Equipo fomenta la verdadera autonomía: una vez aprobada una misión por la organización, el presupuesto queda asegurado en un Escrow de Trustless Work. Ningún manager puede revertir el pago arbitrariamente una vez que el equipo logre los hitos consensuados, dándole a los colaboradores la certidumbre técnica de pago que merecen.",
             cta: "Unirse al Ecosistema"
         },
         sobreNosotrosPage: {
@@ -443,7 +443,7 @@ export const translations = {
             s1Title: "1. Servicios Descentralizados (Non-Custodial)",
             s1Desc: "ReWork no retiene, custodia ni invierte los fondos de sus usuarios (XLM, USDC). Proveemos exclusivamente una infraestructura de software que compila los acuerdos entre las partes en Contratos Inteligentes tipo Escrow dentro de la red Stellar y Trustless Work, sujetos a validación de red autónoma.",
             s2Title: "2. Naturaleza Inmutable de la Identidad AURA",
-            s2Desc: "El registro de participación, el cumplimiento de Squad Goals, y las victorias en Subastas de Talento constituyen atributos registrados criptográficamente en la cuenta de cada usuario (su AURA). Las cancelaciones, penalizaciones o disputas perdidas también se almacenarán On-Chain, conformando un legajo incorruptible y público por diseño.",
+            s2Desc: "El registro de participación, el cumplimiento de Misiones de Equipo, y las victorias en Subastas de Talento constituyen atributos registrados criptográficamente en la cuenta de cada usuario (su AURA). Las cancelaciones, penalizaciones o disputas perdidas también se almacenarán On-Chain, conformando un legajo incorruptible y público por diseño.",
             s3Title: "3. Disputas de Escrows",
             s3Desc: "Toda controversia donde las partes no logren consenso directo en la liberación y/o cancelación de un Smart Contract (Misión, Colecta) se resolverá de conformidad con el panel de votación/kleros delegados dictaminado por los estatutos del ecosistema Trustless Work; ReWork Inc. declina toda competencia corporativa sobre fallos ejecutivos arbitrales.",
             s4Title: "4. Responsabilidades del Usuario",
@@ -524,7 +524,7 @@ export const translations = {
             cancel: "Cancelar",
             privateDesc: "Espacio corporativo privado.",
             members: "Miembros",
-            squads: "Squads",
+            squads: "Equipos",
             enter: "Ingresar",
             noOwnWorkspace: "No tenés un Espacio propio",
             createWorkspaceDesc: "Creá tu propio portal organizacional o uníte a uno existente.",

@@ -15,6 +15,9 @@ export interface Workspace {
     userRole?: 'owner' | 'admin' | 'member';
     member_count?: number;
     squad_count?: number;
+    is_premium?: boolean;
+    hide_global_network?: boolean;
+    treasury_address?: string | null;
 }
 
 interface JoinRequest {
@@ -97,8 +100,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             memberWorkspaces.forEach(w => workspaceMap.set(w.id, w));
             ownedWorkspaces.forEach(w => {
                 const existing = workspaceMap.get(w.id);
+                // Prioritize 'owner' role and ensure we take the most complete object
                 if (!existing || existing.userRole !== 'owner') {
                     workspaceMap.set(w.id, w);
+                } else if (existing.userRole === 'owner') {
+                    // Merge properties if needed, but here they should be identical from both queries
+                    workspaceMap.set(w.id, { ...existing, ...w });
                 }
             });
 

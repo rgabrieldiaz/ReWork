@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useProfile, UserProfile } from "@/hooks/useProfile";
-import { Users, Award, Search, MessageSquare, Plus, Shield, UsersRound, CalendarDays, ExternalLink, ChevronDown, Rocket, UserPlus } from "lucide-react";
+import { Users, Award, Search, MessageSquare, Plus, Shield, UsersRound, CalendarDays, ExternalLink, ChevronDown, Rocket, UserPlus, ArrowRight, X, Loader2 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useSquads, Squad } from "@/hooks/useSquads";
 import CreateSquadModal from "@/components/CreateSquadModal";
@@ -13,7 +13,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function ColaboradoresPage() {
     const { t } = useSettings();
-    const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad } = useSquads();
+    const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad, transferLeadership } = useSquads();
     const { createNotification } = useNotifications();
     const { profile } = useProfile();
     const { address: publicKey } = useFreighter();
@@ -31,32 +31,67 @@ export default function ColaboradoresPage() {
     // Create Squad Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+    // Invitation Modal State
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [selectedUserToInvite, setSelectedUserToInvite] = useState<any>(null);
+
+    // Propose Mission Modal State
+    const [showProposeMissionModal, setShowProposeMissionModal] = useState(false);
+    const [selectedUserForMission, setSelectedUserForMission] = useState<UserProfile | null>(null);
+    const [missionForm, setMissionForm] = useState({
+        title: "",
+        description: "",
+        squadId: "",
+        reward: ""
+    });
+    const [isSubmittingMission, setIsSubmittingMission] = useState(false);
+
     useEffect(() => {
         const fetchCollaborators = async () => {
             if (!activeWorkspace?.id) return;
             setLoading(true);
             
-            // Fix: Use inner join with workspace_members since users table doesn't have workspace_id
-            const { data, error } = await supabase
+            console.log(`[Teams] Fetching data for workspace: ${activeWorkspace.id} (${activeWorkspace.name})`);
+
+            // 1. Fetch users who are members of the workspace
+            const { data: memberUsers, error: memberError } = await supabase
                 .from("users")
                 .select("*, workspace_members!inner(workspace_id)")
                 .eq("workspace_members.workspace_id", activeWorkspace.id)
                 .order("first_name", { ascending: true });
 
-            if (error) {
-                console.error("Error fetching collaborators:", error);
-                // Also log more context if available
-                if (typeof error === 'object') {
-                    console.log("Error details:", JSON.stringify(error, null, 2));
-                }
-            } else if (data) {
-                setCollaborators(data as UserProfile[]);
+            if (memberError) {
+                console.error("[Teams] Error fetching members:", memberError);
             }
+
+            let finalCollaborators = (memberUsers || []) as UserProfile[];
+
+            // 2. Fetch workspace owner if not already in members
+            if (activeWorkspace.owner_wallet) {
+                const isOwnerInMembers = finalCollaborators.some(c => c.wallet_address === activeWorkspace.owner_wallet);
+                
+                if (!isOwnerInMembers) {
+                    console.log("[Teams] Owner not in members list, fetching owner profile...");
+                    const { data: ownerData, error: ownerError } = await supabase
+                        .from("users")
+                        .select("*")
+                        .eq("wallet_address", activeWorkspace.owner_wallet)
+                        .single();
+
+                    if (!ownerError && ownerData) {
+                        finalCollaborators = [ownerData as UserProfile, ...finalCollaborators];
+                    } else if (ownerError) {
+                        console.error("[Teams] Error fetching owner profile:", ownerError);
+                    }
+                }
+            }
+
+            setCollaborators(finalCollaborators);
             setLoading(false);
         };
 
         fetchCollaborators();
-    }, [activeWorkspace?.id]);
+    }, [activeWorkspace?.id, activeWorkspace?.owner_wallet]);
 
     // Derived states
     const filteredSquads = squads.filter(s =>
@@ -102,22 +137,54 @@ export default function ColaboradoresPage() {
     };
 
     const handleLeaveSquad = async (squadId: string) => {
-        if (!confirm("¿Seguro que quieres abandonar este Squad?")) return;
+        if (!confirm("¿Seguro que quieres abandonar este Equipo?")) return;
         try {
             await leaveSquad(squadId);
-            alert("Has abandonado el Squad.");
+            alert("Has abandonado el Equipo.");
         } catch (error: any) {
-            alert(error.message || "Error al abandonar el squad.");
+            alert(error.message || "Error al abandonar el equipo.");
         }
     };
 
     const handleDisbandSquad = async (squadId: string) => {
-        if (!confirm("¿Estás seguro de desarmar este Squad? Esta acción no se puede deshacer.")) return;
+        if (!confirm("¿Estás seguro de desarmar este Equipo? Esta acción no se puede deshacer.")) return;
         try {
             await disbandSquad(squadId);
-            alert("El Squad ha sido eliminado.");
+            alert("El Equipo ha sido eliminado.");
         } catch (error: any) {
-            alert(error.message || "Error al eliminar el squad.");
+            alert(error.message || "Error al eliminar el equipo.");
+        }
+    };
+
+    const handleTransferLeadership = async (squadId: string) => {
+        const members = squadMembers[squadId] || [];
+        const otherMembers = members.filter(m => m.user_id !== profile?.id && m.role !== 'pending');
+        
+        if (otherMembers.length === 0) {
+            alert("No hay otros miembros aceptados en este equipo para transferir el liderazgo.");
+            return;
+        }
+
+        const newLeaderId = prompt(
+            "Selecciona el nuevo Líder por su ID o elige uno de la lista:\n\n" + 
+            otherMembers.map(m => `${m.users?.first_name} ${m.users?.last_name} (${m.user_id})`).join("\n")
+        );
+
+        if (!newLeaderId) return;
+
+        const targetMember = otherMembers.find(m => m.user_id === newLeaderId);
+        if (!targetMember) {
+            alert("ID de usuario no válido o no es miembro de este equipo.");
+            return;
+        }
+
+        if (!confirm(`¿Estás seguro de transferir el liderazgo a ${targetMember.users?.first_name}? Ya no serás el Líder.`)) return;
+
+        try {
+            await transferLeadership(squadId, newLeaderId);
+            alert("Liderazgo transferido exitosamente.");
+        } catch (error: any) {
+            alert(error.message || "Error al transferir el liderazgo.");
         }
     };
 
@@ -135,25 +202,104 @@ export default function ColaboradoresPage() {
         return t.colaboradores.squads.commonSquads.replace("{count}", count.toString());
     };
 
-    const handleInvite = async (userToInvite: UserProfile) => {
-        if (!profile) return alert("Por favor inicia sesión primero.");
-        if (userToInvite.id === profile.id) return alert("No puedes invitarte a ti mismo.");
+    const handleInvite = async (user: any) => {
+        const mySquads = squads.filter(s => s.leader_id === profile?.id);
+        
+        if (mySquads.length === 0) {
+            alert("Necesitas ser líder de al menos un equipo para invitar a alguien.");
+            return;
+        }
 
+        if (mySquads.length === 1) {
+            performInvite(user, mySquads[0].id);
+        } else {
+            setSelectedUserToInvite(user);
+            setShowInviteModal(true);
+        }
+    };
+
+    const performInvite = async (user: any, squadId: string) => {
         try {
-            await createNotification({
-                user_profile_id: userToInvite.wallet_address || userToInvite.id,
-                title: "Invitación de Squad",
-                message: "Has sido invitado a unirte a un Squad.",
+            const squad = squads.find(s => s.id === squadId);
+            if (!squad) return;
+
+            await supabase.from('notifications').insert([{
+                user_profile_id: user.wallet_address || user.id,
+                title: "Invitación a Equipo",
+                message: `${profile?.first_name || 'Alguien'} te ha invitado a unirte al equipo ${squad.name}.`,
                 type: 'community',
-                icon: 'Users',
-                action_text: 'Ver Squads',
-                action_url: '/squad-goals'
-            });
-            alert("Invitación enviada correctamente.");
+                icon: 'UserPlus',
+                payload: { 
+                    type: 'team_invite', 
+                    squadId: squad.id,
+                    squadName: squad.name,
+                    inviterName: profile?.first_name,
+                    targetUserId: user.id
+                },
+                action_status: 'pending'
+            }]);
+
+            alert(`Invitación enviada a ${user.first_name || 'el usuario'} para unirse a ${squad.name}`);
+            setShowInviteModal(false);
+        } catch (err) {
+            console.error("Error sending invite:", err);
+            alert("Error al enviar la invitación");
+        }
+    };
+
+    const handleProposeMission = (user: UserProfile) => {
+        const mySquads = squads.filter(s => s.leader_id === profile?.id);
+        if (mySquads.length === 0) {
+            return alert("Necesitas ser líder de al menos un equipo para proponer una misión.");
+        }
+        
+        setSelectedUserForMission(user);
+        setMissionForm({
+            ...missionForm,
+            squadId: mySquads[0].id // Default to first squad
+        });
+        setShowProposeMissionModal(true);
+    };
+
+    const submitMissionProposal = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUserForMission || !profile) return;
+        if (!missionForm.title || !missionForm.description || !missionForm.squadId) {
+            return alert("Por favor completa los campos obligatorios.");
+        }
+
+        setIsSubmittingMission(true);
+        try {
+            const squad = squads.find(s => s.id === missionForm.squadId);
+            
+            await supabase.from('notifications').insert([{
+                user_profile_id: selectedUserForMission.wallet_address || selectedUserForMission.id,
+                title: "Propuesta de Misión",
+                message: `${profile.first_name || 'Alguien'} te ha propuesto una misión para el equipo ${squad?.name || 'su equipo'}.`,
+                type: 'community',
+                icon: 'Rocket',
+                payload: {
+                    type: 'team_mission_proposal',
+                    missionTitle: missionForm.title,
+                    missionDescription: missionForm.description,
+                    missionReward: missionForm.reward,
+                    squadId: missionForm.squadId,
+                    squadName: squad?.name,
+                    inviterName: profile.first_name,
+                    inviterId: profile.id,
+                    targetUserId: selectedUserForMission.id
+                }
+            }]);
+
+            alert(`Propuesta de misión enviada a ${selectedUserForMission.first_name}`);
+            setShowProposeMissionModal(false);
+            setMissionForm({ title: "", description: "", squadId: "", reward: "" });
             setOpenConnectDropdown(null);
-        } catch (error) {
-            console.error(error);
-            alert("Hubo un error al enviar la invitación.");
+        } catch (err) {
+            console.error("Error submitting mission:", err);
+            alert("Error al enviar la propuesta.");
+        } finally {
+            setIsSubmittingMission(false);
         }
     };
 
@@ -162,6 +308,9 @@ export default function ColaboradoresPage() {
             <div className="bg-card flex flex-col items-center text-center rounded-2xl border border-border-subtle p-8 md:p-12 relative overflow-hidden">
                 <div className="absolute top-10 left-10 w-96 h-96 bg-accent-teal/10 rounded-full blur-[120px] pointer-events-none" />
                 <div className="relative z-10 max-w-3xl">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-teal/10 border border-accent-teal/20 rounded-full text-accent-teal text-[10px] font-bold uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(45,212,191,0.1)]">
+                        <Rocket className="w-3 h-3" /> Workspace: {activeWorkspace?.name || "Global"}
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 flex items-center justify-center gap-4">
                         {t.colaboradores.title} <Users className="text-accent-teal w-10 h-10" />
                     </h1>
@@ -218,13 +367,13 @@ export default function ColaboradoresPage() {
                 ) : filteredSquads.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                         <UsersRound className="w-12 h-12 mb-4 text-neutral-600" />
-                        <h3 className="text-xl font-bold text-foreground mb-2">Ningún Squad encontrado</h3>
-                        <p className="max-w-md text-center">¿Nadie lidera este nicho? Sé el primero en crear un Squad y empieza a cambiar el juego.</p>
+                        <h3 className="text-xl font-bold text-foreground mb-2">Ningún Equipo encontrado</h3>
+                        <p className="max-w-md text-center">¿Nadie lidera este nicho? Sé el primero en crear un Equipo y empieza a cambiar el juego.</p>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
                             className="mt-6 px-6 py-2 bg-accent-teal text-black font-semibold rounded-xl hover:bg-accent-teal/90 transition-colors"
                         >
-                            Comandar Nuevo Squad
+                            Comandar Nuevo Equipo
                         </button>
                     </div>
                 ) : (
@@ -232,37 +381,44 @@ export default function ColaboradoresPage() {
                         {filteredSquads.map((squad) => {
                             const members = squadMembers[squad.id] || [];
                             return (
-                                <div key={squad.id} className="bg-card rounded-2xl border border-border-subtle overflow-hidden hover:border-accent-teal/30 transition-all flex flex-col shadow-lg">
-                                    <div className="p-6 flex-1 flex flex-col relative">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-bold text-xl text-foreground mb-1 break-words">
-                                                    {(squad as any).emoji ? `${(squad as any).emoji} ` : "🛡️ "}{squad.name}
-                                                </h3>
-                                                {squad.specialty && (
-                                                    <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-xs font-semibold rounded-md border border-accent-teal/20 mt-1 max-w-full truncate">
-                                                        {squad.specialty}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="bg-neutral-800/50 p-2 rounded-xl border border-border-subtle">
-                                                <Shield className="w-5 h-5 text-accent-teal opacity-80" />
-                                            </div>
+                                <div key={squad.id} className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] flex flex-col cursor-pointer">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-accent-teal/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                                    
+                                    <div className="flex justify-between items-start mb-8 relative z-10">
+                                        <div className="w-14 h-14 bg-background border border-border-subtle rounded-2xl flex items-center justify-center shadow-inner group-hover:border-accent-teal/30 transition-colors text-2xl">
+                                            {squad.emoji ? (
+                                                <span>{squad.emoji}</span>
+                                            ) : (
+                                                <Shield className="w-6 h-6 text-accent-teal/50" />
+                                            )}
                                         </div>
+                                        {squad.specialty && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-block px-2.5 py-1 bg-accent-teal/10 text-accent-teal text-[10px] font-bold uppercase rounded-md border border-accent-teal/20 tracking-wider">
+                                                    {squad.specialty}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
 
-                                        <p className="text-sm text-muted mb-6 flex-1 line-clamp-3">
+                                    <div className="relative z-10 flex-1 flex flex-col">
+                                        <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
+                                            {squad.name}
+                                            <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
+                                        </h2>
+                                        {/* specialty section removed from here as it moved to top-right */}
+                                        <p className="text-muted text-sm mb-6 line-clamp-2">
                                             {squad.description || "No description provided."}
                                         </p>
 
-                                        <div className="flex items-center justify-between mt-auto mb-6">
-                                            {/* Member Avatars */}
+                                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-border-subtle">
                                             <div className="flex items-center">
                                                 <div className="flex -space-x-3">
                                                     {members.slice(0, 4).map((m, i) => {
-                                                        const member = m.users; // Assuming m is SquadMember and m.users is UserProfile
+                                                        const member = m.users;
                                                         if (!member) return null;
                                                         return (
-                                                            <div key={m.user_id} className="w-8 h-8 rounded-full border-2 border-card bg-background overflow-hidden relative" style={{ zIndex: 3 - i }}>
+                                                            <div key={m.user_id} className="w-8 h-8 rounded-full border-2 border-card bg-background overflow-hidden relative shadow-sm" style={{ zIndex: 10 - i }}>
                                                                 {member.avatar_url ? (
                                                                     <img src={member.avatar_url} alt="member" className="w-full h-full object-cover" />
                                                                 ) : (
@@ -271,35 +427,66 @@ export default function ColaboradoresPage() {
                                                             </div>
                                                         );
                                                     })}
-                                                  {members.length > 4 && (
-                                                        <div className="w-8 h-8 rounded-full border-2 border-card bg-neutral-900 flex items-center justify-center z-10">
+                                                    {members.length > 4 && (
+                                                        <div className="w-8 h-8 rounded-full border-2 border-card bg-background flex items-center justify-center z-0 shadow-sm">
                                                             <span className="text-[10px] font-bold text-muted">+{members.length - 4}</span>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <span className="ml-3 text-xs text-muted font-medium">{members.length} {t.colaboradores.squads.members}</span>
+                                                <span className="ml-3 text-xs text-muted font-mono font-bold tracking-tight">
+                                                    {members.length} {t.colaboradores.squads.members.toUpperCase()}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="pt-4 border-t border-border-subtle flex gap-3">
+                                        <div className="mt-6 flex gap-3">
                                             {squad.leader_id === profile?.id ? (
-                                                <button
-                                                    onClick={() => handleDisbandSquad(squad.id)}
-                                                    className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
-                                                >
-                                                    Desarmar Squad
-                                                </button>
+                                                <div className="flex-1 flex gap-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleTransferLeadership(squad.id);
+                                                        }}
+                                                        className="flex-1 bg-accent-teal/10 hover:bg-accent-teal/20 text-accent-teal font-bold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-[10px] uppercase tracking-widest border border-accent-teal/20"
+                                                    >
+                                                        Transferir
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDisbandSquad(squad.id);
+                                                        }}
+                                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3 py-2.5 rounded-xl transition-colors flex justify-center items-center border border-red-500/20"
+                                                        title="Desarmar Equipo"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             ) : members.some((sm: any) => sm.user_id === profile?.id) ? (
                                                 <button
-                                                    onClick={() => handleLeaveSquad(squad.id)}
-                                                    className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (members.find((sm: any) => sm.user_id === profile?.id)?.role === 'pending') {
+                                                            alert("Tu solicitud está pendiente de aprobación.");
+                                                        } else {
+                                                            handleLeaveSquad(squad.id);
+                                                        }
+                                                    }}
+                                                    className={`flex-1 font-bold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-xs uppercase tracking-widest border ${
+                                                        members.find((sm: any) => sm.user_id === profile?.id)?.role === 'pending'
+                                                            ? 'bg-neutral-800 text-muted border-border-subtle cursor-default'
+                                                            : 'bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/20'
+                                                    }`}
                                                 >
-                                                    Abandonar
+                                                    {members.find((sm: any) => sm.user_id === profile?.id)?.role === 'pending' ? 'Solicitado' : 'Abandonar'}
                                                 </button>
                                             ) : (
                                                 <button
-                                                    onClick={() => handleJoinSquad(squad.id, squad.leader_id)}
-                                                    className="flex-1 bg-foreground/5 hover:bg-accent-teal/10 hover:text-accent-teal text-foreground font-semibold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-sm border border-transparent hover:border-accent-teal/20"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleJoinSquad(squad.id, squad.leader_id);
+                                                    }}
+                                                    className="flex-1 bg-accent-teal/10 hover:bg-accent-teal text-white hover:text-black font-bold py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2 text-xs uppercase tracking-widest border border-accent-teal/30"
                                                 >
                                                     {squad.is_open ? t.colaboradores.squads.join : t.colaboradores.squads.requestInvite}
                                                 </button>
@@ -335,8 +522,11 @@ export default function ColaboradoresPage() {
                             // Mocking the "Disponibilidad / Open to Work" feature visually
                             const isAvailableForMissions = user.wallet_address ? user.wallet_address.charCodeAt(0) % 2 === 0 : false;
 
-                            // Identifying squads the user belongs to (mocked by extracting some squads)
-                            const userSquadMemberships = squads.slice(0, ((user.wallet_address || user.id).length % 3) + 1);
+                            // Identifying squads the user belongs to (Real data from squadMembers)
+                            const userSquadMemberships = Object.entries(squadMembers)
+                                .filter(([_, members]) => members.some(m => m.user_id === user.id && m.role !== 'pending'))
+                                .map(([squadId]) => squads.find(s => s.id === squadId))
+                                .filter(Boolean) as Squad[];
 
                             const dropdownOpen = openConnectDropdown === user.id;
 
@@ -426,8 +616,8 @@ export default function ColaboradoresPage() {
                                                             onClick={() => setOpenConnectDropdown(null)}
                                                         />
                                                         <div className="absolute right-0 bottom-full mb-2 w-48 bg-card border border-border-subtle rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                                                            <button className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors">
-                                                                <ExternalLink className="w-4 h-4 text-muted" /> Ver Perfil
+                                                            <button className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors cursor-default opacity-60">
+                                                                <ExternalLink className="w-4 h-4 text-muted" /> Pronto
                                                             </button>
                                                             <button
                                                                 onClick={(e) => {
@@ -436,9 +626,15 @@ export default function ColaboradoresPage() {
                                                                 }}
                                                                 className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors"
                                                             >
-                                                                <UserPlus className="w-4 h-4 text-muted" /> Invitar a mi Squad
+                                                                <UserPlus className="w-4 h-4 text-accent-teal" /> Invitar a Equipo
                                                             </button>
-                                                            <button className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-accent-teal/10 text-accent-teal transition-colors border-t border-border-subtle">
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleProposeMission(user);
+                                                                }}
+                                                                className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-accent-teal/10 text-accent-teal transition-colors border-t border-border-subtle"
+                                                            >
                                                                 <Rocket className="w-4 h-4" /> Proponer Misión
                                                             </button>
                                                         </div>
@@ -459,6 +655,118 @@ export default function ColaboradoresPage() {
                 onClose={() => setIsCreateModalOpen(false)}
                 onCreated={handleSquadCreated}
             />
+            {/* Invitation Modal */}
+            {showInviteModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-card w-full max-w-md rounded-3xl border border-border-subtle shadow-2xl p-8 relative">
+                        <button
+                            onClick={() => setShowInviteModal(false)}
+                            className="absolute right-6 top-6 p-2 bg-foreground/5 hover:bg-foreground/10 text-muted hover:text-foreground rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h3 className="text-xl font-bold mb-2">Invitar a {selectedUserToInvite?.first_name}</h3>
+                        <p className="text-muted text-sm mb-6">Selecciona el equipo al que deseas invitar a esta persona.</p>
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            {squads.filter(s => s.leader_id === profile?.id).map((squad) => (
+                                <button
+                                    key={squad.id}
+                                    onClick={() => performInvite(selectedUserToInvite, squad.id)}
+                                    className="w-full p-4 rounded-xl border border-border-subtle hover:border-accent-teal/50 hover:bg-accent-teal/5 transition-all text-left group flex items-center gap-4"
+                                >
+                                    <div className="w-10 h-10 bg-background border border-border-subtle rounded-lg flex items-center justify-center text-xl">
+                                        {(squad as any).emoji || "🛡️"}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold group-hover:text-accent-teal transition-colors">{squad.name}</div>
+                                        <div className="text-xs text-muted font-mono uppercase tracking-widest">{squad.specialty}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Propose Mission Modal */}
+            {showProposeMissionModal && selectedUserForMission && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-card w-full max-w-lg rounded-3xl border border-border-subtle shadow-2xl overflow-hidden relative">
+                        <button
+                            onClick={() => setShowProposeMissionModal(false)}
+                            className="absolute right-6 top-6 p-2 bg-foreground/5 hover:bg-foreground/10 text-muted hover:text-foreground rounded-full transition-colors z-20"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="p-8">
+                            <h3 className="text-2xl font-bold mb-2">Proponer Misión</h3>
+                            <p className="text-muted text-sm mb-6">Propón una tarea específica para <span className="text-foreground font-semibold">{selectedUserForMission.first_name}</span>.</p>
+
+                            <form onSubmit={submitMissionProposal} className="space-y-5">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Equipo Responsable</label>
+                                    <select
+                                        value={missionForm.squadId}
+                                        onChange={(e) => setMissionForm({...missionForm, squadId: e.target.value})}
+                                        className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors"
+                                        required
+                                    >
+                                        {squads.filter(s => s.leader_id === profile?.id).map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Título de la Misión</label>
+                                    <input
+                                        type="text"
+                                        value={missionForm.title}
+                                        onChange={(e) => setMissionForm({...missionForm, title: e.target.value})}
+                                        placeholder="Ej: Crear logo de comunidad"
+                                        className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Descripción</label>
+                                    <textarea
+                                        value={missionForm.description}
+                                        onChange={(e) => setMissionForm({...missionForm, description: e.target.value})}
+                                        placeholder="Detalla qué esperas de esta misión..."
+                                        rows={3}
+                                        className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors resize-none"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Recompensa Sugerida (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={missionForm.reward}
+                                        onChange={(e) => setMissionForm({...missionForm, reward: e.target.value})}
+                                        placeholder="Ej: 500 Aura o 10 XLM"
+                                        className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingMission}
+                                    className="w-full bg-accent-teal text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
+                                >
+                                    {isSubmittingMission ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
+                                    Enviar Propuesta
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

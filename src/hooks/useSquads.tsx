@@ -10,6 +10,7 @@ export interface Squad {
     name: string;
     description: string | null;
     specialty: string | null;
+    emoji: string | null;
     leader_id: string;
     is_open: boolean;
     created_at: string;
@@ -93,7 +94,7 @@ export function useSquads() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [activeWorkspace?.id]);
 
     useEffect(() => {
         fetchSquads();
@@ -148,6 +149,35 @@ export function useSquads() {
             throw error;
         }
 
+        // If private, notify the leader
+        if (role === 'pending') {
+            const { data: squadData } = await supabase.from('squads').select('name, leader_id').eq('id', squadId).single();
+            if (!squadData) {
+                await fetchSquads();
+                return newMember;
+            }
+            const { data: leaderProfile } = await supabase.from('users').select('wallet_address').eq('id', squadData.leader_id).single();
+            const { data: requesterProfile } = await supabase.from('users').select('first_name, last_name').eq('id', user.id).single();
+
+            if (leaderProfile?.wallet_address) {
+                await supabase.from('notifications').insert([{
+                    user_profile_id: leaderProfile.wallet_address,
+                    title: "Solicitud de Unión",
+                    message: `${requesterProfile?.first_name || 'Alguien'} quiere unirse a tu equipo ${squadData.name}.`,
+                    type: 'community',
+                    icon: 'UserPlus',
+                    payload: { 
+                        type: 'join_request', 
+                        squadId: squadId, 
+                        squadName: squadData.name,
+                        userId: user.id,
+                        requesterName: `${requesterProfile?.first_name} ${requesterProfile?.last_name}`
+                    },
+                    action_status: 'pending'
+                }]);
+            }
+        }
+
         await fetchSquads();
         return newMember;
     };
@@ -188,5 +218,142 @@ export function useSquads() {
         await fetchSquads();
     };
 
-    return { squads, squadMembers, loading, error, fetchSquads, createSquad, joinSquad, leaveSquad, disbandSquad };
+    const transferLeadership = async (squadId: string, newLeaderId: string) => {
+        if (!walletAddress) throw new Error("Wallet not connected");
+
+        // 1. Update squad leader_id
+        const { error: squadError } = await supabase
+            .from('squads')
+            .update({ leader_id: newLeaderId })
+            .eq('id', squadId);
+
+        if (squadError) throw squadError;
+
+        // 2. Update current leader to 'member'
+        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
+        if (user) {
+            await supabase
+                .from('squad_members')
+                .update({ role: 'member' })
+                .eq('squad_id', squadId)
+                .eq('user_id', user.id);
+        }
+
+        // 3. Update new leader to 'leader'
+        const { error: memberError } = await supabase
+            .from('squad_members')
+            .update({ role: 'leader' })
+            .eq('squad_id', squadId)
+            .eq('user_id', newLeaderId);
+
+        if (memberError) throw memberError;
+
+        await fetchSquads();
+    };
+
+    const respondToJoinRequest = async (notificationId: string, squadId: string, requesterId: string, action: 'accept' | 'reject') => {
+        try {
+            if (action === 'accept') {
+                // Update squad_members role
+                const { error: memberError } = await supabase
+                    .from('squad_members')
+                    .update({ role: 'member' })
+                    .eq('squad_id', squadId)
+                    .eq('user_id', requesterId);
+
+                if (memberError) throw memberError;
+
+                // Notify requester
+                const { data: requester } = await supabase.from('users').select('wallet_address').eq('id', requesterId).single();
+                const { data: squad } = await supabase.from('squads').select('name').eq('id', squadId).single();
+                
+                if (requester?.wallet_address && squad) {
+                    await supabase.from('notifications').insert([{
+                        user_profile_id: requester.wallet_address,
+                        title: "Solicitud Aceptada",
+                        message: `Has sido aceptado en el equipo ${squad.name}.`,
+                        type: 'community',
+                        icon: 'CheckCircle'
+                    }]);
+                }
+            } else {
+                // Remove pending member
+                const { error: deleteError } = await supabase
+                    .from('squad_members')
+                    .delete()
+                    .eq('squad_id', squadId)
+                    .eq('user_id', requesterId);
+
+                if (deleteError) throw deleteError;
+
+                // Notify requester
+                const { data: requester } = await supabase.from('users').select('wallet_address').eq('id', requesterId).single();
+                const { data: squad } = await supabase.from('squads').select('name').eq('id', squadId).single();
+                
+                if (requester?.wallet_address && squad) {
+                    await supabase.from('notifications').insert([{
+                        user_profile_id: requester.wallet_address,
+                        title: "Solicitud Rechazada",
+                        message: `Tu solicitud para unirte al equipo ${squad.name} fue rechazada.`,
+                        type: 'community',
+                        icon: 'XCircle'
+                    }]);
+                }
+            }
+
+            // Update notification status
+            await supabase
+                .from('notifications')
+                .update({ action_status: action === 'accept' ? 'accepted' : 'rejected' })
+                .eq('id', notificationId);
+
+        } catch (err) {
+            console.error('Error responding to join request:', err);
+            throw err;
+        } finally {
+            await fetchSquads();
+        }
+    };
+
+    const respondToMissionProposal = async (notificationId: string, squadId: string, userId: string, action: 'accept' | 'reject') => {
+        try {
+            if (action === 'accept') {
+                // 1. Join the squad (as member)
+                const { error: memberError } = await supabase
+                    .from('squad_members')
+                    .upsert([{ squad_id: squadId, user_id: userId, role: 'member' }], { onConflict: 'squad_id,user_id' });
+
+                if (memberError) throw memberError;
+
+                // 2. Notify leader
+                const { data: squad } = await supabase.from('squads').select('name, leader_id').eq('id', squadId).single();
+                if (squad) {
+                    const { data: leader } = await supabase.from('users').select('wallet_address').eq('id', squad.leader_id).single();
+                    if (leader?.wallet_address) {
+                        await supabase.from('notifications').insert([{
+                            user_profile_id: leader.wallet_address,
+                            title: "Misión Aceptada",
+                            message: `Un colaborador ha aceptado tu propuesta de misión para ${squad.name}.`,
+                            type: 'community',
+                            icon: 'CheckCircle'
+                        }]);
+                    }
+                }
+            }
+
+            // Update notification status
+            await supabase
+                .from('notifications')
+                .update({ action_status: action === 'accept' ? 'accepted' : 'rejected' })
+                .eq('id', notificationId);
+
+        } catch (err) {
+            console.error('Error responding to mission proposal:', err);
+            throw err;
+        } finally {
+            await fetchSquads();
+        }
+    };
+
+    return { squads, squadMembers, loading, error, fetchSquads, createSquad, joinSquad, leaveSquad, disbandSquad, transferLeadership, respondToJoinRequest, respondToMissionProposal };
 }

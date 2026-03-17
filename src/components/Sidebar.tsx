@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck } from "lucide-react";
+import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck, Shield } from "lucide-react";
 import { useFreighter } from "@/hooks/useFreighter";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
@@ -155,7 +155,21 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     </div>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2 mt-2">
+                <nav className="flex-1 px-4 space-y-2 mt-2 overflow-y-auto custom-scrollbar">
+                    {activeWorkspace?.is_premium && (activeWorkspace.userRole === 'admin' || activeWorkspace.userRole === 'owner') && (
+                        <Link
+                            href="/app/admin"
+                            onClick={onClose}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
+                                pathname === '/app/admin'
+                                    ? 'bg-accent-teal/10 text-accent-teal border-l-2 border-accent-teal'
+                                    : 'text-muted hover:text-foreground hover:bg-foreground/5'
+                            } ${isSidebarCollapsed ? 'px-4 lg:px-0 lg:justify-center' : 'px-4 gap-4'}`}
+                        >
+                            <Shield className={`w-5 h-5 flex-shrink-0 ${pathname.includes('/admin') ? "text-accent-teal" : "text-muted group-hover:text-accent-teal"}`} />
+                            <span className={`font-bold whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>Panel Admin</span>
+                        </Link>
+                    )}
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;

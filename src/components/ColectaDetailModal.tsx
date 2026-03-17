@@ -12,7 +12,14 @@ interface Colecta {
     deadline: string;
     created_at: string;
     image_url: string;
+    image?: string; // Support both
     tags: string[];
+    currency: string;
+    organizer_profile?: {
+        first_name: string;
+        last_name: string;
+        avatar_url?: string;
+    };
 }
 
 interface ColectaDetailModalProps {
@@ -46,7 +53,7 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
     const progress = Math.min(100, Math.round((colecta.current_amount / colecta.goal_amount) * 100));
     const isGoalMet = colecta.current_amount >= colecta.goal_amount;
     const isExpired = new Date(colecta.deadline).getTime() < Date.now();
-    const currency = colecta.goal_amount === 150 ? 'USDC' : 'XLM'; // Mock logic for currency
+    const currency = colecta.currency || 'XLM';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
@@ -135,13 +142,21 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
 
                         <div className="flex items-center gap-4 text-sm text-muted mb-6">
                             <span className="flex items-center gap-1.5 bg-background px-3 py-1 rounded-lg border border-border-subtle">
-                                <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">
-                                    {colecta.organizer.slice(0, 2)}
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold overflow-hidden shadow-inner">
+                                    {colecta.organizer_profile?.avatar_url ? (
+                                        <img src={colecta.organizer_profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        colecta.organizer_profile?.first_name?.[0] || colecta.organizer.slice(0, 2)
+                                    )}
+                                </div>
+                                <span className="font-bold text-foreground">
+                                    {colecta.organizer_profile 
+                                        ? `${colecta.organizer_profile.first_name} ${colecta.organizer_profile.last_name || ''}`.trim()
+                                        : truncateKey(colecta.organizer)}
                                 </span>
-                                {truncateKey(colecta.organizer)}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4" />
+                            <span className="flex items-center gap-1.5 font-medium">
+                                <Clock className="w-4 h-4 text-accent-teal" />
                                 Termina el {new Date(colecta.deadline).toLocaleDateString()}
                             </span>
                         </div>
@@ -184,65 +199,65 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
 
                         {/* Action Inputs */}
                         <div className="mt-auto">
-                            {isOrganizer ? (
+                            {/* Donation Section (Visible to everyone if not expired and not reached goal, OR if organizer wants to seed) */}
+                            {!isExpired && (
                                 <div className="space-y-4">
-                                    {isGoalMet ? (
-                                        <button
-                                            disabled={isProcessing}
-                                            onClick={() => onAction(colecta, 'release')}
-                                            className="w-full bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)] flex justify-center items-center gap-2 group text-lg"
-                                        >
-                                            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Gift className="w-5 h-5 transition-transform group-hover:scale-110" />}
-                                            {t.colectas?.releaseFunds || "Liberar Fondos"}
-                                        </button>
-                                    ) : (
-                                        <div className="bg-neutral-800/50 border border-border-subtle p-4 rounded-xl text-center">
-                                            <p className="text-muted text-sm">{t.colectas?.manageFailed || "Debes alcanzar la meta para retirar."}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {!isGoalMet && !isExpired && (
-                                        <div className="flex flex-col sm:flex-row gap-3">
-                                            <div className="relative flex-1">
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={donationAmount}
-                                                    onChange={(e) => setDonationAmount(e.target.value)}
-                                                    placeholder="Ej. 50"
-                                                    className="w-full bg-background border border-border-subtle rounded-xl pl-6 pr-16 py-4 text-lg text-foreground font-medium focus:outline-none focus:border-accent-teal transition-all placeholder:text-muted/50 shadow-inner"
-                                                    disabled={isProcessing}
-                                                />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted font-semibold bg-card px-2 py-1 rounded-md text-sm border border-border-subtle">
-                                                    {currency}
-                                                </div>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <div className="relative flex-1">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={donationAmount}
+                                                onChange={(e) => setDonationAmount(e.target.value)}
+                                                placeholder="Ej. 50"
+                                                className="w-full bg-background border border-border-subtle rounded-xl pl-6 pr-16 py-4 text-lg text-foreground font-medium focus:outline-none focus:border-accent-teal transition-all placeholder:text-muted/50 shadow-inner"
+                                                disabled={isProcessing}
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted font-semibold bg-card px-2 py-1 rounded-md text-sm border border-border-subtle">
+                                                {currency}
                                             </div>
-                                            <button
-                                                onClick={() => onDonate(colecta, Number(donationAmount))}
-                                                disabled={isProcessing || !donationAmount || Number(donationAmount) <= 0}
-                                                className="bg-foreground hover:bg-neutral-200 text-black font-bold px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group sm:w-auto w-full text-lg"
-                                            >
-                                                {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                                    <>
-                                                        {t.colectas?.donateWithEscrow || "Aportar"}
-                                                        <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                                                    </>
-                                                )}
-                                            </button>
                                         </div>
-                                    )}
-
-                                    {isExpired && !isGoalMet && hasDonated && (
                                         <button
-                                            onClick={() => onAction(colecta, 'refund')}
-                                            className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-4 rounded-xl transition-colors border border-red-500/20 flex justify-center items-center gap-2 group text-lg"
+                                            onClick={() => onDonate(colecta, Number(donationAmount))}
+                                            disabled={isProcessing || !donationAmount || Number(donationAmount) <= 0}
+                                            className="bg-foreground hover:bg-neutral-200 text-black font-bold px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group sm:w-auto w-full text-lg shadow-lg hover:shadow-foreground/10"
                                         >
-                                            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                                            {t.colectas?.claimRefund || "Reclamar Reembolso"}
+                                            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                                <>
+                                                    {isOrganizer ? "Aportar a mi colecta" : (t.colectas?.donateWithEscrow || "Aportar")}
+                                                    <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                                </>
+                                            )}
                                         </button>
-                                    )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Organizer Special Actions */}
+                            {isOrganizer && isGoalMet && (
+                                <div className="mt-4">
+                                    <button
+                                        disabled={isProcessing}
+                                        onClick={() => onAction(colecta, 'release')}
+                                        className="w-full bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)] flex justify-center items-center gap-2 group text-lg"
+                                    >
+                                        {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Gift className="w-5 h-5 transition-transform group-hover:scale-110" />}
+                                        {t.colectas?.releaseFunds || "Liberar Fondos"}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Refund for Donors if expired and failed */}
+                            {isExpired && !isGoalMet && hasDonated && (
+                                <div className="mt-4 text-center">
+                                    <p className="text-muted text-sm mb-3">La meta no fue alcanzada. Puedes reclamar tu aporte.</p>
+                                    <button
+                                        onClick={() => onAction(colecta, 'refund')}
+                                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-4 rounded-xl transition-colors border border-red-500/20 flex justify-center items-center gap-2 group text-lg"
+                                    >
+                                        {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                                        {t.colectas?.claimRefund || "Reclamar Reembolso"}
+                                    </button>
                                 </div>
                             )}
                         </div>

@@ -6,12 +6,12 @@ import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ConnectButton } from "@/components/ConnectButton";
-import { Bell } from "lucide-react";
+import { Bell, Wallet, ExternalLink, ChevronDown } from "lucide-react";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { useState } from "react";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-    const { connected, address, network } = useFreighter();
+    const { connected, address, network, connect } = useFreighter();
     const { profile, loading: profileLoading } = useProfile();
     const { t } = useSettings();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useSharedBalances();
@@ -87,38 +87,62 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 <span className="text-xs font-bold ml-1 pt-0.5">PTS</span>
                             </span>
                         </div>
-                        <div className="flex items-center gap-4 text-xs font-mono mr-2 hidden sm:flex">
-                            <div className="flex items-center gap-2 bg-muted/10 px-2 py-1 rounded-md border border-slate-700/50">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span className="text-muted">
-                                    {balanceLoading ? (
-                                        <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
-                                    ) : (
-                                        <span className="text-foreground">{usdcBalance !== null ? usdcBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</span>
-                                    )}
-                                    <span className="text-emerald-400 font-bold ml-1">USDC</span>
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-muted/10 px-2 py-1 rounded-md border border-slate-700/50">
-                                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                <span className="text-muted">
-                                    {balanceLoading ? (
-                                        <span className="animate-pulse bg-slate-600 rounded w-8 h-3 inline-block"></span>
-                                    ) : (
-                                        <a
+
+                        {/* Hover Wallet Display */}
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle hover:border-accent-teal/30 hover:bg-foreground/10 transition-all min-w-[48px] justify-center">
+                                <Wallet className="w-5 h-5 text-accent-teal" />
+                                <ChevronDown className="w-3 h-3 text-muted group-hover:text-accent-teal transition-transform group-hover:rotate-180" />
+                            </button>
+
+                            {/* Dropdown / Tooltip */}
+                            <div className="absolute top-full right-0 mt-2 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                                <div className="glass-card p-4 shadow-2xl border border-border-subtle overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-accent-teal/5 rounded-bl-full -mr-8 -mt-8"></div>
+                                    
+                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Wallet</p>
+                                    
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">USDC</span>
+                                            </div>
+                                            <span className="font-mono text-sm font-bold">
+                                                {balanceLoading ? (
+                                                    <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
+                                                ) : usdcBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">XLM</span>
+                                            </div>
+                                            <span className="font-mono text-sm font-bold">
+                                                {balanceLoading ? (
+                                                    <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
+                                                ) : xlmBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 pt-3 border-t border-border-subtle">
+                                        <a 
                                             href={`https://stellar.expert/explorer/testnet/account/${address}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="hover:text-indigo-400 transition-colors uppercase tracking-wider text-foreground"
-                                            title="Ver transacciones en Stellar Expert"
+                                            className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
                                         >
-                                            {xlmBalance !== null ? xlmBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                                            Ver en Explorer
+                                            <ExternalLink className="w-3 h-3" />
                                         </a>
-                                    )}
-                                    <span className="text-indigo-400 font-bold ml-1">XLM</span>
-                                </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         {/* Network Indicator */}
                         <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
                             ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
