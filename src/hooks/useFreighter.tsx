@@ -14,6 +14,7 @@ interface FreighterContextType {
     connected: boolean;
     address: string | null;
     network: string | null;
+    loading: boolean;
     connect: () => Promise<string>;
     disconnect: () => void;
     sign: (xdr: string, networkPassphrase: string) => Promise<{ signedTxXdr: string; signerAddress: string; }>;
@@ -25,6 +26,7 @@ export function FreighterProvider({ children }: { children: ReactNode }) {
     const [connected, setConnected] = useState(false);
     const [address, setAddress] = useState<string | null>(null);
     const [network, setNetwork] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         checkConnection();
@@ -45,6 +47,8 @@ export function FreighterProvider({ children }: { children: ReactNode }) {
             }
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -81,7 +85,7 @@ export function FreighterProvider({ children }: { children: ReactNode }) {
     );
 
     return (
-        <FreighterContext.Provider value={{ connected, address, network, connect, disconnect, sign }
+        <FreighterContext.Provider value={{ connected, address, network, loading, connect, disconnect, sign }
         }>
             {children}
         </FreighterContext.Provider>

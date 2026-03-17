@@ -28,7 +28,7 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-    const { address: walletAddress } = useFreighter();
+    const { address: walletAddress, loading: walletLoading } = useFreighter();
     const { notifyPointsEarned } = useGamification();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -104,17 +104,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        fetchProfile();
+        if (!walletLoading) {
+            fetchProfile();
+        }
 
         // Listen for Auth changes (login/logout)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            fetchProfile();
+            if (!walletLoading) fetchProfile();
         });
 
         return () => {
             subscription.unsubscribe();
         };
-    }, [walletAddress]);
+    }, [walletAddress, walletLoading]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
         const identifier = profile?.id;
