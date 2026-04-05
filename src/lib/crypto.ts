@@ -17,7 +17,7 @@ export async function generateDeterministicKeypair(uniqueId: string): Promise<Ke
     const data = new TextEncoder().encode(uniqueId + secureSalt);
     
     // Hash using WebCrypto API
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data as any);
     
     // Convert ArrayBuffer to Uint8Array/Buffer format expected by Stellar SDK
     const seed = Buffer.from(hashBuffer);
