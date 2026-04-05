@@ -32,13 +32,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         setIsMobile(getIsMobile());
-
-        // Only initialize SWK on desktop
-        if (!getIsMobile()) {
-            initKit();
-        } else {
-            setLoading(false);
-        }
+        initKit();
     }, []);
 
     const initKit = async () => {
@@ -49,7 +43,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             
             StellarWalletsKit.init({
                 network: Networks.TESTNET,
-                selectedWalletId: FREIGHTER_ID,
                 modules: defaultModules(),
             });
             setKit(() => StellarWalletsKit);
@@ -73,9 +66,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     };
 
     const connect = useCallback(async (): Promise<string> => {
-        if (isMobile) {
-            throw new Error("Wallet connection is not available on mobile devices.");
-        }
         if (!kit) {
             throw new Error("Wallet kit not initialized. Please try again.");
         }

@@ -46,9 +46,7 @@ export default function AuthGateway() {
 
     } catch (err: any) {
       console.error("Error conectando wallet:", err);
-      if (err?.message?.toLowerCase().includes("not available")) {
-        setError("La conexión de wallet no está disponible en dispositivos móviles.");
-      } else if (err?.message?.toLowerCase().includes("user rejected") || err?.message?.toLowerCase().includes("denied")) {
+      if (err?.message?.toLowerCase().includes("user rejected") || err?.message?.toLowerCase().includes("denied")) {
         setError("Conexión rechazada. Aprobá la solicitud en tu wallet para continuar.");
       } else {
         setError(err?.message || "Error al conectar la wallet. Intentá de nuevo.");
