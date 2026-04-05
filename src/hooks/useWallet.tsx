@@ -14,6 +14,7 @@ interface WalletContextType {
     network: string | null;
     loading: boolean;
     isMobile: boolean;
+    connect: () => Promise<string>;
     disconnect: () => void;
     sign: (xdr: string, networkPassphrase: string) => Promise<{ signedTxXdr: string; signerAddress: string }>;
     injectAddress: (addr: string) => void;
