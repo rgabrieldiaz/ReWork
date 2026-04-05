@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useBalances } from "@/hooks/useBalances";
 
 interface BalanceContextType {
@@ -14,7 +14,7 @@ interface BalanceContextType {
 const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
 export function BalanceProvider({ children }: { children: ReactNode }) {
-    const { address, network } = useFreighter();
+    const { address, network } = useWallet();
     const { xlmBalance, usdcBalance, loading, refresh } = useBalances(address || null, network);
 
     return (

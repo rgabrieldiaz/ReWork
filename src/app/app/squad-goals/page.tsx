@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Target, Users, AlertCircle, Loader2, CheckCircle, Clock, Search, Plus, Info, X, ShieldCheck, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import CreateSquadGoalModal from "@/components/CreateSquadGoalModal";
 import { useInitializeEscrow, useSendTransaction, useReleaseFunds } from "@trustless-work/escrow/hooks";
 import { InitializeMultiReleaseEscrowPayload, MultiReleaseReleaseFundsPayload } from "@trustless-work/escrow/types";
@@ -13,7 +13,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function SquadGoalsPage() {
     const { t } = useSettings();
-    const { connected, address: publicKey, sign } = useFreighter();
+    const { connected, address: publicKey, sign } = useWallet();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
     const [activeTab, setActiveTab] = useState<"activas" | "propuestas">("propuestas");

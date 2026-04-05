@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { X, Loader2, Smile, ShieldCheck, Target, Image as ImageIcon } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useSettings } from "@/hooks/useSettings";
 
 interface CreateSquadGoalModalProps {
@@ -15,7 +15,7 @@ interface CreateSquadGoalModalProps {
 
 export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: CreateSquadGoalModalProps) {
     const { t } = useSettings();
-    const { address: publicKey } = useFreighter();
+    const { address: publicKey } = useWallet();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");

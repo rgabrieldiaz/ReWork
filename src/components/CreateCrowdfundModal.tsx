@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { X, Loader2, Smile, ShieldCheck, Image as ImageIcon, UserCircle, Wallet, Globe, Users, ChevronDown, ChevronUp } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 
 interface CreateCrowdfundModalProps {
     isOpen: boolean;
@@ -19,7 +19,7 @@ interface Squad {
 }
 
 export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, workspaceId }: CreateCrowdfundModalProps) {
-    const { address: publicKey } = useFreighter();
+    const { address: publicKey } = useWallet();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [goalAmount, setGoalAmount] = useState("");

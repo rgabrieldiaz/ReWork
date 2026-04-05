@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Shield, Copy, ExternalLink, CheckCircle, Award, Activity, Globe, Fingerprint, Wallet, Star, Zap, Link2 } from "lucide-react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useSettings } from "@/hooks/useSettings";
@@ -13,7 +13,7 @@ function truncateAddress(addr: string) {
 }
 
 export default function Web3IdentityPage() {
-    const { connected, address } = useFreighter();
+    const { connected, address } = useWallet();
     const { profile } = useProfile();
     const { xlmBalance, usdcBalance } = useBalances(address || null);
     const { t } = useSettings();
@@ -62,7 +62,7 @@ export default function Web3IdentityPage() {
             {!connected ? (
                 <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                     <Wallet className="w-12 h-12 mb-4 text-neutral-600" />
-                    <p className="font-semibold text-foreground/60 mb-1">Conecta tu wallet Freighter</p>
+                    <p className="font-semibold text-foreground/60 mb-1">Conecta tu wallet Stellar</p>
                     <p className="text-sm">Para ver tu identidad soberana en la red Stellar.</p>
                 </div>
             ) : (

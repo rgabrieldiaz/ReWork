@@ -1,6 +1,6 @@
 "use client";
 
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useSettings } from "@/hooks/useSettings";
@@ -9,21 +9,24 @@ import { ConnectButton } from "@/components/ConnectButton";
 import { Bell, Wallet, ExternalLink, ChevronDown } from "lucide-react";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-    const { connected, address, network, connect } = useFreighter();
+    const { connected, address, network, isMobile } = useWallet();
     const { profile, loading: profileLoading } = useProfile();
+    const { authenticated } = usePrivy();
     const { t } = useSettings();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useSharedBalances();
     const { unreadCount } = useNotifications();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
+    const isLoggedIn = authenticated || connected;
     const firstName = profile?.first_name || t.profile.role;
 
-    // Simulate Net Worth based on XLM, USDC, and Points
-    const xlmValue = (xlmBalance || 0) * 0.15; // Assume 1 XLM = $0.15
-    const auraValue = (profile?.points || 0) * 0.05; // Assume 1 AURA = $0.05
-    const usdcValue = usdcBalance || 0; // 1 USDC = $1.00
+    // Simulate Net Worth
+    const xlmValue = (xlmBalance || 0) * 0.15;
+    const auraValue = (profile?.points || 0) * 0.05;
+    const usdcValue = usdcBalance || 0;
     const totalNetWorth = (xlmValue + auraValue + usdcValue).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
     return (
@@ -37,8 +40,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                 )}
-                {connected ? (
-                    // Authenticated Left Side
+                {isLoggedIn ? (
                     <div className="flex items-center gap-4 sm:gap-8 hidden sm:flex">
                         <div>
                             <h1 className="text-sm text-muted font-medium uppercase tracking-widest">{t.header.welcome}</h1>
@@ -62,7 +64,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
                     </div>
                 ) : (
-                    // Unauthenticated Left Side
                     <div>
                         <h1 className="text-sm text-muted font-medium tracking-widest uppercase">{t.header.controlPanel}</h1>
                         <div className="flex items-center gap-2 mt-1">
@@ -77,7 +78,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
 
             <div className="flex items-center gap-6">
-                {connected && (
+                {isLoggedIn && (
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
                             <span className="text-xs text-muted font-bold tracking-wider uppercase">Mi AURA</span>
@@ -88,80 +89,83 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             </span>
                         </div>
 
-                        {/* Hover Wallet Display */}
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle hover:border-accent-teal/30 hover:bg-foreground/10 transition-all min-w-[48px] justify-center">
-                                <Wallet className="w-5 h-5 text-accent-teal" />
-                                <ChevronDown className="w-3 h-3 text-muted group-hover:text-accent-teal transition-transform group-hover:rotate-180" />
-                            </button>
+                        {/* Hover Wallet Display — desktop only, only when wallet connected */}
+                        {connected && !isMobile && (
+                            <div className="relative group">
+                                <button className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle hover:border-accent-teal/30 hover:bg-foreground/10 transition-all min-w-[48px] justify-center">
+                                    <Wallet className="w-5 h-5 text-accent-teal" />
+                                    <ChevronDown className="w-3 h-3 text-muted group-hover:text-accent-teal transition-transform group-hover:rotate-180" />
+                                </button>
 
-                            {/* Dropdown / Tooltip */}
-                            <div className="absolute top-full right-0 mt-2 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
-                                <div className="glass-card p-4 shadow-2xl border border-border-subtle overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-16 h-16 bg-accent-teal/5 rounded-bl-full -mr-8 -mt-8"></div>
-                                    
-                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Wallet</p>
-                                    
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">USDC</span>
+                                <div className="absolute top-full right-0 mt-2 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                                    <div className="glass-card p-4 shadow-2xl border border-border-subtle overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-16 h-16 bg-accent-teal/5 rounded-bl-full -mr-8 -mt-8"></div>
+                                        
+                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Wallet</p>
+                                        
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">USDC</span>
+                                                </div>
+                                                <span className="font-mono text-sm font-bold">
+                                                    {balanceLoading ? (
+                                                        <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
+                                                    ) : usdcBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </span>
                                             </div>
-                                            <span className="font-mono text-sm font-bold">
-                                                {balanceLoading ? (
-                                                    <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
-                                                ) : usdcBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">XLM</span>
+                                                </div>
+                                                <span className="font-mono text-sm font-bold">
+                                                    {balanceLoading ? (
+                                                        <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
+                                                    ) : xlmBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">XLM</span>
-                                            </div>
-                                            <span className="font-mono text-sm font-bold">
-                                                {balanceLoading ? (
-                                                    <span className="animate-pulse bg-muted/10 rounded w-12 h-3 block"></span>
-                                                ) : xlmBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                            </span>
+                                        <div className="mt-4 pt-3 border-t border-border-subtle">
+                                            <a 
+                                                href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
+                                            >
+                                                Ver en Explorer
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
                                         </div>
-                                    </div>
-
-                                    <div className="mt-4 pt-3 border-t border-border-subtle">
-                                        <a 
-                                            href={`https://stellar.expert/explorer/testnet/account/${address}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
-                                        >
-                                            Ver en Explorer
-                                            <ExternalLink className="w-3 h-3" />
-                                        </a>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Network Indicator */}
-                        <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
-                            ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                            : network === 'PUBLIC'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                : 'bg-slate-500/10 text-muted border-slate-500/20'
-                            }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${network === 'TESTNET' ? 'bg-indigo-400 animate-pulse'
-                                : network === 'PUBLIC' ? 'bg-emerald-400'
-                                    : 'bg-slate-400'
-                                }`}></span>
-                            {network === 'PUBLIC' ? t.header.mainnet : network || t.header.offline}
-                        </div>
+                        {/* Network Indicator — only when wallet connected */}
+                        {connected && (
+                            <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
+                                ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                : network === 'PUBLIC'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                    : 'bg-slate-500/10 text-muted border-slate-500/20'
+                                }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${network === 'TESTNET' ? 'bg-indigo-400 animate-pulse'
+                                    : network === 'PUBLIC' ? 'bg-emerald-400'
+                                        : 'bg-slate-400'
+                                    }`}></span>
+                                {network === 'PUBLIC' ? t.header.mainnet : network || t.header.offline}
+                            </div>
+                        )}
 
                     </div>
                 )}
                 <div className="flex items-center gap-4">
                     <ConnectButton />
-                    {connected && (
+                    {isLoggedIn && (
                         <button
                             onClick={() => setIsNotificationsOpen(true)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/5 border border-border-subtle text-muted hover:text-foreground transition-colors relative"

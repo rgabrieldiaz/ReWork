@@ -9,7 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@stellar/freighter-api": "^6.0.1",
+    "@creit.tech/stellar-wallets-kit": "^2.1.0",
+    "@privy-io/react-auth": "^3.19.0",
     "@stellar/stellar-sdk": "^14.5.0",
     "@supabase/supabase-js": "^2.98.0",
     "@trustless-work/escrow": "^3.0.5",

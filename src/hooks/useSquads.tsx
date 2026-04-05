@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useFreighter } from '@/hooks/useFreighter';
+import { useWallet } from '@/hooks/useWallet';
 import { useWorkspace } from '@/hooks/useWorkspace';
 
 export interface Squad {
@@ -31,7 +31,7 @@ export interface SquadMember {
 }
 
 export function useSquads() {
-    const { address: walletAddress } = useFreighter();
+    const { address: walletAddress } = useWallet();
     const { activeWorkspace } = useWorkspace();
     const [squads, setSquads] = useState<Squad[]>([]);
     const [squadMembers, setSquadMembers] = useState<Record<string, SquadMember[]>>({});

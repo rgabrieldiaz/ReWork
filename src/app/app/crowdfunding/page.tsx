@@ -3,20 +3,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck, RefreshCw, ArrowRight, Users, UserCircle } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
 import { ColectaDetailModal } from "@/components/ColectaDetailModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
+// signTransaction is handled by useWallet().sign
 
 // Utils
 const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(key.length - 4)}`;
 
 export default function ColectasPage() {
     const { t } = useSettings();
-    const { connected, address: publicKey } = useFreighter();
+    const { connected, address: publicKey, sign } = useWallet();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
     const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -216,7 +216,7 @@ export default function ColectasPage() {
     // Actions
     const handleDonate = async (camp: any, overrideAmount?: number) => {
         if (!connected || !publicKey) {
-            showToast("Conecta tu wallet Freighter para aportar.", 'error');
+            showToast("Conecta tu wallet para aportar.", 'error');
             return;
         }
 
@@ -267,13 +267,11 @@ export default function ColectasPage() {
             const { unsignedTransaction } = deployData;
             if (!unsignedTransaction) throw new Error("Sin XDR de Trustless Work.");
 
-            // 2. Sign with Freighter
-            const net = await getNetworkDetails();
-            const signedResult = await signTransaction(unsignedTransaction, {
-                networkPassphrase: net.networkPassphrase || "Test SDF Network ; September 2015"
-            });
-            const signedXdr = typeof signedResult === "string" ? signedResult : (signedResult as any)?.signedTxXdr || (signedResult as any)?.signedXdr || signedResult;
-            if (!signedXdr) throw new Error("Firma cancelada o fallida desde Freighter.");
+            // 2. Sign with Wallet
+            const networkPassphrase = "Test SDF Network ; September 2015";
+            const signedResult = await sign(unsignedTransaction, networkPassphrase);
+            const signedXdr = signedResult?.signedTxXdr || "";
+            if (!signedXdr) throw new Error("Firma cancelada o fallida.");
 
             // 3. Submit to network
             const sendRes = await fetch('/api/trustless-work/send-transaction', {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck, Shield } from "lucide-react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import { ChevronDown, Plus } from "lucide-react";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const pathname = usePathname();
-    const { connected, address, connect } = useFreighter();
+    const { connected, address, connect } = useWallet();
     const { profile, loading } = useProfile();
     const { t, isSidebarCollapsed, toggleSidebar } = useSettings();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);

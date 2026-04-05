@@ -8,7 +8,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useSquads, Squad } from "@/hooks/useSquads";
 import CreateSquadModal from "@/components/CreateSquadModal";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function ColaboradoresPage() {
@@ -16,7 +16,7 @@ export default function ColaboradoresPage() {
     const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad, transferLeadership } = useSquads();
     const { createNotification } = useNotifications();
     const { profile } = useProfile();
-    const { address: publicKey } = useFreighter();
+    const { address: publicKey } = useWallet();
     const { activeWorkspace } = useWorkspace();
     const [collaborators, setCollaborators] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);

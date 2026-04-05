@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useSettings } from "@/hooks/useSettings";
 import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +13,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-    const { address } = useFreighter();
+    const { address } = useWallet();
     const { profile, updateProfile, loading } = useProfile();
     const { language, setLanguage, theme, setTheme, t } = useSettings();
 

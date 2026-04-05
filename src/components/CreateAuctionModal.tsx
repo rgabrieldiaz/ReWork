@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { X, Image as ImageIcon, ShieldCheck, Smile, Lock, Globe, Users, ChevronDown, ChevronUp } from "lucide-react";
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -20,7 +20,7 @@ interface Squad {
 }
 
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
-    const { connected, address } = useFreighter();
+    const { connected, address } = useWallet();
     const { addPoints } = useProfile();
     const { activeWorkspace } = useWorkspace();
     const [loading, setLoading] = useState(false);

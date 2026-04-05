@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Users, Hexagon, Globe, Send, CheckCircle2, Loader2, Search, Tag } from "lucide-react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/lib/supabase";
 
@@ -20,7 +20,7 @@ interface PublicWorkspace {
 }
 
 export default function AlliancesGallery() {
-  const { address, connected } = useFreighter();
+  const { address, connected } = useWallet();
   const { profile } = useProfile();
 
   const [workspaces, setWorkspaces] = useState<PublicWorkspace[]>([]);

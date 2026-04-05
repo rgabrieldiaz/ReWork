@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 
 export interface Workspace {
     id: string;
@@ -39,7 +39,7 @@ interface WorkspaceContextType {
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-    const { address: walletAddress } = useFreighter();
+    const { address: walletAddress } = useWallet();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
@@ -57,18 +57,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         try {
             // Fetch user ID first to check memberships
-            const { data: userData } = await supabase
+            const { data: usersData, error: userError } = await supabase
                 .from('users')
                 .select('id')
-                .eq('wallet_address', walletAddress)
-                .single();
+                .eq('wallet_address', walletAddress);
+            
+            console.log('[useWorkspace] User fetch result (multiple rows safe):', JSON.stringify({ usersData, userError }, null, 2));
 
             let memberWorkspaces: Workspace[] = [];
-            if (userData) {
+            const userIds = usersData?.map(u => u.id) || [];
+            
+            if (userIds.length > 0) {
                 const { data: memberData } = await supabase
                     .from('workspace_members')
                     .select('workspace_id, role, workspaces(*, workspace_members(count), squads(count))')
-                    .eq('user_id', userData.id);
+                    .in('user_id', userIds);
 
                 memberWorkspaces = memberData?.map(m => {
                     const ws = m.workspaces as any;
@@ -82,10 +85,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             }
 
             // Fetch workspaces owned directly by wallet
-            const { data: ownedData } = await supabase
+            const { data: ownedData, error: ownedError } = await supabase
                 .from('workspaces')
                 .select('*, workspace_members(count), squads(count)')
                 .eq('owner_wallet', walletAddress);
+
+            console.log('[useWorkspace] Owned workspaces fetch result:', JSON.stringify({ ownedData, ownedError }, null, 2));
 
             const ownedWorkspaces = (ownedData || []).map((w: any) => ({
                 ...w,
@@ -110,6 +115,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             });
 
             const uniqueWorkspaces = Array.from(workspaceMap.values());
+            console.log('[useWorkspace] Final processed workspaces:', uniqueWorkspaces);
             setWorkspaces(uniqueWorkspaces);
 
             // Fetch Join Requests

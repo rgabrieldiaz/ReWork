@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { useSettings } from "@/hooks/useSettings";
 import { useProfile } from "@/hooks/useProfile";
+import { usePrivy } from "@privy-io/react-auth";
 import { Loader2 } from "lucide-react";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -13,20 +14,24 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const { isSidebarCollapsed } = useSettings();
     const pathname = usePathname();
     const router = useRouter();
-    const { profile, loading } = useProfile();
+    const { profile, loading: profileLoading } = useProfile();
+    const { ready, authenticated } = usePrivy();
 
     const isAppRoute = pathname.startsWith("/app");
 
+    // Combined auth state: either Privy is authenticated OR profile exists (wallet-only login)
+    const isAuthenticated = authenticated || !!profile;
+    const isLoading = !ready || profileLoading;
+
     useEffect(() => {
-        // Auth Guard: If it's an app route and we're not loading and there's no profile, redirect to auth
-        if (isAppRoute && !loading && !profile) {
+        // Auth Guard: redirect to auth if not authenticated and not loading
+        if (isAppRoute && !isLoading && !isAuthenticated) {
             router.push("/auth");
         }
-    }, [isAppRoute, loading, profile, router]);
+    }, [isAppRoute, isLoading, isAuthenticated, router]);
 
-    // Show a global loader for app routes while checking authentication
-    // to prevent unauthorized content flickering
-    if (isAppRoute && (loading || !profile)) {
+    // Show loader while checking auth
+    if (isAppRoute && (isLoading || !isAuthenticated)) {
         return (
             <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
                 <div className="relative">

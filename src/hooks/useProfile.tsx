@@ -2,11 +2,12 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useFreighter } from '@/hooks/useFreighter';
+import { usePrivy } from '@privy-io/react-auth';
+import { useWallet } from '@/hooks/useWallet';
 import { useGamification } from '@/hooks/useGamification';
 
 export interface UserProfile {
-    id: string; // UUID from Supabase Auth
+    id: string;
     wallet_address: string | null;
     email: string | null;
     first_name: string | null;
@@ -28,26 +29,29 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-    const { address: walletAddress, loading: walletLoading } = useFreighter();
+    const { ready, authenticated, user: privyUser } = usePrivy();
+    const { address: walletAddress, loading: walletLoading, injectAddress } = useWallet();
     const { notifyPointsEarned } = useGamification();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            // Wait for Privy to be ready AND wallet to finish loading
+            if (!ready || walletLoading) return;
+
             setLoading(true);
             try {
-                // 1. Get Supabase Auth Session
-                const { data: { session } } = await supabase.auth.getSession();
-                const authUser = session?.user;
+                // Determine identity: Privy user email or wallet address
+                const privyEmail = privyUser?.email?.address || privyUser?.google?.email || null;
 
                 let query = supabase.from('users').select('*');
-                
-                if (authUser) {
-                    // Fetch by UUID if logged in via Google/Email
-                    query = query.eq('id', authUser.id);
+
+                if (privyEmail) {
+                    // Fetch by email if authenticated via Privy
+                    query = query.eq('email', privyEmail);
                 } else if (walletAddress) {
-                    // Fetch by wallet if NOT logged in but wallet is connected
+                    // Fetch by wallet if connected via SWK
                     query = query.eq('wallet_address', walletAddress);
                 } else {
                     setProfile(null);
@@ -58,43 +62,73 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 const { data, error } = await query.single();
 
                 if (error && error.code !== 'PGRST116') {
-                    console.error('Error fetching profile:', error);
+                    console.warn('Error fetching profile detail HTTP/DB:', JSON.stringify({
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    }, null, 2));
                 }
 
                 if (data) {
                     const currentProfile = data as UserProfile;
-                    
-                    // 2. Auto-link logic: If logged in via Auth but wallet is new/not linked
-                    if (authUser && walletAddress && currentProfile.wallet_address !== walletAddress) {
+
+                    let assignWallet = walletAddress;
+
+                    // 1. Generate retroactively if user has no wallet and hasn't connected one
+                    if (!currentProfile.wallet_address && authenticated && !assignWallet && privyUser?.id) {
+                        const { generateDeterministicKeypair } = await import('@/lib/crypto');
+                        const keypair = await generateDeterministicKeypair(privyUser.id);
+                        assignWallet = keypair.publicKey();
+                        
                         const { data: updatedData } = await supabase
                             .from('users')
-                            .update({ wallet_address: walletAddress, updated_at: new Date().toISOString() })
-                            .eq('id', authUser.id)
+                            .update({ wallet_address: assignWallet, updated_at: new Date().toISOString() })
+                            .eq('id', currentProfile.id)
                             .select()
                             .single();
-                        
-                        if (updatedData) {
-                            setProfile(updatedData as UserProfile);
-                        } else {
-                            setProfile(currentProfile);
-                        }
+                            
+                        setProfile((updatedData || { ...currentProfile, wallet_address: assignWallet }) as UserProfile);
+                        if (typeof injectAddress === 'function') injectAddress(assignWallet);
+                    } 
+                    // 2. Auto-link explicit visible wallet address if Privy user connects a new/different external wallet
+                    else if (authenticated && assignWallet && currentProfile.wallet_address !== assignWallet) {
+                        const { data: updatedData } = await supabase
+                            .from('users')
+                            .update({ wallet_address: assignWallet, updated_at: new Date().toISOString() })
+                            .eq('id', currentProfile.id)
+                            .select()
+                            .single();
+
+                        setProfile((updatedData || currentProfile) as UserProfile);
                     } else {
                         setProfile(currentProfile);
                     }
-                } else if (authUser) {
-                    // This shouldn't normally happen due to the trigger, but as a fallback:
-                    // Create profile if it doesn't exist but user is authenticated
-                     const { data: newData } = await supabase
+                } else if (authenticated && privyEmail) {
+                    // Create new profile for Privy user
+                    const privyName = privyUser?.google?.name || privyUser?.email?.address?.split('@')[0] || '';
+                    const privyAvatar = (privyUser as any)?.google?.picture || '';
+
+                    let assignWallet = walletAddress;
+                    if (!assignWallet && privyUser?.id) {
+                        const { generateDeterministicKeypair } = await import('@/lib/crypto');
+                        const keypair = await generateDeterministicKeypair(privyUser.id);
+                        assignWallet = keypair.publicKey();
+                        if (typeof injectAddress === 'function') injectAddress(assignWallet);
+                    }
+
+                    const { data: newData } = await supabase
                         .from('users')
                         .insert({
-                            id: authUser.id,
-                            email: authUser.email,
-                            first_name: authUser.user_metadata?.full_name || '',
-                            avatar_url: authUser.user_metadata?.avatar_url || '',
+                            email: privyEmail,
+                            first_name: privyName,
+                            avatar_url: privyAvatar,
+                            wallet_address: assignWallet || null,
                             points: 0
                         })
                         .select()
                         .single();
+
                     if (newData) setProfile(newData as UserProfile);
                 }
             } catch (err) {
@@ -104,19 +138,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        if (!walletLoading) {
-            fetchProfile();
-        }
-
-        // Listen for Auth changes (login/logout)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            if (!walletLoading) fetchProfile();
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [walletAddress, walletLoading]);
+        fetchProfile();
+    }, [ready, authenticated, privyUser, walletAddress, walletLoading]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
         const identifier = profile?.id;

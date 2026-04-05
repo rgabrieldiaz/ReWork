@@ -4,13 +4,14 @@ import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { TWProvider } from "@/components/TWProvider";
-import { FreighterProvider } from "@/hooks/useFreighter";
+import { WalletProvider } from "@/hooks/useWallet";
 import { ProfileProvider } from "@/hooks/useProfile";
 import { SettingsProvider } from "@/hooks/useSettings";
 import { MainLayout } from "@/components/MainLayout";
 import { BalanceProvider } from "@/hooks/useSharedBalances";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { Toaster } from "sonner";
+import { PrivyWrapper } from "@/components/PrivyWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -29,19 +30,21 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`} suppressHydrationWarning>
         <SettingsProvider>
-          <FreighterProvider>
-            <ProfileProvider>
-              <BalanceProvider>
-              <WorkspaceProvider>
-                <TWProvider>
-                  <MainLayout>
-                    {children}
-                  </MainLayout>
-                </TWProvider>
-              </WorkspaceProvider>
-            </BalanceProvider>
-            </ProfileProvider>
-          </FreighterProvider>
+          <PrivyWrapper>
+            <WalletProvider>
+              <ProfileProvider>
+                <BalanceProvider>
+                <WorkspaceProvider>
+                  <TWProvider>
+                    <MainLayout>
+                      {children}
+                    </MainLayout>
+                  </TWProvider>
+                </WorkspaceProvider>
+              </BalanceProvider>
+              </ProfileProvider>
+            </WalletProvider>
+          </PrivyWrapper>
         </SettingsProvider>
         <Toaster
           theme="dark"

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Copy, Wallet, ChevronRight, TrendingUp, Sparkles, LogOut, ArrowRightLeft } from "lucide-react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useGamification } from "@/hooks/useGamification";
@@ -10,7 +10,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
 import * as StellarSdk from "@stellar/stellar-sdk";
-import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
+// signTransaction is handled by useWallet().sign
 import { X, Clock, ShieldCheck } from "lucide-react";
 
 interface Auction {
@@ -32,7 +32,7 @@ interface Auction {
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { connected, address, network, sign } = useFreighter();
+  const { connected, address, network, sign } = useWallet();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
@@ -149,11 +149,9 @@ export default function Home() {
       if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow.");
 
       const { unsignedTransaction } = deployData;
-      const net = await getNetworkDetails();
-      const signedResult = await signTransaction(unsignedTransaction, {
-        networkPassphrase: net.networkPassphrase || "Test SDF Network ; September 2015"
-      });
-      const signedXdr = typeof signedResult === "string" ? signedResult : (signedResult as any)?.signedTxXdr || (signedResult as any)?.signedXdr || (signedResult as any)?.xdr || signedResult;
+      const networkPassphrase = "Test SDF Network ; September 2015";
+      const signedResult = await sign(unsignedTransaction, networkPassphrase);
+      const signedXdr = signedResult?.signedTxXdr || "";
       if (!signedXdr) throw new Error("Firma fallida.");
 
       const response = await fetch('/api/trustless-work/send-transaction', {

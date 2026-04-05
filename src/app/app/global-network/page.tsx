@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
@@ -20,7 +20,7 @@ interface Bounty {
 }
 
 export default function GlobalNetworkPage() {
-    const { connected, address } = useFreighter();
+    const { connected, address } = useWallet();
     const { profile } = useProfile();
     const { t } = useSettings();
     const [bounties, setBounties] = useState<Bounty[]>([]);

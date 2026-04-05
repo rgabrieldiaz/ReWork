@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useFreighter } from './useFreighter';
+import { useWallet } from './useWallet';
 
 export type NotificationType = 'activity' | 'community';
 
@@ -20,7 +20,7 @@ export interface AppNotification {
 }
 
 export function useNotifications() {
-    const { address } = useFreighter();
+    const { address } = useWallet();
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
 

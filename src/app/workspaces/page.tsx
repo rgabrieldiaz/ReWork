@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, Users, Hexagon, ChevronRight, LogOut, Globe, Zap, Loader2, Copy, CheckCircle2, ExternalLink, Pencil, X as XIcon, Settings } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useWorkspace, Workspace as HookWorkspace } from "@/hooks/useWorkspace";
@@ -22,7 +22,7 @@ interface GlobalBounty {
 export default function WorkspacesPage() {
   const { t, language, setLanguage } = useSettings();
   const router = useRouter();
-  const { address, connected } = useFreighter();
+  const { address, connected } = useWallet();
   const { profile } = useProfile();
   const { xlmBalance, usdcBalance } = useBalances(address);
   const { workspaces, loading: loadingWorkspaces, joinRequests, setActiveWorkspaceId } = useWorkspace();

@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Gavel, Clock, Search, ShieldCheck, Plus, XCircle, HandCoins, ChevronDown, Info, X, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useFreighter } from "@/hooks/useFreighter";
-import { signTransaction, getNetworkDetails } from "@stellar/freighter-api";
+import { useWallet } from "@/hooks/useWallet";
+// signTransaction is handled by useWallet().sign
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
 import { AuctionDetailModal } from "@/components/AuctionDetailModal";
 import { UserBadge } from "@/components/UserBadge";
@@ -96,7 +96,7 @@ export default function MarketplacePage() {
     const [auctions, setAuctions] = useState<Auction[]>([]);
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
     const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
-    const { connected, address } = useFreighter();
+    const { connected, address, sign } = useWallet();
     const { addPoints } = useProfile();
     const { t } = useSettings();
     const { createNotification } = useNotifications();
@@ -280,7 +280,7 @@ export default function MarketplacePage() {
 
     const handleBid = async (auction: Auction, bidAmount: number) => {
         if (!connected || !address) {
-            alert("Por favor, conecta tu billetera Freighter primero.");
+            alert("Por favor, conecta tu wallet primero.");
             return;
         }
 
@@ -344,14 +344,12 @@ export default function MarketplacePage() {
             const { unsignedTransaction } = deployData;
             if (!unsignedTransaction) throw new Error("No XDR proveniente de Trustless Work.");
 
-            // 3. Sign Transaction via Freighter
-            const net = await getNetworkDetails();
-            const signedResult = await signTransaction(unsignedTransaction, {
-                networkPassphrase: net.networkPassphrase || "Test SDF Network ; September 2015"
-            });
-            const signedXdr = typeof signedResult === "string" ? signedResult : (signedResult as any)?.signedTxXdr || (signedResult as any)?.signedXdr || (signedResult as any)?.xdr || signedResult;
+            // 3. Sign Transaction via Wallet
+            const networkPassphrase = "Test SDF Network ; September 2015";
+            const signedResult = await sign(unsignedTransaction, networkPassphrase);
+            const signedXdr = signedResult?.signedTxXdr || "";
 
-            if (!signedXdr) throw new Error("Firma cancelada o fallida desde Freighter.");
+            if (!signedXdr) throw new Error("Firma cancelada o fallida.");
 
             // 4. Submit to Trustless Work 
             const response = await fetch('/api/trustless-work/send-transaction', {

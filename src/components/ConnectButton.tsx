@@ -1,17 +1,21 @@
 "use client";
 
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
+import { useProfile } from "@/hooks/useProfile";
+import { usePrivy } from "@privy-io/react-auth";
 import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export function ConnectButton() {
-    const { connected, address, connect } = useFreighter();
+    const { connected, address, isMobile } = useWallet();
+    const { profile } = useProfile();
+    const { authenticated, user: privyUser } = usePrivy();
     const router = useRouter();
 
     useEffect(() => {
         if (connected && address) {
-            // Registrar usuario en Supabase si no existe
+            // Register/update user in Supabase when wallet connects
             supabase
                 .from("users")
                 .upsert(
@@ -24,11 +28,17 @@ export function ConnectButton() {
         }
     }, [connected, address]);
 
-    if (connected && address) {
+    // Show user info (Privy email or wallet address)
+    if (authenticated || connected) {
+        const displayName = profile?.first_name
+            || privyUser?.google?.name
+            || privyUser?.email?.address?.split('@')[0]
+            || (address ? `${address.slice(0, 4)}...${address.slice(-4)}` : "User");
+
         return (
             <div className="flex items-center gap-4">
-                <span className="text-sm font-mono font-bold text-accent-teal bg-accent-teal/10 px-4 py-2 rounded-full border border-accent-teal/20 shadow-[0_0_10px_rgba(0,242,255,0.1)]">
-                    {address.slice(0, 4)}...{address.slice(-4)}
+                <span className="text-sm font-mono font-bold text-accent-teal bg-accent-teal/10 px-4 py-2 rounded-full border border-accent-teal/20 shadow-[0_0_10px_rgba(0,242,255,0.1)] truncate max-w-[180px]">
+                    {displayName}
                 </span>
                 <button
                     onClick={() => router.push('/logout')}
@@ -43,12 +53,5 @@ export function ConnectButton() {
         );
     }
 
-    return (
-        <button
-            onClick={connect}
-            className="px-6 py-2.5 bg-accent-teal text-background font-bold rounded-full hover:bg-foreground transition-colors glow-teal text-sm tracking-wide uppercase"
-        >
-            Conectar Billetera
-        </button>
-    );
+    return null; // No button shown when not authenticated (auth page handles login)
 }

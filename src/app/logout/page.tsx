@@ -2,28 +2,34 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useSettings } from "@/hooks/useSettings";
-import { useFreighter } from "@/hooks/useFreighter";
+import { useWallet } from "@/hooks/useWallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { LogOut, ShieldCheck } from "lucide-react";
 
 export default function LogoutPage() {
   const { t } = useSettings();
   const router = useRouter();
-  const { disconnect } = useFreighter();
+  const { disconnect } = useWallet();
+  const { logout: privyLogout } = usePrivy();
 
   useEffect(() => {
     const logout = async () => {
-      // 1. Ejecutar desconexión de Wallet y Contextos
+      // 1. Disconnect wallet
       disconnect();
       
-      // 2. Limpiar Supabase Auth
-      await supabase.auth.signOut();
+      // 2. Logout from Privy
+      try {
+        await privyLogout();
+      } catch (e) {
+        // Privy may throw if not authenticated, that's fine
+        console.warn("Privy logout:", e);
+      }
 
-      // 3. Limpiar Storage local
+      // 3. Clear local storage
       localStorage.removeItem("rework_current_workspace");
       
-      // 4. Redirigir al Bridge (Auth) tras 2.5 segundos
+      // 4. Redirect to auth
       router.push("/auth");
     };
 
@@ -32,11 +38,10 @@ export default function LogoutPage() {
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [disconnect, router]);
+  }, [disconnect, privyLogout, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 relative overflow-hidden">
-      {/* Background Orbs */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 blur-[100px] rounded-full pointer-events-none -z-10"></div>
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent-teal/5 blur-[100px] rounded-full pointer-events-none -z-10"></div>
 
