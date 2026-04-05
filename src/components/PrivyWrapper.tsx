@@ -14,10 +14,9 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
                     logo: undefined,
                 },
                 loginMethods: ["google", "email"],
-                // @ts-ignore: To disable embedded wallets and avoid the localhost HTTPS error
                 embeddedWallets: {
                     createOnLogin: "off"
-                }
+                } as any
             }}
         >
             {children}
