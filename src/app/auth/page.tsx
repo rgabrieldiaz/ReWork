@@ -146,40 +146,38 @@ export default function AuthGateway() {
                         <ChevronRight className="w-5 h-5 text-accent-teal group-hover:translate-x-1 transition-transform" />
                     </button>
 
-                    {/* Wallet Button — desktop only */}
-                    {!isMobile && (
-                        <>
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-border-subtle"></div>
-                                <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">o conectá tu wallet</span>
-                                <div className="flex-grow border-t border-border-subtle"></div>
-                            </div>
+                    {/* Wallet Button */}
+                    <>
+                        <div className="relative flex items-center py-2">
+                            <div className="flex-grow border-t border-border-subtle"></div>
+                            <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">o conectá tu wallet</span>
+                            <div className="flex-grow border-t border-border-subtle"></div>
+                        </div>
 
-                            <button 
-                                onClick={handleConnectWallet}
-                                disabled={loading}
-                                className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group disabled:opacity-50"
-                            >
-                                {loading && (
-                                    <div className="absolute inset-0 w-full h-full bg-accent-teal/10 animate-pulse"></div>
-                                )}
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="w-10 h-10 bg-foreground/10 rounded-full flex items-center justify-center border border-border-subtle">
-                                        <Wallet className="w-5 h-5 text-foreground" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-bold text-sm">
-                                            {loading ? "Abriendo wallet..." : connected ? "Wallet Conectada" : "Conectar Wallet Stellar"}
-                                        </p>
-                                        <p className="text-xs text-muted">
-                                            {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Freighter, xBull, Lobstr, Albedo..."}
-                                        </p>
-                                    </div>
+                        <button 
+                            onClick={handleConnectWallet}
+                            disabled={loading}
+                            className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group disabled:opacity-50"
+                        >
+                            {loading && (
+                                <div className="absolute inset-0 w-full h-full bg-accent-teal/10 animate-pulse"></div>
+                            )}
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-10 h-10 bg-foreground/10 rounded-full flex items-center justify-center border border-border-subtle">
+                                    <Wallet className="w-5 h-5 text-foreground" />
                                 </div>
-                                <ChevronRight className={`w-5 h-5 text-muted transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
-                            </button>
-                        </>
-                    )}
+                                <div className="text-left">
+                                    <p className="font-bold text-sm">
+                                        {loading ? "Abriendo wallet..." : connected ? "Wallet Conectada" : "Conectar Wallet Stellar"}
+                                    </p>
+                                    <p className="text-xs text-muted">
+                                        {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Freighter, xBull, Lobstr, Albedo..."}
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className={`w-5 h-5 text-muted transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
+                        </button>
+                    </>
                 </div>
             )}
 
