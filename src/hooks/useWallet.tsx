@@ -39,11 +39,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         try {
             const { StellarWalletsKit, Networks } = await import("@creit.tech/stellar-wallets-kit");
             const { defaultModules } = await import("@creit.tech/stellar-wallets-kit/modules/utils");
-            const { FREIGHTER_ID } = await import("@creit.tech/stellar-wallets-kit/modules/freighter");
+            const { WalletConnectModule } = await import("@creit.tech/stellar-wallets-kit/modules/wallet-connect");
             
             StellarWalletsKit.init({
                 network: Networks.TESTNET,
-                modules: defaultModules(),
+                modules: [
+                    ...defaultModules(),
+                    new WalletConnectModule({
+                        projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "8d234c919d5c4146a782b78a2e106da4",
+                        metadata: {
+                            name: "ReWork Web3",
+                            description: "ReWork Decentralized Application",
+                            url: "https://rework.network",
+                            icons: ["https://rework.network/favicon.ico"]
+                        }
+                    })
+                ],
             });
             setKit(() => StellarWalletsKit);
 
