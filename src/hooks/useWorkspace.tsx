@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useProfile } from "@/hooks/useProfile";
+import { isSuperAdmin } from "@/lib/admins";
 
 export interface Workspace {
     id: string;
@@ -40,13 +42,14 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { address: walletAddress } = useWallet();
+    const { profile } = useProfile();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
     const [loading, setLoading] = useState(true);
 
     const fetchWorkspaces = async () => {
-        if (!walletAddress) {
+        if (!walletAddress && !profile?.email) {
             setWorkspaces([]);
             setJoinRequests([]);
             setActiveWorkspace(null);
@@ -56,6 +59,36 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
         setLoading(true);
         try {
+            const userIsSuperAdmin = isSuperAdmin(profile?.email, walletAddress || profile?.wallet_address, profile?.role);
+
+            if (userIsSuperAdmin) {
+                // SUPER ADMIN: Acceso total a TODOS los workspaces
+                const { data: allWorkspacesData, error: allWsError } = await supabase
+                    .from('workspaces')
+                    .select('*, workspace_members(count), squads(count)');
+
+                if (!allWsError && allWorkspacesData) {
+                    const superAdminWorkspaces: Workspace[] = allWorkspacesData.map((w: any) => ({
+                        ...w,
+                        userRole: 'owner' as const,
+                        is_premium: true, // Habilitar acceso total al panel admin
+                        member_count: w.workspace_members?.[0]?.count ?? 0,
+                        squad_count: w.squads?.[0]?.count ?? 0
+                    }));
+
+                    setWorkspaces(superAdminWorkspaces);
+
+                    const savedId = localStorage.getItem('rework_active_workspace_id');
+                    const initial = superAdminWorkspaces.find(w => w.id === savedId) || superAdminWorkspaces[0] || null;
+                    setActiveWorkspace(initial);
+                    if (initial) {
+                        localStorage.setItem('rework_active_workspace_id', initial.id);
+                    }
+                    setLoading(false);
+                    return;
+                }
+            }
+
             // Fetch user ID first to check memberships
             const { data: usersData, error: userError } = await supabase
                 .from('users')
@@ -149,7 +182,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         fetchWorkspaces();
-    }, [walletAddress]);
+    }, [walletAddress, profile?.email, profile?.role]);
 
     const setActiveWorkspaceId = (id: string) => {
         const found = workspaces.find(w => w.id === id);

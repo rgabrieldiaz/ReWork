@@ -241,7 +241,7 @@ export default function WorkspacesPage() {
                       }`}>
                         {ws.userRole || 'Collaborator'}
                       </span>
-                      {(ws.is_premium && (ws.userRole === 'admin' || ws.userRole === 'owner')) && (
+                      {(isAdmin || (ws.is_premium && (ws.userRole === 'admin' || ws.userRole === 'owner'))) && (
                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();

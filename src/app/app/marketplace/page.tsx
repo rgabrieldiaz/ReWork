@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Gavel, Clock, Search, ShieldCheck, Plus, XCircle, HandCoins, ChevronDown, Info, X, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { USDC_ISSUER } from "@/lib/stellar";
 import { useWallet } from "@/hooks/useWallet";
 // signTransaction is handled by useWallet().sign
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
@@ -314,12 +315,11 @@ export default function MarketplacePage() {
                 platformFee: 0.5,
                 milestones: [
                     { 
-                        description: "Aprobación y entrega del artículo por el vendedor",
-                        amount: bidAmount
+                        description: "Aprobación y entrega del artículo por el vendedor"
                     }
                 ],
                 trustline: {
-                    address: DUMMY_PLATFORM_ADDRESS,
+                    address: USDC_ISSUER,
                     symbol: assetSymbol
                 }
             };

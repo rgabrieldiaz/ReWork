@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabase";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSettings } from "@/hooks/useSettings";
 import { useBalances } from "@/hooks/useBalances";
+import { useProfile } from "@/hooks/useProfile";
 
 interface WorkspaceMember {
     id: string;
@@ -49,8 +50,9 @@ export default function AdminDashboard() {
 
     // Get treasury balance
     const { xlmBalance, usdcBalance } = useBalances(workspace?.treasury_address || null);
+    const { profile } = useProfile();
 
-    const isAdmin = activeWorkspace?.userRole === 'admin' || activeWorkspace?.userRole === 'owner';
+    const isAdmin = profile?.role?.toLowerCase() === 'admin' || activeWorkspace?.userRole === 'admin' || activeWorkspace?.userRole === 'owner';
 
     useEffect(() => {
         const fetchAdminData = async () => {

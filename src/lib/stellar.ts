@@ -17,3 +17,11 @@ export const config = {
 
 export const horizon = new StellarSdk.Horizon.Server(config.horizonUrl);
 export const rpc = new StellarSdk.rpc.Server(config.rpcUrl);
+
+// Direcciones oficiales de emisores de USDC en Stellar
+export const STELLAR_USDC_ISSUER = {
+    testnet: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+    mainnet: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+};
+
+export const USDC_ISSUER = NETWORK === "mainnet" ? STELLAR_USDC_ISSUER.mainnet : STELLAR_USDC_ISSUER.testnet;

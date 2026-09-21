@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-2 overflow-y-auto custom-scrollbar">
-                    {activeWorkspace?.is_premium && (activeWorkspace.userRole === 'admin' || activeWorkspace.userRole === 'owner') && (
+                    {(profile?.role?.toLowerCase() === 'admin' || (activeWorkspace?.is_premium && (activeWorkspace?.userRole === 'admin' || activeWorkspace?.userRole === 'owner'))) && (
                         <Link
                             href="/app/admin"
                             onClick={onClose}

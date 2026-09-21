@@ -9,6 +9,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
+import { USDC_ISSUER } from "@/lib/stellar";
 import * as StellarSdk from "@stellar/stellar-sdk";
 // signTransaction is handled by useWallet().sign
 import { X, Clock, ShieldCheck } from "lucide-react";
@@ -119,7 +120,6 @@ export default function Home() {
     try {
       const assetSymbol = selectedAuction.currency || "USDC";
       const dummyPlatform = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
-      const testnetContract = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
       const payload: any = {
         signer: address,
@@ -137,7 +137,7 @@ export default function Home() {
         amount: amount,
         platformFee: 0.5,
         milestones: [{ description: "Aprobación y entrega" }],
-        trustline: { address: testnetContract, symbol: assetSymbol }
+        trustline: { address: USDC_ISSUER, symbol: assetSymbol }
       };
 
       const deployRes = await fetch('/api/trustless-work/deploy-escrow', {

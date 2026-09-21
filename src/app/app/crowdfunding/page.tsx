@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, Info, Plus, Gift, CheckCircle, Clock, AlertCircle, X, Heart, Activity, Share2, ArrowUpRight, Filter, Loader2, ChevronDown, ShieldCheck, RefreshCw, ArrowRight, Users, UserCircle } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
+import { USDC_ISSUER } from "@/lib/stellar";
 import { useWallet } from "@/hooks/useWallet";
 import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
@@ -245,11 +246,10 @@ export default function ColectasPage() {
                 amount: amountToDonate,
                 platformFee: 0.5,
                 milestones: [{ 
-                    description: `Colecta: ${camp.title}`,
-                    amount: amountToDonate
+                    description: `Colecta: ${camp.title}`
                 }],
                 trustline: {
-                    address: PLATFORM_ADDR,
+                    address: USDC_ISSUER,
                     symbol: "USDC"
                 }
             };

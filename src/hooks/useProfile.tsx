@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@/hooks/useWallet';
 import { useGamification } from '@/hooks/useGamification';
+import { isSuperAdmin } from '@/lib/admins';
 
 export interface UserProfile {
     id: string;
@@ -72,6 +73,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
                 if (data) {
                     const currentProfile = data as UserProfile;
+                    const applyAdmin = (p: UserProfile): UserProfile => {
+                        if (isSuperAdmin(p.email, p.wallet_address, p.role)) {
+                            return { ...p, role: 'Admin' };
+                        }
+                        return p;
+                    };
+
+                    if (isSuperAdmin(currentProfile.email, currentProfile.wallet_address, currentProfile.role) && currentProfile.role !== 'Admin') {
+                        currentProfile.role = 'Admin';
+                        supabase.from('users').update({ role: 'Admin' }).eq('id', currentProfile.id).then();
+                    }
 
                     let assignWallet = walletAddress;
 
@@ -88,7 +100,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             .select()
                             .single();
                             
-                        setProfile((updatedData || { ...currentProfile, wallet_address: assignWallet }) as UserProfile);
+                        setProfile(applyAdmin((updatedData || { ...currentProfile, wallet_address: assignWallet }) as UserProfile));
                         if (typeof injectAddress === 'function') injectAddress(assignWallet);
                     } 
                     // 2. Auto-link explicit visible wallet address if Privy user connects a new/different external wallet
@@ -100,9 +112,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             .select()
                             .single();
 
-                        setProfile((updatedData || currentProfile) as UserProfile);
+                        setProfile(applyAdmin((updatedData || currentProfile) as UserProfile));
                     } else {
-                        setProfile(currentProfile);
+                        setProfile(applyAdmin(currentProfile));
                     }
                 } else if (authenticated && privyEmail) {
                     // Create new profile for Privy user
@@ -117,6 +129,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                         if (typeof injectAddress === 'function') injectAddress(assignWallet);
                     }
 
+                    const initialRole = isSuperAdmin(privyEmail, assignWallet) ? 'Admin' : 'Colaborador';
+
                     const { data: newData } = await supabase
                         .from('users')
                         .insert({
@@ -124,6 +138,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             first_name: privyName,
                             avatar_url: privyAvatar,
                             wallet_address: assignWallet || null,
+                            role: initialRole,
                             points: 0
                         })
                         .select()
