@@ -59,6 +59,16 @@
     background-color: var(--bg);
     color: var(--fg);
   }
+
+  /* Global Dropdown & Select Styling (Dark Theme & High Contrast) */
+  select {
+    color-scheme: dark;
+  }
+
+  select option {
+    background-color: #0d1624 !important;
+    color: #f8fafc !important;
+  }
 }
 
 @layer utilities {

@@ -736,11 +736,11 @@ export default function Home() {
                       setFromToken(val);
                       if (val === toToken) setToToken(fromToken);
                     }}
-                    className="flex items-center gap-2 bg-muted/10/80 hover:bg-border-subtle px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
+                    className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
                   >
-                    <option value="USDC">USDC</option>
-                    <option value="XLM">XLM</option>
-                    <option value="ARS">ARS ($)</option>
+                    <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
+                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM</option>
+                    <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
                   </select>
                 </div>
               </div>
@@ -770,11 +770,11 @@ export default function Home() {
                       setToToken(val);
                       if (val === fromToken) setFromToken(toToken);
                     }}
-                    className="flex items-center gap-2 bg-muted/10/80 hover:bg-border-subtle px-3 py-2 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors appearance-none"
+                    className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
                   >
-                    <option value="XLM">XLM</option>
-                    <option value="USDC">USDC</option>
-                    <option value="ARS">ARS ($)</option>
+                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM</option>
+                    <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
+                    <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
                   </select>
                 </div>
               </div>
