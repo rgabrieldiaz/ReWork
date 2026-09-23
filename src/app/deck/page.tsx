@@ -29,7 +29,8 @@ import {
   Briefcase,
   AlertCircle,
   Smartphone,
-  Star
+  Star,
+  Landmark
 } from "lucide-react";
 
 export default function PresentationDeckPage() {
@@ -566,31 +567,100 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
-            <div className="space-y-4">
-              <div className="relative rounded-2xl overflow-hidden border border-white/15 shadow-xl bg-slate-900 aspect-video flex items-center justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-2">
+            {/* Desktop Real Screenshot */}
+            <div className="lg:col-span-7 space-y-3">
+              <div className="relative rounded-2xl overflow-hidden border border-white/15 shadow-2xl bg-slate-900 aspect-video flex items-center justify-center group">
                 <Image
-                  src="/deck/dashboard_full.png"
-                  alt="ReWork Dashboard"
-                  width={640}
-                  height={360}
+                  src="/deck/dashboard_clean.png"
+                  alt="ReWork Desktop Platform"
+                  width={720}
+                  height={405}
                   className="object-cover w-full h-full"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050c14]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                  <span className="text-xs font-mono text-[#00f2ff] bg-black/70 px-2 py-1 rounded border border-[#00f2ff]/30">
+                    Contratos Soroban verificados + DEX Swaps
+                  </span>
+                </div>
               </div>
-              <p className="text-xs font-mono text-slate-400 text-center">Dashboard Integral de ReWork con métricas en tiempo real</p>
+              <p className="text-xs font-mono text-slate-400 text-center">
+                Dashboard Web3 Desktop: Workspaces, Bounties con Escrow y Swaps Stellar
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="relative rounded-2xl overflow-hidden border border-white/15 shadow-xl bg-slate-900 aspect-video flex items-center justify-center">
-                <Image
-                  src="/deck/mobile_view.webp"
-                  alt="ReWork Mobile Responsive"
-                  width={640}
-                  height={360}
-                  className="object-cover w-full h-full"
-                />
+            {/* Pristine Mobile Smartphone Mockup (Pixel-Perfect, Vector, Zero Errors) */}
+            <div className="lg:col-span-5 flex flex-col items-center">
+              <div className="w-[270px] bg-[#050c14] border-4 border-slate-700 rounded-[38px] p-3 shadow-2xl relative overflow-hidden ring-1 ring-white/20">
+                {/* Dynamic Island / Speaker */}
+                <div className="w-24 h-3.5 bg-slate-800 rounded-full mx-auto mb-2 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-950 mr-2"></div>
+                  <div className="w-1 h-1 rounded-full bg-blue-900/60"></div>
+                </div>
+
+                {/* Mobile Screen Container */}
+                <div className="bg-[#0b121e] rounded-[24px] p-3 space-y-2.5 text-white border border-white/5">
+                  {/* Top Status */}
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 px-1 font-mono">
+                    <span className="font-bold text-white">ReWork Mobile</span>
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      Stellar Testnet
+                    </span>
+                  </div>
+
+                  {/* Net Worth Card */}
+                  <div className="p-3 bg-gradient-to-br from-[#00f2ff]/15 to-blue-600/10 border border-[#00f2ff]/30 rounded-2xl">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-mono">Patrimonio Total</span>
+                        <p className="text-lg font-black font-mono text-white">$ 1,250.00 <span className="text-xs text-[#00f2ff]">USDC</span></p>
+                      </div>
+                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/20 px-1.5 py-0.5 rounded">
+                        +12.8% APY
+                      </span>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-white/10 flex justify-between text-[10px] font-mono text-slate-300">
+                      <span>Líquido: $350.00</span>
+                      <span className="text-emerald-400 font-bold">Stake: $900.00</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 bg-purple-500/15 border border-purple-500/30 rounded-xl text-center">
+                      <QrCode className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                      <span className="text-[10px] font-bold text-purple-200 block">Cobro QR</span>
+                      <span className="text-[8px] text-purple-400/80 font-mono">SEP-0007</span>
+                    </div>
+                    <div className="p-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
+                      <Landmark className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      <span className="text-[10px] font-bold text-emerald-200 block">Banco ARS</span>
+                      <span className="text-[8px] text-emerald-400/80 font-mono">Rampa Directa</span>
+                    </div>
+                  </div>
+
+                  {/* Active Escrow Item */}
+                  <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex justify-between items-center text-[10px] mb-1">
+                      <span className="font-bold text-slate-200 truncate max-w-[130px]">Smart Contract Escrow</span>
+                      <span className="text-[8px] font-mono bg-emerald-500/20 text-emerald-400 px-1 rounded">Activo</span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 leading-tight">Auditoría Frontend — Hito 2 de 3</p>
+                    <div className="mt-1.5 flex justify-between items-center text-[9px] font-mono text-[#00f2ff]">
+                      <span>Custodia Soroban:</span>
+                      <span className="font-bold">500.00 USDC</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Home Indicator */}
+                <div className="w-24 h-1 bg-white/30 rounded-full mx-auto mt-2"></div>
               </div>
-              <p className="text-xs font-mono text-slate-400 text-center">Experiencia 100% optimizada para dispositivos móviles</p>
+
+              <p className="text-xs font-mono text-slate-400 text-center mt-2">
+                Experiencia Mobile PWA con deep-linking y QR SEP-0007
+              </p>
             </div>
           </div>
         </div>

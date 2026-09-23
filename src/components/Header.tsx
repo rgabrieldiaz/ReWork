@@ -13,7 +13,7 @@ import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { getTripleValues, SupportedCurrency, formatCurrency } from "@/lib/currency";
+import { getTripleValues, SupportedCurrency, formatCurrency, DEFAULT_RATES } from "@/lib/currency";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network, isMobile } = useWallet();
@@ -97,21 +97,35 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             {/* Separador */}
                             <div className="h-6 w-[1px] bg-border-subtle hidden md:block"></div>
 
-                            {/* En Stake + Rendimiento Verde */}
-                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            {/* En Stake */}
+                            <div className="hidden md:flex flex-col">
+                                <span className="text-[10px] text-muted font-medium uppercase tracking-wider">
+                                    En Stake
+                                </span>
+                                <span className="font-mono text-sm font-bold text-foreground">
+                                    {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                </span>
+                            </div>
+
+                            {/* Rendimiento Acumulado en Vivo (Ganancia Devengada) */}
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 shadow-sm shadow-emerald-500/5">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                 <div className="flex flex-col text-left">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/80">
-                                            En Stake
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/90">
+                                            Rendimiento Vivo
                                         </span>
                                         <span className="text-[9px] font-bold text-emerald-300 bg-emerald-400/20 px-1 py-0.2 rounded flex items-center gap-0.5">
                                             <TrendingUp className="w-2.5 h-2.5" />
                                             +{activeApy}% APY
                                         </span>
                                     </div>
-                                    <span className="font-mono text-xs font-black text-emerald-300">
-                                        {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                    <span className="font-mono text-xs font-black text-emerald-300 glow-green">
+                                        {activeCurrency === "ARS"
+                                            ? formatCurrency(accruedYield * DEFAULT_RATES.USDC_TO_ARS, "ARS")
+                                            : activeCurrency === "XLM"
+                                            ? formatCurrency(accruedYield / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                                            : `+${accruedYield.toFixed(4)} USDC`}
                                     </span>
                                 </div>
                             </div>
