@@ -23,6 +23,10 @@ const NavContent = ({ language, setLanguage, t, className = "" }: any) => (
       <Link href="/features" className="hover:text-foreground transition-colors">{t.publicNav.infrastructure}</Link>
       <Link href="/about" className="hover:text-foreground transition-colors">{t.publicNav.solutions}</Link>
       <Link href="/pricing" className="hover:text-foreground transition-colors">{t.publicNav.plans}</Link>
+      <Link href="/deck" className="text-accent-teal hover:text-accent-teal/80 transition-colors font-semibold flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent-teal animate-pulse"></span>
+        Pitch Deck
+      </Link>
     </div>
     
     <div className="flex items-center gap-4">

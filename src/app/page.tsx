@@ -22,13 +22,18 @@ export default function LandingPage() {
       <main className="relative z-10 w-full">
         {/* Hero Section */}
         <section className="pt-20 pb-32 px-6 max-w-7xl mx-auto text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border-subtle mb-8 backdrop-blur-md">
+          <Link 
+            href="/deck" 
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-teal/10 border border-accent-teal/30 hover:border-accent-teal mb-8 backdrop-blur-md transition-all hover:scale-105 group cursor-pointer"
+          >
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-teal opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-teal"></span>
             </span>
-            <span className="text-xs font-mono font-medium text-muted">{t.landing.hero.badge}</span>
-          </div>
+            <span className="text-xs font-mono font-medium text-accent-teal group-hover:underline">
+              {t.landing.hero.badge} • Ver Pitch Deck →
+            </span>
+          </Link>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8 max-w-4xl text-balance leading-[1.1]">
             {t.landing.hero.title1}<br/>
@@ -49,9 +54,15 @@ export default function LandingPage() {
               {t.landing.hero.ctaPrimary}
               <Zap className="w-5 h-5 text-accent-teal" />
             </Link>
+            <Link 
+              href="/deck" 
+              className="px-8 py-4 glass-card border border-accent-teal/40 hover:border-accent-teal text-foreground rounded-xl font-bold transition-all flex items-center justify-center gap-2 hover:bg-accent-teal/10 shadow-lg shadow-accent-teal/5"
+            >
+              📊 Ver Pitch Deck
+            </Link>
             <a 
               href="#features" 
-              className="px-8 py-4 glass-card border border-border-subtle hover:border-accent-teal/50 rounded-xl font-bold transition-all flex items-center justify-center hover:bg-foreground/5"
+              className="px-8 py-4 glass-card border border-border-subtle hover:border-accent-teal/50 rounded-xl font-bold transition-all flex items-center justify-center hover:bg-foreground/5 text-muted hover:text-foreground"
             >
               {t.landing.hero.ctaSecondary}
             </a>

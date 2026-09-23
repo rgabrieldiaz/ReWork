@@ -15,6 +15,7 @@ export function PublicFooter() {
             <li><Link href="/features" className="hover:text-accent-teal transition-colors">{t.publicFooter.features}</Link></li>
             <li><Link href="/security" className="hover:text-accent-teal transition-colors">{t.publicFooter.security}</Link></li>
             <li><Link href="/pricing" className="hover:text-accent-teal transition-colors">{t.publicFooter.plans}</Link></li>
+            <li><Link href="/deck" className="hover:text-accent-teal transition-colors text-accent-teal/90 font-medium">📊 Pitch Deck (Slides)</Link></li>
           </ul>
         </div>
         <div>
