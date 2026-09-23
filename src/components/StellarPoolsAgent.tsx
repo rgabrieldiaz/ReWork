@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, ChevronRight, X, Lock } from "lucide-react";
 import { useStaking } from "@/hooks/useStaking";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
@@ -70,10 +71,15 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
   const { stake, stakedAmount, activeApy } = useStaking();
   const { usdcBalance, refresh } = useSharedBalances();
 
+  const [mounted, setMounted] = useState<boolean>(false);
   const [selectedPool, setSelectedPool] = useState<StellarPool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>("50");
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
   const [transferSuccess, setTransferSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleOpenTransfer = (pool: StellarPool) => {
     setSelectedPool(pool);
@@ -256,19 +262,23 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
   }
 
   if (isOpen !== undefined) {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-        <div className="relative w-full max-w-3xl glass-card border border-border-subtle p-6 rounded-3xl bg-card shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+    if (!isOpen || !mounted) return null;
+    return createPortal(
+      <div 
+        onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto custom-scrollbar"
+      >
+        <div className="relative w-full max-w-3xl border border-border-subtle p-6 rounded-3xl bg-[#0d1624] text-foreground shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-2 rounded-full text-muted hover:text-foreground"
+            className="absolute top-5 right-5 p-2 rounded-full text-muted hover:text-foreground bg-foreground/5 hover:bg-foreground/15 border border-border-subtle transition-all z-20"
           >
             <X className="w-5 h-5" />
           </button>
           {content}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 

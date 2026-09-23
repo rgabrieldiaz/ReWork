@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Landmark, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, convertCurrency, DEFAULT_RATES } from "@/lib/currency";
@@ -13,6 +14,7 @@ interface BankTransferModalProps {
 export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   const { usdcBalance, refresh } = useSharedBalances();
 
+  const [mounted, setMounted] = useState<boolean>(false);
   const [usdcAmount, setUsdcAmount] = useState<string>("50");
   const [cbuAlias, setCbuAlias] = useState<string>("rework.crypto.ars");
   const [accountHolder, setAccountHolder] = useState<string>("Gabriel Diaz");
@@ -20,6 +22,10 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   const [bankName, setBankName] = useState<string>("Mercado Pago / Banco Galicia");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [successReceipt, setSuccessReceipt] = useState<any>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on Escape key
   useEffect(() => {
@@ -31,7 +37,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const numericUsdc = parseFloat(usdcAmount) || 0;
   const pesosReceiving = numericUsdc * DEFAULT_RATES.USDC_TO_ARS;
@@ -70,12 +76,12 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg glass-card border border-border-subtle p-5 sm:p-6 rounded-3xl shadow-2xl bg-card max-h-[90vh] flex flex-col my-auto overflow-hidden">
+      <div className="relative w-full max-w-lg border border-border-subtle p-5 sm:p-6 rounded-3xl shadow-2xl bg-[#0d1624] text-foreground max-h-[90vh] flex flex-col my-auto overflow-hidden">
         {/* Sticky Header with Title and Prominent Close Button */}
         <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-border-subtle flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -256,6 +262,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import { X, QrCode, ArrowDownLeft, ArrowUpRight, Copy, Check, ShieldCheck, Wallet, RefreshCw, Landmark } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
@@ -17,6 +18,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
   const { connected, address } = useWallet();
   const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
 
+  const [mounted, setMounted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"receive" | "pay">(defaultTab);
   const [currency, setCurrency] = useState<SupportedCurrency>("ARS");
   const [amount, setAmount] = useState<string>("5000");
@@ -30,6 +32,10 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
   const [payCurrency, setPayCurrency] = useState<SupportedCurrency>("USDC");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [paySuccess, setPaySuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setActiveTab(defaultTab);
@@ -77,7 +83,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
       .catch((err) => console.error("Error generating QR code:", err));
   }, [isOpen, activeTab, amount, currency, concept, address]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const numericAmount = parseFloat(amount) || 0;
   const tripleReceive = getTripleValues(numericAmount, currency);
@@ -117,12 +123,12 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
     }, 1500);
   };
 
-  return (
+  return createPortal(
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg glass-card border border-border-subtle p-5 sm:p-6 rounded-3xl shadow-2xl bg-card max-h-[90vh] flex flex-col my-auto overflow-hidden">
+      <div className="relative w-full max-w-lg border border-border-subtle p-5 sm:p-6 rounded-3xl shadow-2xl bg-[#0d1624] text-foreground max-h-[90vh] flex flex-col my-auto overflow-hidden">
         {/* Sticky Header with Title and Prominent Close Button */}
         <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-border-subtle flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -381,6 +387,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
