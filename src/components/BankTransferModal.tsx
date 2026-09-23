@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Landmark, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, convertCurrency, DEFAULT_RATES } from "@/lib/currency";
@@ -20,6 +20,16 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   const [bankName, setBankName] = useState<string>("Mercado Pago / Banco Galicia");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [successReceipt, setSuccessReceipt] = useState<any>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -61,26 +71,34 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg glass-card border border-border-subtle p-6 rounded-3xl shadow-2xl bg-card">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-muted hover:text-foreground hover:bg-foreground/10 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-accent-teal/10 border border-accent-teal/20 flex items-center justify-center text-accent-teal">
-            <Landmark className="w-6 h-6" />
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
+    >
+      <div className="relative w-full max-w-lg glass-card border border-border-subtle p-5 sm:p-6 rounded-3xl shadow-2xl bg-card max-h-[90vh] flex flex-col my-auto overflow-hidden">
+        {/* Sticky Header with Title and Prominent Close Button */}
+        <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-border-subtle flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent-teal/10 border border-accent-teal/20 flex items-center justify-center text-accent-teal flex-shrink-0">
+              <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight">Retiro a Cuenta Bancaria (ARS)</h2>
+              <p className="text-[11px] text-muted hidden sm:block">Convertí tus activos de ReWork a Pesos en tu banco</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">Retiro a Cuenta Bancaria (ARS)</h2>
-            <p className="text-xs text-muted">Convertí tus activos de ReWork a Pesos Argentinos en tu banco</p>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 sm:p-2.5 rounded-xl text-muted hover:text-foreground bg-foreground/5 hover:bg-foreground/15 border border-border-subtle transition-all flex items-center justify-center flex-shrink-0"
+            title="Cerrar ventana"
+            aria-label="Cerrar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
+
+        {/* Scrollable Content Body */}
+        <div className="overflow-y-auto custom-scrollbar pr-1 space-y-4 flex-1">
 
         {successReceipt ? (
           <div className="space-y-6 animate-in zoom-in-95 duration-300">
@@ -226,6 +244,17 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
             </button>
           </div>
         )}
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="pt-3 mt-2 border-t border-border-subtle flex justify-end flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto px-6 py-2 rounded-xl border border-border-subtle text-muted hover:text-foreground hover:bg-foreground/5 text-xs font-bold transition-all text-center"
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );
