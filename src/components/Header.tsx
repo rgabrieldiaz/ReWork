@@ -53,33 +53,67 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     </button>
                 )}
                 {isLoggedIn ? (
-                    <div className="flex items-center gap-4 sm:gap-8 hidden sm:flex">
+                    <div className="flex items-center gap-4 sm:gap-6 hidden sm:flex">
                         <div>
-                            <h1 className="text-sm text-muted font-medium uppercase tracking-widest">{t.header.welcome}</h1>
-                            <p className="text-xl font-bold">
-                                {profileLoading ? <span className="animate-pulse bg-muted/10 rounded w-24 h-6 block mt-1"></span> : firstName}
+                            <h1 className="text-xs text-muted font-medium uppercase tracking-widest">{t.header.welcome}</h1>
+                            <p className="text-lg font-bold">
+                                {profileLoading ? <span className="animate-pulse bg-muted/10 rounded w-20 h-5 block mt-1"></span> : firstName}
                             </p>
                         </div>
                         <div className="h-8 w-[1px] bg-border-glass"></div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-sm text-muted font-medium uppercase tracking-widest">{t.header.totalNetWorth}</h1>
-                                <span className="text-[10px] font-mono font-bold text-accent-teal bg-accent-teal/10 px-1.5 py-0.2 rounded border border-accent-teal/20">
-                                    {activeCurrency}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <p className="text-xl font-bold font-mono">
+                        
+                        {/* Financial Group: Patrimonio + Líquido + Stake & Rendimiento */}
+                        <div className="flex items-center gap-4">
+                            {/* Patrimonio Total */}
+                            <div>
+                                <div className="flex items-center gap-1.5">
+                                    <h1 className="text-xs text-muted font-medium uppercase tracking-widest">{t.header.totalNetWorth}</h1>
+                                    <span className="text-[9px] font-mono font-bold text-accent-teal bg-accent-teal/10 px-1 py-0.2 rounded border border-accent-teal/20">
+                                        {activeCurrency}
+                                    </span>
+                                </div>
+                                <p className="text-lg font-bold font-mono">
                                     {balanceLoading || profileLoading ? (
-                                        <span className="animate-pulse bg-muted/10 rounded w-20 h-6 block mt-1"></span>
+                                        <span className="animate-pulse bg-muted/10 rounded w-16 h-5 block mt-1"></span>
                                     ) : (
                                         tripleNetWorth.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']
                                     )}
                                 </p>
-                                <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-400/20">
-                                    <TrendingUp className="w-3 h-3" />
-                                    +{activeApy}% APY
+                            </div>
+
+                            {/* Separador */}
+                            <div className="h-6 w-[1px] bg-border-subtle hidden xl:block"></div>
+
+                            {/* Líquido Disponible */}
+                            <div className="hidden xl:flex flex-col">
+                                <span className="text-[10px] text-muted font-medium uppercase tracking-wider">
+                                    Líquido
                                 </span>
+                                <span className="font-mono text-sm font-bold text-foreground">
+                                    {balanceLoading ? "..." : tripleLiquid.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                </span>
+                            </div>
+
+                            {/* Separador */}
+                            <div className="h-6 w-[1px] bg-border-subtle hidden md:block"></div>
+
+                            {/* En Stake + Rendimiento Verde */}
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <div className="flex flex-col text-left">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/80">
+                                            En Stake
+                                        </span>
+                                        <span className="text-[9px] font-bold text-emerald-300 bg-emerald-400/20 px-1 py-0.2 rounded flex items-center gap-0.5">
+                                            <TrendingUp className="w-2.5 h-2.5" />
+                                            +{activeApy}% APY
+                                        </span>
+                                    </div>
+                                    <span className="font-mono text-xs font-black text-emerald-300">
+                                        {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -116,19 +150,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     {c}
                                 </button>
                             ))}
-                        </div>
-
-                        {/* Stake en Verde Vibrante */}
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <div className="flex flex-col text-left">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/80">
-                                    En Stake ({activeApy}% APY)
-                                </span>
-                                <span className="font-mono text-xs font-black text-emerald-300">
-                                    {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
-                                </span>
-                            </div>
                         </div>
 
                         {/* Botón QR */}
