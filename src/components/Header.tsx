@@ -5,11 +5,15 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useStaking } from "@/hooks/useStaking";
 import { ConnectButton } from "@/components/ConnectButton";
-import { Bell, Wallet, ExternalLink, ChevronDown } from "lucide-react";
+import { Bell, Wallet, ExternalLink, ChevronDown, QrCode, Landmark, TrendingUp, Lock } from "lucide-react";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
+import { QRPaymentsModal } from "@/components/QRPaymentsModal";
+import { BankTransferModal } from "@/components/BankTransferModal";
 import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import { getTripleValues, SupportedCurrency, formatCurrency } from "@/lib/currency";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network, isMobile } = useWallet();
@@ -17,17 +21,25 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { authenticated } = usePrivy();
     const { t } = useSettings();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useSharedBalances();
+    const { stakedAmount, activeApy, accruedYield, activeCurrency, setActiveCurrency } = useStaking();
     const { unreadCount } = useNotifications();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
     const isLoggedIn = authenticated || connected;
     const firstName = profile?.first_name || t.profile.role;
 
-    // Simulate Net Worth
-    const xlmValue = (xlmBalance || 0) * 0.15;
+    // Simulate Net Worth & Liquidity
+    const xlmValue = (xlmBalance || 0) * 0.28;
     const auraValue = (profile?.points || 0) * 0.05;
     const usdcValue = usdcBalance || 0;
-    const totalNetWorth = (xlmValue + auraValue + usdcValue).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const totalLiquidUsdc = xlmValue + usdcValue;
+    const totalNetWorthUsdc = totalLiquidUsdc + stakedAmount + auraValue;
+
+    const tripleLiquid = getTripleValues(totalLiquidUsdc, "USDC");
+    const tripleStake = getTripleValues(stakedAmount, "USDC");
+    const tripleNetWorth = getTripleValues(totalNetWorthUsdc, "USDC");
 
     return (
         <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-border-subtle sticky top-0 bg-background/80 backdrop-blur-md z-40">
@@ -50,14 +62,23 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         </div>
                         <div className="h-8 w-[1px] bg-border-glass"></div>
                         <div>
-                            <h1 className="text-sm text-muted font-medium uppercase tracking-widest">{t.header.totalNetWorth}</h1>
                             <div className="flex items-center gap-2">
-                                <p className="text-xl font-bold">
-                                    {balanceLoading || profileLoading ? <span className="animate-pulse bg-muted/10 rounded w-20 h-6 block mt-1"></span> : `${totalNetWorth} USD`}
+                                <h1 className="text-sm text-muted font-medium uppercase tracking-widest">{t.header.totalNetWorth}</h1>
+                                <span className="text-[10px] font-mono font-bold text-accent-teal bg-accent-teal/10 px-1.5 py-0.2 rounded border border-accent-teal/20">
+                                    {activeCurrency}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-xl font-bold font-mono">
+                                    {balanceLoading || profileLoading ? (
+                                        <span className="animate-pulse bg-muted/10 rounded w-20 h-6 block mt-1"></span>
+                                    ) : (
+                                        tripleNetWorth.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']
+                                    )}
                                 </p>
-                                <span className="text-xs font-bold text-accent-teal bg-accent-teal/10 px-2 py-0.5 rounded flex items-center gap-1 border border-accent-teal/20">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" clipRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"></path></svg>
-                                    12.4%
+                                <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-400/20">
+                                    <TrendingUp className="w-3 h-3" />
+                                    +{activeApy}% APY
                                 </span>
                             </div>
                         </div>
@@ -77,10 +98,61 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 )}
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
                 {isLoggedIn && (
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
+                    <div className="flex items-center gap-3">
+                        {/* Currency Quick Toggle */}
+                        <div className="hidden sm:flex items-center gap-1 p-1 bg-foreground/5 rounded-xl border border-border-subtle">
+                            {(["USDC", "ARS", "XLM"] as SupportedCurrency[]).map((c) => (
+                                <button
+                                    key={c}
+                                    onClick={() => setActiveCurrency(c)}
+                                    className={`px-2 py-0.5 rounded-lg text-[10px] font-bold font-mono transition-all ${
+                                        activeCurrency === c
+                                            ? "bg-accent-teal text-background shadow-sm"
+                                            : "text-muted hover:text-foreground"
+                                    }`}
+                                >
+                                    {c}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Stake en Verde Vibrante */}
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <div className="flex flex-col text-left">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/80">
+                                    En Stake ({activeApy}% APY)
+                                </span>
+                                <span className="font-mono text-xs font-black text-emerald-300">
+                                    {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Botón QR */}
+                        <button
+                            onClick={() => setIsQrModalOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 text-xs font-bold transition-all shadow-sm"
+                            title="Cobros y Pagos con QR"
+                        >
+                            <QrCode className="w-3.5 h-3.5 text-purple-400" />
+                            <span className="hidden lg:inline">QR</span>
+                        </button>
+
+                        {/* Botón Retiro Banco ARS */}
+                        <button
+                            onClick={() => setIsBankModalOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-xs font-bold transition-all shadow-sm"
+                            title="Retiro en Pesos a Banco"
+                        >
+                            <Landmark className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="hidden lg:inline">Banco ARS</span>
+                        </button>
+
+                        {/* Mi AURA */}
+                        <div className="hidden xl:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
                             <span className="text-xs text-muted font-bold tracking-wider uppercase">Mi AURA</span>
                             <div className="w-px h-5 bg-border-subtle"></div>
                             <span className="flex items-center text-accent-teal glow-teal">
@@ -89,7 +161,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             </span>
                         </div>
 
-                        {/* Hover Wallet Display — desktop only, only when wallet connected */}
+                        {/* Hover Wallet Display */}
                         {connected && !isMobile && (
                             <div className="relative group">
                                 <button className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle hover:border-accent-teal/30 hover:bg-foreground/10 transition-all min-w-[48px] justify-center">
@@ -97,13 +169,13 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     <ChevronDown className="w-3 h-3 text-muted group-hover:text-accent-teal transition-transform group-hover:rotate-180" />
                                 </button>
 
-                                <div className="absolute top-full right-0 mt-2 w-56 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                                <div className="absolute top-full right-0 mt-2 w-64 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50">
                                     <div className="glass-card p-4 shadow-2xl border border-border-subtle overflow-hidden">
                                         <div className="absolute top-0 right-0 w-16 h-16 bg-accent-teal/5 rounded-bl-full -mr-8 -mt-8"></div>
                                         
-                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Wallet</p>
+                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Multi-Moneda</p>
                                         
-                                        <div className="space-y-3">
+                                        <div className="space-y-2.5">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
@@ -127,6 +199,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                                     ) : xlmBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                 </span>
                                             </div>
+
+                                            <div className="flex items-center justify-between pt-1 border-t border-border-subtle">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">ARS Equivalente</span>
+                                                </div>
+                                                <span className="font-mono text-xs font-bold text-muted">
+                                                    {tripleLiquid.formatted.ars}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <div className="mt-4 pt-3 border-t border-border-subtle">
@@ -145,7 +227,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             </div>
                         )}
 
-                        {/* Network Indicator — only when wallet connected */}
+                        {/* Network Indicator */}
                         {connected && (
                             <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border ${network === 'TESTNET'
                                 ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
@@ -160,7 +242,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 {network === 'PUBLIC' ? t.header.mainnet : network || t.header.offline}
                             </div>
                         )}
-
                     </div>
                 )}
                 <div className="flex items-center gap-4">
@@ -185,6 +266,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <NotificationsDrawer
                 isOpen={isNotificationsOpen}
                 onClose={() => setIsNotificationsOpen(false)}
+            />
+
+            <QRPaymentsModal
+                isOpen={isQrModalOpen}
+                onClose={() => setIsQrModalOpen(false)}
+            />
+
+            <BankTransferModal
+                isOpen={isBankModalOpen}
+                onClose={() => setIsBankModalOpen(false)}
             />
         </header>
     );

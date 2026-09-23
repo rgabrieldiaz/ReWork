@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck, Shield } from "lucide-react";
+import { Home, Lightbulb, TrendingUp, ShoppingBag, Users, LifeBuoy, Target, ChevronLeft, ChevronRight, Globe, ShieldCheck, Shield, Compass, Briefcase } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
@@ -26,7 +26,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
     const navItems = [
         { name: t.nav.dashboard, href: "/app", icon: Home },
-        { name: "Red Global", href: "/app/global-network", icon: Globe },
+        { name: t.nav.servicesNetwork || "Red de Servicios", href: "/app/global-network", icon: Briefcase },
+        { name: t.nav.goals || "Crear Objetivo", href: "/app/goals", icon: Compass },
         { name: t.nav.squadGoals, href: "/app/squad-goals", icon: Target },
         { name: t.nav.crowdfunding, href: "/app/crowdfunding", icon: TrendingUp },
         { name: t.nav.marketplace, href: "/app/marketplace", icon: ShoppingBag },

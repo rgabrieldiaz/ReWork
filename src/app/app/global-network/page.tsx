@@ -83,14 +83,24 @@ export default function GlobalNetworkPage() {
     return (
         <div className="animate-in fade-in duration-500 p-4 sm:p-8">
             <header className="mb-12">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-accent-teal/20 rounded-2xl flex items-center justify-center border border-accent-teal/30">
-                        <Globe className="w-6 h-6 text-accent-teal" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-accent-teal/20 rounded-2xl flex items-center justify-center border border-accent-teal/30">
+                            <Globe className="w-6 h-6 text-accent-teal" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Red de Servicios</h1>
+                            <p className="text-muted">Ofrecé y contratá servicios con todos los miembros y empresas del ecosistema ReWork sin intermediarios.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Red de Creadores Web3</h1>
-                        <p className="text-muted">Explorá misiones y bounties abiertos en todo el ecosistema.</p>
-                    </div>
+
+                    <button 
+                        onClick={() => alert("Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo.")}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-teal text-background rounded-xl font-bold hover:bg-accent-teal/90 transition-all text-sm shadow-[0_0_15px_rgba(0,242,255,0.2)]"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Ofrecer Servicio
+                    </button>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 items-center mt-8">
@@ -98,7 +108,7 @@ export default function GlobalNetworkPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent-teal transition-colors" />
                         <input
                             type="text"
-                            placeholder="Buscar misiones, tecnología, retos..."
+                            placeholder="Buscar servicios, tecnología, desarrollo, diseño..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-foreground/5 border border-border-subtle focus:border-accent-teal/50 rounded-xl py-3 pl-10 pr-4 outline-none transition-all"
@@ -106,11 +116,11 @@ export default function GlobalNetworkPage() {
                     </div>
                     <button className="flex items-center gap-2 px-4 py-3 bg-foreground/5 border border-border-subtle rounded-xl hover:bg-foreground/10 transition-all text-sm font-medium">
                         <Filter className="w-4 h-4" />
-                        Filtros Avanzados
+                        Filtros
                     </button>
                     <div className="ml-auto flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest bg-accent-teal/5 border border-accent-teal/10 px-4 py-2 rounded-full">
                         <Sparkles className="w-3 h-3 text-accent-teal" />
-                        {bounties.length} Misiones Disponibles
+                        {bounties.length} Servicios Activos
                     </div>
                 </div>
             </header>
@@ -166,9 +176,9 @@ export default function GlobalNetworkPage() {
                     <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
                         <Globe className="w-8 h-8 text-muted" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">No se encontraron misiones</h3>
+                    <h3 className="text-xl font-bold mb-2">No se encontraron servicios ni misiones</h3>
                     <p className="text-muted max-w-md mx-auto">
-                        Parece que no hay misiones globales que coincidan con tu búsqueda. Intentá con otros términos o volvé más tarde.
+                        Sé el primero en ofrecer un servicio o buscar una tarea en la comunidad de ReWork sin intermediarios.
                     </p>
                 </div>
             )}
@@ -179,11 +189,11 @@ export default function GlobalNetworkPage() {
                 <div className="relative z-10 flex-1">
                     <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
                         <Sparkles className="text-accent-teal" />
-                        Tu Perfil Aura es tu CV Web3
+                        Tu Perfil Aura es tu CV en la Red de Servicios
                     </h2>
                     <p className="text-muted max-w-2xl">
-                        Cada misión completada, cada punto ganado y cada badge verificado fortalece tu reputación en la Red de Creadores. 
-                        No necesitás enviar archivos adjuntos, tu historial habla por vos.
+                        Cada servicio completado, cada punto ganado y cada pago liberado por Escrow fortalece tu reputación global. 
+                        No necesitás enviar archivos adjuntos ni intermediarios: tu historial on-chain habla por vos.
                     </p>
                 </div>
                 <div className="relative z-10 text-center md:text-right">

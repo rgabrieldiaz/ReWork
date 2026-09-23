@@ -9,6 +9,7 @@ import { ProfileProvider } from "@/hooks/useProfile";
 import { SettingsProvider } from "@/hooks/useSettings";
 import { MainLayout } from "@/components/MainLayout";
 import { BalanceProvider } from "@/hooks/useSharedBalances";
+import { StakingProvider } from "@/hooks/useStaking";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { Toaster } from "sonner";
 import { PrivyWrapper } from "@/components/PrivyWrapper";
@@ -34,14 +35,16 @@ export default function RootLayout({
             <WalletProvider>
               <ProfileProvider>
                 <BalanceProvider>
-                <WorkspaceProvider>
-                  <TWProvider>
-                    <MainLayout>
-                      {children}
-                    </MainLayout>
-                  </TWProvider>
-                </WorkspaceProvider>
-              </BalanceProvider>
+                  <StakingProvider>
+                    <WorkspaceProvider>
+                      <TWProvider>
+                        <MainLayout>
+                          {children}
+                        </MainLayout>
+                      </TWProvider>
+                    </WorkspaceProvider>
+                  </StakingProvider>
+                </BalanceProvider>
               </ProfileProvider>
             </WalletProvider>
           </PrivyWrapper>

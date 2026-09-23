@@ -1,0 +1,276 @@
+"use client";
+
+import React, { useState } from "react";
+import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, ChevronRight, X, Lock } from "lucide-react";
+import { useStaking } from "@/hooks/useStaking";
+import { useSharedBalances } from "@/hooks/useSharedBalances";
+import { formatCurrency, getTripleValues } from "@/lib/currency";
+
+export interface StellarPool {
+  id: string;
+  name: string;
+  protocol: string;
+  apy: number;
+  tvl: string;
+  risk: "Bajo" | "Medio" | "Moderado";
+  assetPair: string;
+  description: string;
+}
+
+const STELLAR_POOLS: StellarPool[] = [
+  {
+    id: "pool-1",
+    name: "Stellar AMM Nativo (USDC / XLM)",
+    protocol: "Stellar Core Protocol 20+",
+    apy: 12.8,
+    tvl: "$ 4.8M USDC",
+    risk: "Bajo",
+    assetPair: "USDC • XLM",
+    description: "Pool de liquidez descentralizado en el libro de órdenes nativo de Stellar con comisiones automáticas.",
+  },
+  {
+    id: "pool-2",
+    name: "RWA Real-World Yield Vault",
+    protocol: "Franklin Templeton / Ondo on Stellar",
+    apy: 8.5,
+    tvl: "$ 18.2M USDC",
+    risk: "Bajo",
+    assetPair: "USDC • T-Bills",
+    description: "Rendimiento respaldado por Bonos del Tesoro de EE.UU. tokenizados sobre Stellar. Máxima seguridad institucional.",
+  },
+  {
+    id: "pool-3",
+    name: "Pool Pesos Argentinos (ARST / USDC)",
+    protocol: "Anclap Stellar Gateway",
+    apy: 19.5,
+    tvl: "$ 1.2M USD",
+    risk: "Medio",
+    assetPair: "ARST • USDC",
+    description: "Liquidez cambiaria local para el corredor Argentina-Global. Alto volumen transaccional y comisiones elevadas.",
+  },
+  {
+    id: "pool-4",
+    name: "Soroswap Smart Auto-Compounder",
+    protocol: "Soroswap DEX",
+    apy: 15.2,
+    tvl: "$ 3.1M USDC",
+    risk: "Moderado",
+    assetPair: "Multi-Asset",
+    description: "Contrato inteligente de Soroban que rebalancea automáticamente entre los pools de mayor rendimiento diario.",
+  },
+];
+
+interface StellarPoolsAgentProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  compact?: boolean;
+}
+
+export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarPoolsAgentProps) {
+  const { stake, stakedAmount, activeApy } = useStaking();
+  const { usdcBalance, refresh } = useSharedBalances();
+
+  const [selectedPool, setSelectedPool] = useState<StellarPool | null>(null);
+  const [stakeAmount, setStakeAmount] = useState<string>("50");
+  const [isTransferring, setIsTransferring] = useState<boolean>(false);
+  const [transferSuccess, setTransferSuccess] = useState<boolean>(false);
+
+  const handleOpenTransfer = (pool: StellarPool) => {
+    setSelectedPool(pool);
+    setTransferSuccess(false);
+  };
+
+  const handleConfirmTransfer = async () => {
+    if (!selectedPool) return;
+    const amount = parseFloat(stakeAmount) || 0;
+    if (amount <= 0) {
+      alert("Por favor ingresa un monto válido a transferir.");
+      return;
+    }
+
+    setIsTransferring(true);
+    setTimeout(async () => {
+      await stake(amount, 6, selectedPool.name);
+      setIsTransferring(false);
+      setTransferSuccess(true);
+      refresh();
+      setTimeout(() => {
+        setTransferSuccess(false);
+        setSelectedPool(null);
+        if (onClose) onClose();
+      }, 2000);
+    }, 1500);
+  };
+
+  const content = (
+    <div className="space-y-6">
+      {/* Agent banner */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-accent-teal/15 via-indigo-500/10 to-transparent border border-accent-teal/20 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-accent-teal/20 text-accent-teal flex items-center justify-center border border-accent-teal/30">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground">Agente DeFi de Rendimiento ReWork</h3>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                OPTIMIZADOR ACTIVO
+              </span>
+            </div>
+            <p className="text-xs text-muted">
+              Detecta automáticamente las mejores oportunidades con APY de la red de Stellar para tu liquidez.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Pools List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {STELLAR_POOLS.map((pool) => {
+          const triple = getTripleValues(100);
+          return (
+            <div
+              key={pool.id}
+              className="glass-card p-5 rounded-2xl border border-border-subtle hover:border-accent-teal/40 transition-all flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="text-[10px] font-mono text-muted uppercase tracking-wider block">
+                      {pool.protocol}
+                    </span>
+                    <h4 className="text-sm font-bold text-foreground group-hover:text-accent-teal transition-colors">
+                      {pool.name}
+                    </h4>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-black font-mono text-emerald-400 block glow-green">
+                      {pool.apy}% APY
+                    </span>
+                    <span className="text-[10px] text-muted">TVL: {pool.tvl}</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted line-clamp-2 mb-4">{pool.description}</p>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-foreground/5 border border-border-subtle text-foreground">
+                    {pool.assetPair}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      pool.risk === "Bajo"
+                        ? "text-emerald-400 bg-emerald-400/10"
+                        : "text-amber-400 bg-amber-400/10"
+                    }`}
+                  >
+                    Riesgo {pool.risk}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => handleOpenTransfer(pool)}
+                  className="px-3 py-1.5 bg-accent-teal/10 hover:bg-accent-teal text-accent-teal hover:text-background font-bold text-xs rounded-xl border border-accent-teal/30 transition-all flex items-center gap-1"
+                >
+                  Trasladar Liquidez
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Transfer Modal overlay */}
+      {selectedPool && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-md glass-card border border-border-subtle p-6 rounded-3xl bg-card shadow-2xl">
+            <button
+              onClick={() => setSelectedPool(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-muted hover:text-foreground"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {transferSuccess ? (
+              <div className="text-center py-6 space-y-3 animate-in zoom-in-95">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-bold">¡Liquidez Trasladada Exitosamente!</h3>
+                <p className="text-xs text-muted">
+                  Tus fondos ahora están generando {selectedPool.apy}% APY en {selectedPool.name}.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-accent-teal mb-1">
+                  <Lock className="w-5 h-5" />
+                  <h3 className="font-bold text-base">Trasladar a {selectedPool.name}</h3>
+                </div>
+                <p className="text-xs text-muted">
+                  Ingresa el monto que deseas colocar en el pool para empezar a devengar rendimiento.
+                </p>
+
+                <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
+                  <div className="flex justify-between text-xs text-muted">
+                    <span>Monto a Bloquear</span>
+                    <span>Disponible: {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={stakeAmount}
+                      onChange={(e) => setStakeAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full bg-transparent text-2xl font-bold font-mono outline-none border-none text-foreground"
+                    />
+                    <span className="font-mono font-bold text-accent-teal">USDC</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex justify-between items-center text-emerald-400 font-mono">
+                  <span>Rendimiento Proyectado:</span>
+                  <span className="font-bold">+{selectedPool.apy}% Anual</span>
+                </div>
+
+                <button
+                  onClick={handleConfirmTransfer}
+                  disabled={isTransferring || parseFloat(stakeAmount) <= 0}
+                  className="w-full py-3.5 bg-accent-teal hover:bg-accent-teal/90 text-background font-bold rounded-2xl text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+                >
+                  {isTransferring ? "Aprobando en Stellar Network..." : "Confirmar Traslado de Liquidez"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (compact) {
+    return content;
+  }
+
+  if (isOpen !== undefined) {
+    if (!isOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+        <div className="relative w-full max-w-3xl glass-card border border-border-subtle p-6 rounded-3xl bg-card shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 p-2 rounded-full text-muted hover:text-foreground"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
+}

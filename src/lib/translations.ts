@@ -2,9 +2,11 @@ export const translations = {
     es: {
         nav: {
             dashboard: "Inicio",
+            servicesNetwork: "Red de Servicios",
+            goals: "Crear Objetivo",
             squadGoals: "Misiones de Equipo",
             crowdfunding: "Colectas",
-            marketplace: "Mercado",
+            marketplace: "Marketplace",
             people: "Equipos",
             learning: "Capacitación",
             helpDesk: "Soporte",
@@ -562,6 +564,8 @@ export const translations = {
     en: {
         nav: {
             dashboard: "Dashboard",
+            servicesNetwork: "Services Network",
+            goals: "Create Goal",
             squadGoals: "Squad Goals",
             crowdfunding: "Pools",
             marketplace: "Marketplace",
