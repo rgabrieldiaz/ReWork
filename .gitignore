@@ -48,3 +48,12 @@ supabase/.temp/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# video rendering & local demo tooling (kept local only)
+video/
+public/video/
+docs/DEMO_VIDEO.md
+
+
+
+
