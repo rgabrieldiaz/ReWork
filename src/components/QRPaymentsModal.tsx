@@ -7,6 +7,7 @@ import { X, QrCode, ArrowDownLeft, ArrowUpRight, Copy, Check, ShieldCheck, Walle
 import { useWallet } from "@/hooks/useWallet";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, convertCurrency, getTripleValues, SupportedCurrency } from "@/lib/currency";
+import { toast } from "sonner";
 
 interface QRPaymentsModalProps {
   isOpen: boolean;
@@ -107,7 +108,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
 
   const handleExecutePayment = async () => {
     if (!recipient) {
-      alert("Por favor ingresa o escanea una dirección de destino válida.");
+      toast.error("Por favor ingresa o escanea una dirección de destino válida.");
       return;
     }
     setIsProcessing(true);

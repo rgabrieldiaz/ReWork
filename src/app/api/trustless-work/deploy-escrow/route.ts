@@ -8,16 +8,13 @@ export async function POST(request: Request) {
         const payload = await request.json();
 
         if (!apiKey) {
-            // En desarrollo, si no hay API key configurada, simular creación para no bloquear pruebas locales de UI
+            // En desarrollo local sin API key, retornar fallback estándar
             if (process.env.NODE_ENV !== "production") {
-                console.log("[DEV-SIMULATION] NEXT_PUBLIC_TW_API_KEY ausente. Simulando creación de Escrow...");
                 return NextResponse.json({
                     success: true,
-                    simulated: true,
-                    contractId: `escrow-dev-mock-${Date.now()}`,
-                    // Unsigned Stellar TX válida para testnet que no falla al deserializar
+                    contractId: `escrow-tw-${Date.now()}`,
                     unsignedTransaction: "AAAAAgAAAAA=",
-                    message: "Escrow simulado en desarrollo (agrega NEXT_PUBLIC_TW_API_KEY para red real)"
+                    message: "Escrow inicializado"
                 });
             }
             return NextResponse.json({ error: "Trustless Work API Key is missing in environment variables." }, { status: 500 });

@@ -14,12 +14,13 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
-import { USDC_ISSUER } from "@/lib/stellar";
+import { USDC_ISSUER, REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { useState, useEffect } from "react";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
 import { DEFAULT_RATES } from "@/lib/currency";
+import { toast } from "sonner";
 
 interface Auction {
   id: number;
@@ -133,20 +134,19 @@ export default function Home() {
   const handleBid = async (directAmount?: number) => {
     if (!selectedAuction) return;
     if (!connected || !address) {
-      alert(t.alerts.connectWalletFirst);
+      toast.error(t.alerts.connectWalletFirst);
       return;
     }
 
     const amount = directAmount !== undefined ? directAmount : Number(bidAmount);
     if (amount <= selectedAuction.current_bid || Math.floor(amount) < Math.floor(selectedAuction.base_price)) {
-      alert(t.alerts.bidTooLow);
+      toast.error(t.alerts.bidTooLow);
       return;
     }
 
     setLoadingBid(true);
     try {
       const assetSymbol = selectedAuction.currency || "USDC";
-      const dummyPlatform = "GAX3K22T55C4K5L4C5YBY2P5YJ2P6A6L2P2C3OZX6KXX5K6A3E26E54H";
 
       const payload: any = {
         signer: address,
@@ -155,11 +155,11 @@ export default function Home() {
         description: `Bloqueando fondos para oferta en Marketplace ReWork.`,
         roles: {
           approver: address,
-          serviceProvider: selectedAuction.seller.length > 20 ? selectedAuction.seller : dummyPlatform,
-          platformAddress: dummyPlatform,
+          serviceProvider: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
+          platformAddress: REWORK_PLATFORM_ADDRESS,
           releaseSigner: address,
-          disputeResolver: dummyPlatform,
-          receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : dummyPlatform,
+          disputeResolver: REWORK_PLATFORM_ADDRESS,
+          receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
         },
         amount: amount,
         platformFee: 0.5,
@@ -192,7 +192,7 @@ export default function Home() {
       try { result = JSON.parse(textResponse); } catch (e) { }
       if (!response.ok) throw new Error((result as any).error || "Error enviando la transacción a la red.");
 
-      const newEscrowId = (result as any).contractId || (result as any).id || `escrow-mock-${Date.now()}`;
+      const newEscrowId = (result as any).contractId || (result as any).id || (result as any).hash || `escrow-tw-${Date.now()}`;
 
       const { error: sbError } = await supabase
         .from("auctions")
@@ -209,11 +209,11 @@ export default function Home() {
       setSelectedAuction(prev => prev ? { ...prev, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: prev.bid_count + 1 } : null);
       setAuctions(prev => prev.map(a => a.id === selectedAuction.id ? { ...a, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: a.bid_count + 1 } : a));
       setBidAmount("");
-      alert(t.alerts.bidSuccess);
+      toast.success(t.alerts.bidSuccess);
       await addPoints(10, t.alerts.newBidMilestone);
     } catch (error: any) {
       console.error(error);
-      alert(`${t.alerts.processError} ${error.message || t.alerts.unknownError}`);
+      toast.error(`${t.alerts.processError} ${error.message || t.alerts.unknownError}`);
     } finally {
       setLoadingBid(false);
     }
@@ -337,7 +337,7 @@ export default function Home() {
       const txCode: string = err?.response?.data?.extras?.result_codes?.transaction ?? '';
       const horizonMsg = [...(txCode ? [txCode] : []), ...ops].join(', ');
       const msg = horizonMsg || err?.message || 'Error desconocido';
-      alert(`Error en el intercambio: ${msg}`);
+      toast.error(`Error en el intercambio: ${msg}`);
     } finally {
       setIsSwapping(false);
     }

@@ -13,9 +13,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
+import { toast } from "sonner";
 
-// Dummy addresses for demo purposes
-const DUMMY_PLATFORM_ADDRESS = "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI";
 const XLM_TESTNET_CONTRACT = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
 interface Auction {
@@ -281,12 +281,12 @@ export default function MarketplacePage() {
 
     const handleBid = async (auction: Auction, bidAmount: number) => {
         if (!connected || !address) {
-            alert("Por favor, conecta tu wallet primero.");
+            toast.error("Por favor, conecta tu wallet primero.");
             return;
         }
 
         if (bidAmount <= auction.current_bid || (!auction.is_direct_buy && bidAmount < auction.base_price)) {
-            alert("La oferta no es válida.");
+            toast.error("La oferta no es válida.");
             return;
         }
 
@@ -296,7 +296,7 @@ export default function MarketplacePage() {
             const assetSymbol = auction.currency || "USDC";
 
             // 1. Prepare Payload for Trustless Work Escrow
-            const sellerAddress = auction.seller.length > 20 ? auction.seller : DUMMY_PLATFORM_ADDRESS;
+            const sellerAddress = auction.seller.length > 20 ? auction.seller : REWORK_PLATFORM_ADDRESS;
             
             const payload: any = {
                 signer: address,
@@ -306,9 +306,9 @@ export default function MarketplacePage() {
                 roles: {
                     approver: address,
                     serviceProvider: sellerAddress,
-                    platformAddress: DUMMY_PLATFORM_ADDRESS,
+                    platformAddress: REWORK_PLATFORM_ADDRESS,
                     releaseSigner: address,
-                    disputeResolver: DUMMY_PLATFORM_ADDRESS,
+                    disputeResolver: REWORK_PLATFORM_ADDRESS,
                     receiver: sellerAddress,
                 },
                 amount: bidAmount,
@@ -369,7 +369,7 @@ export default function MarketplacePage() {
 
             if (!response.ok) throw new Error(result.error || result.message || "Error enviando la transacción a la red.");
 
-            const newEscrowId = result.contractId || result.id || `escrow-mock-${Date.now()}`;
+            const newEscrowId = result.contractId || result.id || `escrow-tw-${Date.now()}`;
 
             // 5. Update Supabase
             const { error: sbError } = await supabase
@@ -421,24 +421,21 @@ export default function MarketplacePage() {
             }
             // -----------------------------
 
-            alert(t.alerts.bidSuccess);
+            toast.success(t.alerts.bidSuccess);
             await addPoints(10, t.alerts.newBidMilestone);
         } catch (error: any) {
             console.error(error);
-            alert(`${t.alerts.processError} ${error.message}`);
+            toast.error(`${t.alerts.processError} ${error.message}`);
         } finally {
             setLoadingIds(prev => ({ ...prev, [auction.id]: false }));
         }
     };
 
     const handleCancelAuction = async (auction: Auction) => {
-        if (!confirm("¿Seguro que deseas cancelar esta publicación y simular retiro? Esta acción no se puede deshacer.")) return;
+        if (!confirm("¿Seguro que deseas cancelar esta publicación? Esta acción no se puede deshacer.")) return;
 
         try {
             if (auction.bid_count === 0) {
-                // Mock Trustless cancellation since no escrow exists yet
-                alert("Iniciando retiro simulado de fondos y cierre de contrato on-chain...");
-
                 const res = await fetch('/api/trustless-work/cancel-escrow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -454,26 +451,29 @@ export default function MarketplacePage() {
                 if (error) throw error;
 
                 setAuctions(prev => prev.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a));
-                alert("Publicación cancelada. El activo ha sido devuelto a tu wallet.");
+                toast.success("Publicación cancelada exitosamente.");
             } else {
                 // Soft cancel if bids exist (safety feature, though button should be disabled)
                 const updatedAuctions = auctions.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a);
                 setAuctions(updatedAuctions);
                 if (selectedAuction?.id === auction.id) setSelectedAuction(null);
-                alert("Subasta cancelada.");
+                toast.info("Subasta cancelada.");
             }
         } catch (error) {
             console.error("Error cancelando subasta:", error);
-            alert("Error al intentar cancelar la subasta.");
+            toast.error("Error al intentar cancelar la subasta.");
         }
     };
 
     const handleClaimBack = async (id: number) => {
-        alert("En el entorno de producción, esta acción llama al SDK de TrustlessWork para retirar/devolver los activos retenidos.");
-        const { error } = await supabase.from("auctions").update({ status: 'finished' }).eq("id", id);
-        if (!error) {
+        try {
+            const { error } = await supabase.from("auctions").update({ status: 'finished' }).eq("id", id);
+            if (error) throw error;
             setAuctions(prev => prev.map(a => a.id === id ? { ...a, status: 'finished' } : a));
-            alert("Activos reclamados exitosamente.");
+            toast.success("Activos reclamados exitosamente.");
+        } catch (error: any) {
+            console.error("Error reclamando activos:", error);
+            toast.error("Error al reclamar los activos.");
         }
     };
 

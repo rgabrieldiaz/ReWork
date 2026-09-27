@@ -6,6 +6,7 @@ import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, Chevr
 import { useStaking } from "@/hooks/useStaking";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, getTripleValues } from "@/lib/currency";
+import { toast } from "sonner";
 
 export interface StellarPool {
   id: string;
@@ -91,7 +92,7 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
     if (!selectedPool) return;
     const amount = parseFloat(stakeAmount) || 0;
     if (amount <= 0) {
-      alert("Por favor ingresa un monto válido a transferir.");
+      toast.error("Por favor ingresa un monto válido a transferir.");
       return;
     }
 

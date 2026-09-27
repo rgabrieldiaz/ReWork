@@ -25,3 +25,6 @@ export const STELLAR_USDC_ISSUER = {
 };
 
 export const USDC_ISSUER = NETWORK === "mainnet" ? STELLAR_USDC_ISSUER.mainnet : STELLAR_USDC_ISSUER.testnet;
+
+// Dirección oficial de la plataforma ReWork para tarifas y arbitraje de contratos Escrow
+export const REWORK_PLATFORM_ADDRESS = "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI";

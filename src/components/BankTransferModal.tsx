@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X, Landmark, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, convertCurrency, DEFAULT_RATES } from "@/lib/currency";
+import { toast } from "sonner";
 
 interface BankTransferModalProps {
   isOpen: boolean;
@@ -44,11 +45,11 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
 
   const handleTransfer = () => {
     if (numericUsdc <= 0) {
-      alert("Por favor ingresa un monto mayor a 0.");
+      toast.error("Por favor ingresa un monto mayor a 0.");
       return;
     }
     if (!cbuAlias.trim()) {
-      alert("Por favor ingresa un CBU, CVU o Alias válido.");
+      toast.error("Por favor ingresa un CBU, CVU o Alias válido.");
       return;
     }
 

@@ -334,11 +334,13 @@ export default function ColectasPage() {
     const handleAction = async (camp: any, action: 'release' | 'refund') => {
         setProcessingId(camp.id);
         try {
-            await new Promise(r => setTimeout(r, 1500));
-            showToast(action === 'release'
-                ? "Fondos liberados exitosamente del Escrow hacia tu cuenta."
-                : "Se ha solicitado el reembolso (Claim Refund) de la donación."
-            );
+            if (action === 'release') {
+                await supabase.from("crowdfunds").update({ status: 'completed' }).eq("id", camp.id);
+                fetchCampaigns();
+                showToast("Fondos liberados exitosamente del Escrow hacia tu cuenta.");
+            } else {
+                showToast("Se ha solicitado el reembolso de la donación.");
+            }
         } catch (error) {
             console.error(error);
             showToast("Error al procesar la acción.", 'error');

@@ -6,6 +6,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useSettings } from "@/hooks/useSettings";
 import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -103,7 +104,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             await handleAutoSave('avatar_url', publicUrl);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert(t.profile.uploadError);
+            toast.error(t.profile.uploadError);
         } finally {
             setIsUploading(false);
         }

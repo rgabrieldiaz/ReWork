@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { toast } from "sonner";
 
 interface CreateAuctionModalProps {
     isOpen: boolean;
@@ -111,17 +112,17 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!connected || !address) {
-            alert("Conecta tu billetera primero para publicar un artículo.");
+            toast.error("Conecta tu billetera primero para publicar un artículo.");
             return;
         }
 
         if (!title || !basePrice) {
-            alert("Por favor completa los campos obligatorios.");
+            toast.error("Por favor completa los campos obligatorios.");
             return;
         }
 
         if (privacy === "private" && !selectedSquadId) {
-            alert("Por favor selecciona un equipo para la subasta privada.");
+            toast.error("Por favor selecciona un equipo para la subasta privada.");
             return;
         }
 
@@ -149,6 +150,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             if (error) throw error;
 
             await addPoints(50, "Subasta publicada");
+            toast.success("Subasta publicada con éxito");
             onCreated();
             onClose();
         } catch (err: any) {
@@ -159,7 +161,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             const errDetails = err?.details ? ` (${err.details})` : "";
             const errHint = err?.hint ? ` Pista: ${err.hint}` : "";
             
-            alert(`Error creando la subasta: ${errMsg}${errDetails}${errHint}`);
+            toast.error(`Error creando la subasta: ${errMsg}${errDetails}${errHint}`);
         } finally {
             setLoading(false);
         }

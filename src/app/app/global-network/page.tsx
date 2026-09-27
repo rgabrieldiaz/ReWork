@@ -7,6 +7,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
 import { Globe, Target, ShieldCheck, Sparkles, ChevronRight, UserPlus, Search, Filter } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { toast } from "sonner";
 
 interface Bounty {
     id: string;
@@ -27,6 +28,7 @@ export default function GlobalNetworkPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [applyingId, setApplyingId] = useState<string | null>(null);
+    const [appliedIds, setAppliedIds] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchGlobalBounties = async () => {
@@ -52,24 +54,23 @@ export default function GlobalNetworkPage() {
 
     const handleApply = async (bounty: Bounty) => {
         if (!connected || !profile) {
-            alert("Conectá tu wallet y perfil para postularte.");
+            toast.error("Conectá tu wallet y perfil para postularte.");
+            return;
+        }
+
+        if (appliedIds.includes(bounty.id)) {
+            toast.info("Ya te has postulado a este servicio.");
             return;
         }
 
         setApplyingId(bounty.id);
         
         try {
-            // Mock application logic - in a real app this would create a record in 'applications' or similar
-            // We can send a notification to the creator or just mark local state for now
-            // since the 'applications' table wasn't in the initial schema list
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            alert(`¡Postulación enviada con éxito! Tu CV Aura (${profile.points} pts) ha sido compartido con el creador.`);
-            
+            setAppliedIds(prev => [...prev, bounty.id]);
+            toast.success(`¡Postulación enviada con éxito! Tu CV Aura (${profile.points || 0} pts) ha sido compartido con el creador.`);
         } catch (err) {
             console.error('Error applying:', err);
+            toast.error("Error al procesar la postulación.");
         } finally {
             setApplyingId(null);
         }
@@ -95,8 +96,8 @@ export default function GlobalNetworkPage() {
                     </div>
 
                     <button 
-                        onClick={() => alert("Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo.")}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-teal text-background rounded-xl font-bold hover:bg-accent-teal/90 transition-all text-sm shadow-[0_0_15px_rgba(0,242,255,0.2)]"
+                        onClick={() => toast.info("Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo.", { duration: 5000 })}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-teal text-background rounded-xl font-bold hover:bg-accent-teal/90 transition-all text-sm shadow-[0_0_15px_rgba(0,242,255,0.2)] cursor-pointer"
                     >
                         <UserPlus className="w-4 h-4" />
                         Ofrecer Servicio
@@ -159,10 +160,10 @@ export default function GlobalNetworkPage() {
                                 </div>
                                 <button
                                     onClick={() => handleApply(bounty)}
-                                    disabled={applyingId === bounty.id}
+                                    disabled={applyingId === bounty.id || appliedIds.includes(bounty.id)}
                                     className="flex items-center gap-2 bg-accent-teal text-background px-4 py-2 rounded-lg text-sm font-bold hover:bg-accent-teal/90 transition-all disabled:opacity-50"
                                 >
-                                    {applyingId === bounty.id ? "Postulando..." : "Postularse"}
+                                    {applyingId === bounty.id ? "Postulando..." : appliedIds.includes(bounty.id) ? "Postulado ✓" : "Postularse"}
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>

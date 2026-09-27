@@ -28,6 +28,7 @@ import { formatCurrency, getTripleValues, SupportedCurrency, DEFAULT_RATES } fro
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
+import { toast } from "sonner";
 
 export default function GoalsPage() {
   const { connected, address } = useWallet();
@@ -124,7 +125,7 @@ export default function GoalsPage() {
 
   const handleExecuteTransfer = () => {
     if (!transferTarget) {
-      alert("Ingresa un usuario o dirección Stellar de destino.");
+      toast.error("Ingresa un usuario o dirección Stellar de destino.");
       return;
     }
     setTransferSuccess(true);

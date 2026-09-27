@@ -10,6 +10,7 @@ import CreateSquadModal from "@/components/CreateSquadModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWallet } from "@/hooks/useWallet";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { toast } from "sonner";
 
 export default function ColaboradoresPage() {
     const { t } = useSettings();
@@ -129,10 +130,10 @@ export default function ColaboradoresPage() {
                     action_url: '/colaboradores'
                 });
             }
-            alert("Success!");
+            toast.success("¡Te has unido al equipo exitosamente!");
         } catch (error: any) {
             console.error("Error joining squad:", error);
-            alert(error.message || "Error joining squad. You might already be a member or pending.");
+            toast.error(error.message || "Error al unirse al equipo.");
         }
     };
 
@@ -140,9 +141,9 @@ export default function ColaboradoresPage() {
         if (!confirm("¿Seguro que quieres abandonar este Equipo?")) return;
         try {
             await leaveSquad(squadId);
-            alert("Has abandonado el Equipo.");
+            toast.success("Has abandonado el Equipo.");
         } catch (error: any) {
-            alert(error.message || "Error al abandonar el equipo.");
+            toast.error(error.message || "Error al abandonar el equipo.");
         }
     };
 
@@ -150,9 +151,9 @@ export default function ColaboradoresPage() {
         if (!confirm("¿Estás seguro de desarmar este Equipo? Esta acción no se puede deshacer.")) return;
         try {
             await disbandSquad(squadId);
-            alert("El Equipo ha sido eliminado.");
+            toast.success("El Equipo ha sido eliminado.");
         } catch (error: any) {
-            alert(error.message || "Error al eliminar el equipo.");
+            toast.error(error.message || "Error al eliminar el equipo.");
         }
     };
 
@@ -161,7 +162,7 @@ export default function ColaboradoresPage() {
         const otherMembers = members.filter(m => m.user_id !== profile?.id && m.role !== 'pending');
         
         if (otherMembers.length === 0) {
-            alert("No hay otros miembros aceptados en este equipo para transferir el liderazgo.");
+            toast.error("No hay otros miembros aceptados en este equipo para transferir el liderazgo.");
             return;
         }
 
@@ -174,7 +175,7 @@ export default function ColaboradoresPage() {
 
         const targetMember = otherMembers.find(m => m.user_id === newLeaderId);
         if (!targetMember) {
-            alert("ID de usuario no válido o no es miembro de este equipo.");
+            toast.error("ID de usuario no válido o no es miembro de este equipo.");
             return;
         }
 
@@ -182,9 +183,9 @@ export default function ColaboradoresPage() {
 
         try {
             await transferLeadership(squadId, newLeaderId);
-            alert("Liderazgo transferido exitosamente.");
+            toast.success("Liderazgo transferido exitosamente.");
         } catch (error: any) {
-            alert(error.message || "Error al transferir el liderazgo.");
+            toast.error(error.message || "Error al transferir el liderazgo.");
         }
     };
 
@@ -206,7 +207,7 @@ export default function ColaboradoresPage() {
         const mySquads = squads.filter(s => s.leader_id === profile?.id);
         
         if (mySquads.length === 0) {
-            alert("Necesitas ser líder de al menos un equipo para invitar a alguien.");
+            toast.error("Necesitas ser líder de al menos un equipo para invitar a alguien.");
             return;
         }
 
@@ -239,18 +240,19 @@ export default function ColaboradoresPage() {
                 action_status: 'pending'
             }]);
 
-            alert(`Invitación enviada a ${user.first_name || 'el usuario'} para unirse a ${squad.name}`);
+            toast.success(`Invitación enviada a ${user.first_name || 'el usuario'} para unirse a ${squad.name}`);
             setShowInviteModal(false);
         } catch (err) {
             console.error("Error sending invite:", err);
-            alert("Error al enviar la invitación");
+            toast.error("Error al enviar la invitación");
         }
     };
 
     const handleProposeMission = (user: UserProfile) => {
         const mySquads = squads.filter(s => s.leader_id === profile?.id);
         if (mySquads.length === 0) {
-            return alert("Necesitas ser líder de al menos un equipo para proponer una misión.");
+            toast.error("Necesitas ser líder de al menos un equipo para proponer una misión.");
+            return;
         }
         
         setSelectedUserForMission(user);
@@ -265,7 +267,8 @@ export default function ColaboradoresPage() {
         e.preventDefault();
         if (!selectedUserForMission || !profile) return;
         if (!missionForm.title || !missionForm.description || !missionForm.squadId) {
-            return alert("Por favor completa los campos obligatorios.");
+            toast.error("Por favor completa los campos obligatorios.");
+            return;
         }
 
         setIsSubmittingMission(true);
@@ -291,13 +294,13 @@ export default function ColaboradoresPage() {
                 }
             }]);
 
-            alert(`Propuesta de misión enviada a ${selectedUserForMission.first_name}`);
+            toast.success(`Propuesta de misión enviada a ${selectedUserForMission.first_name}`);
             setShowProposeMissionModal(false);
             setMissionForm({ title: "", description: "", squadId: "", reward: "" });
             setOpenConnectDropdown(null);
         } catch (err) {
             console.error("Error submitting mission:", err);
-            alert("Error al enviar la propuesta.");
+            toast.error("Error al enviar la propuesta.");
         } finally {
             setIsSubmittingMission(false);
         }
@@ -467,7 +470,7 @@ export default function ColaboradoresPage() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (members.find((sm: any) => sm.user_id === profile?.id)?.role === 'pending') {
-                                                            alert("Tu solicitud está pendiente de aprobación.");
+                                                            toast.info("Tu solicitud está pendiente de aprobación.");
                                                         } else {
                                                             handleLeaveSquad(squad.id);
                                                         }

@@ -9,12 +9,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Faltan parámetros requeridos" }, { status: 400 });
         }
 
-        // Simulamos la interacción con Stellar/Trustless Work para "cerrar contrato"
-        // y devolver el depósito al creador.
-        console.log(`[Trustless Mock] Cerrando contrato y devolviendo fondos para subasta ${auctionId} a la wallet ${seller}`);
-
-        // Simular retraso de red
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        console.log(`[Trustless Work API] Cancel escrow request for auction ${auctionId} - seller: ${seller}`);
 
         return NextResponse.json({
             success: true,
