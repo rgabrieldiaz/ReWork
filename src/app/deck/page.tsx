@@ -27,17 +27,20 @@ import {
   Wallet,
   Building2,
   Briefcase,
-  AlertCircle,
-  Smartphone,
   Star,
   Landmark
 } from "lucide-react";
 import { ReWorkIcon, ReWorkLogo } from "@/components/ReWorkLogo";
+import { deckTranslations, DeckLanguage } from "./deckTranslations";
 
 export default function PresentationDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [language, setLanguage] = useState<DeckLanguage>("en");
   const totalSlides = 12;
+
+  const t = deckTranslations[language];
+  const slidesData = t.slidesData;
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev < totalSlides - 1 ? prev + 1 : prev));
@@ -85,21 +88,6 @@ export default function PresentationDeckPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide, totalSlides]);
 
-  const slidesData = [
-    { title: "Portada", subtitle: "ReWork — Confianza por Código" },
-    { title: "El Problema", subtitle: "25% Validación del Problema" },
-    { title: "La Solución", subtitle: "25% Foco de Producto" },
-    { title: "Módulos Core", subtitle: "Workspaces, Red de Servicios y Misiones" },
-    { title: "4 Primitivas Stellar", subtitle: "25% Ejecución Técnica (Desempate #1)" },
-    { title: "Producto Real", subtitle: "UX, Métricas & Farming en Vivo" },
-    { title: "Arquitectura", subtitle: "Stellar Building Blocks & Soroban" },
-    { title: "Modelo de Negocio", subtitle: "25% Foco de Negocio" },
-    { title: "Tracción & Calidad", subtitle: "0 Mocks, Tests & Deploy Activo" },
-    { title: "Comparativa", subtitle: "Ventajas frente a Alternativas" },
-    { title: "Roadmap 90 Días", subtitle: "Instawards & Pipeline SCF 7.0" },
-    { title: "Equipo & Cierre", subtitle: "Builders y Contacto" }
-  ];
-
   return (
     <div className="min-h-screen bg-[#050c14] text-slate-100 font-sans selection:bg-[#00f2ff]/30 selection:text-[#00f2ff] flex flex-col justify-between overflow-x-hidden">
       {/* Print Specific CSS */}
@@ -141,16 +129,19 @@ export default function PresentationDeckPage() {
       `}</style>
 
       {/* Top Header / Presentation Navigation (Screen Only) */}
-      <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 px-6 py-3 flex items-center justify-between">
+      <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
             <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
           </div>
           <div>
             <span className="font-extrabold tracking-tight text-white flex items-center gap-2 font-mono">
-              re<span className="text-[#00f2ff]">work</span> <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">Scale Track</span>
+              re<span className="text-[#00f2ff]">work</span>{" "}
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">
+                {t.nav.scaleTrack}
+              </span>
             </span>
-            <p className="text-[11px] text-slate-400 font-mono hidden sm:block">Argentina Builder Challenge (BAF × Stellar)</p>
+            <p className="text-[11px] text-slate-400 font-mono hidden sm:block">{t.nav.sub}</p>
           </div>
         </div>
 
@@ -160,37 +151,66 @@ export default function PresentationDeckPage() {
             onClick={prevSlide}
             disabled={currentSlide === 0}
             className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
-            title="Anterior (←)"
+            title={t.nav.prev}
           >
             <ChevronLeft className="w-4 h-4 text-[#00f2ff]" />
           </button>
           <div className="font-mono text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-slate-300">
-            <span className="text-[#00f2ff] font-bold">{String(currentSlide + 1).padStart(2, "0")}</span> / {String(totalSlides).padStart(2, "0")}
+            <span className="text-[#00f2ff] font-bold">{String(currentSlide + 1).padStart(2, "0")}</span> /{" "}
+            {String(totalSlides).padStart(2, "0")}
           </div>
           <button
             onClick={nextSlide}
             disabled={currentSlide === totalSlides - 1}
             className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
-            title="Siguiente (→)"
+            title={t.nav.next}
           >
             <ChevronRight className="w-4 h-4 text-[#00f2ff]" />
           </button>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Language Switcher */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
+            <button
+              onClick={() => setLanguage("en")}
+              className={`px-2 py-1 rounded transition-all flex items-center gap-1 ${
+                language === "en"
+                  ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="English (Default)"
+            >
+              <Globe className="w-3 h-3" />
+              <span>EN</span>
+            </button>
+            <button
+              onClick={() => setLanguage("es")}
+              className={`px-2 py-1 rounded transition-all ${
+                language === "es"
+                  ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Español"
+            >
+              ES
+            </button>
+          </div>
+
           <button
             onClick={() => window.print()}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00f2ff]/10 border border-[#00f2ff]/40 text-[#00f2ff] hover:bg-[#00f2ff] hover:text-[#050c14] font-mono text-xs font-semibold transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)]"
-            title="Exportar toda la presentación a PDF"
+            title={t.nav.downloadPdfTitle}
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Descargar PDF</span>
+            <span className="hidden sm:inline">{t.nav.downloadPdf}</span>
+            <span className="sm:hidden">{t.nav.downloadPdfShort}</span>
           </button>
           <button
             onClick={toggleFullscreen}
             className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 text-slate-300 hover:text-white transition-all hidden sm:block"
-            title="Pantalla Completa (F)"
+            title={t.nav.fullscreen}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
@@ -198,7 +218,7 @@ export default function PresentationDeckPage() {
             href="/app"
             className="text-xs font-mono text-slate-400 hover:text-[#00f2ff] transition-all flex items-center gap-1"
           >
-            <span>Ver App</span>
+            <span>{t.nav.viewApp}</span>
             <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
@@ -220,13 +240,15 @@ export default function PresentationDeckPage() {
           <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Slide Content Dynamic Renderer */}
-          <SlideRenderer slideIndex={currentSlide} />
+          <SlideRenderer slideIndex={currentSlide} language={language} />
 
           {/* Slide Footer */}
           <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-500">
-            <span>ReWork Protocol · Stellar × BAF Argentina Builder Challenge 2026</span>
+            <span>{t.nav.footerLeft}</span>
             <span className="text-[#00f2ff]/80">{slidesData[currentSlide].title}</span>
-            <span>Diapositiva {currentSlide + 1} de {totalSlides}</span>
+            <span>
+              {t.nav.slidePrefix} {currentSlide + 1} {t.nav.of} {totalSlides}
+            </span>
           </div>
         </div>
       </main>
@@ -253,10 +275,12 @@ export default function PresentationDeckPage() {
       <div className="print-deck-container">
         {Array.from({ length: totalSlides }).map((_, idx) => (
           <div key={idx} className="slide-page bg-[#050c14] text-white p-12">
-            <SlideRenderer slideIndex={idx} />
+            <SlideRenderer slideIndex={idx} language={language} />
             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between text-xs font-mono text-slate-400">
               <span>ReWork — Argentina Builder Challenge 2026 (Scale Track)</span>
-              <span>Diapositiva {idx + 1} de {totalSlides}</span>
+              <span>
+                {t.nav.slidePrefix} {idx + 1} {t.nav.of} {totalSlides}
+              </span>
             </div>
           </div>
         ))}
@@ -268,17 +292,20 @@ export default function PresentationDeckPage() {
 // -------------------------------------------------------------
 // Component: Slide Content Renderer for Screen & PDF
 // -------------------------------------------------------------
-function SlideRenderer({ slideIndex }: { slideIndex: number }) {
+function SlideRenderer({ slideIndex, language }: { slideIndex: number; language: DeckLanguage }) {
+  const t = deckTranslations[language];
+
   switch (slideIndex) {
     // ---------------------------------------------------------
-    // SLIDE 1: PORTADA
+    // SLIDE 1: PORTADA / COVER
     // ---------------------------------------------------------
-    case 0:
+    case 0: {
+      const s = t.slide0;
       return (
         <div className="flex flex-col items-center justify-center text-center py-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2ff]/10 border border-[#00f2ff]/30 text-[#00f2ff] text-xs font-mono mb-6">
             <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-            <span>Argentina Builder Challenge · Stellar × BAF · Track Scale</span>
+            <span>{s.badge}</span>
           </div>
 
           <div className="mb-6 flex justify-center">
@@ -286,54 +313,56 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
           </div>
 
           <p className="text-xl sm:text-2xl font-light text-slate-300 italic mb-4 max-w-2xl">
-            &ldquo;El valor de la confianza garantizado por el código.&rdquo;
+            {s.quote}
           </p>
 
           <p className="text-sm sm:text-base text-slate-400 max-w-2xl mb-10 leading-relaxed font-sans">
-            Plataforma descentralizada de Workspaces B2B, Custodia Inteligente en Soroban y Reputación Soberana para empresas, agencias y DAOs en América Latina.
+            {s.description}
           </p>
 
           {/* 4 Stellar Building Blocks Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full">
             <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <ShieldCheck className="w-5 h-5 text-[#00f2ff] mx-auto mb-1" />
-              <p className="font-mono text-xs font-bold">Soroban Smart Escrow</p>
-              <p className="text-[11px] text-slate-400">Trustless Work V1/V2</p>
+              <p className="font-mono text-xs font-bold">{s.badge1Title}</p>
+              <p className="text-[11px] text-slate-400">{s.badge1Sub}</p>
             </div>
             <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <QrCode className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-              <p className="font-mono text-xs font-bold">Pagos QR SEP-0007</p>
-              <p className="text-[11px] text-slate-400">Deep-linking USDC/ARS</p>
+              <p className="font-mono text-xs font-bold">{s.badge2Title}</p>
+              <p className="text-[11px] text-slate-400">{s.badge2Sub}</p>
             </div>
             <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <TrendingUp className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <p className="font-mono text-xs font-bold">DeFi Yield &amp; Swaps</p>
-              <p className="text-[11px] text-slate-400">Stellar AMM Protocol 20+</p>
+              <p className="font-mono text-xs font-bold">{s.badge3Title}</p>
+              <p className="text-[11px] text-slate-400">{s.badge3Sub}</p>
             </div>
             <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
               <Star className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-              <p className="font-mono text-xs font-bold">AURA CV On-Chain</p>
-              <p className="text-[11px] text-slate-400">Reputación Soberana</p>
+              <p className="font-mono text-xs font-bold">{s.badge4Title}</p>
+              <p className="text-[11px] text-slate-400">{s.badge4Sub}</p>
             </div>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
-    // SLIDE 2: EL PROBLEMA
+    // SLIDE 2: EL PROBLEMA / THE PROBLEM
     // ---------------------------------------------------------
-    case 1:
+    case 1: {
+      const s = t.slide1;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-red-500 pl-4">
-            <span className="font-mono text-xs uppercase tracking-widest text-red-400">01 / Criterio 1 (25%): Validación del Problema</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-red-400">{s.tag}</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              La Desconfianza Cuesta Millones al Trabajo Digital en LATAM
+              {s.heading}
             </h2>
           </div>
 
           <p className="text-sm text-slate-300 max-w-3xl">
-            En América Latina, más de 45 millones de profesionales y empresas enfrentan fricciones que destruyen acuerdos. Cuando no hay confianza técnica verificable, surgen tres problemas críticos:
+            {s.lead}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
@@ -341,9 +370,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 mb-4 font-bold">
                 1
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Incertidumbre e Impagos</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card1Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                El cliente teme pagar por adelantado y no recibir el trabajo; el profesional teme entregar y no cobrar. Más del <strong className="text-red-300">30%</strong> de freelancers sufren demoras de +45 días o impagos totales por falta de garantías.
+                {s.card1Text}
               </p>
             </div>
 
@@ -351,9 +380,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 mb-4 font-bold">
                 2
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Comisiones Abusivas (10-20%)</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card2Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Plataformas Web2 tradicionales (Upwork, Fiverr) cobran hasta 20% solo por actuar como intermediarios de la desconfianza, sumado a demoras bancarias de 7 días y cepos cambiarios.
+                {s.card2Text}
               </p>
             </div>
 
@@ -361,35 +390,37 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4 font-bold">
                 3
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Reputación Secuestrada</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card3Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Feudalismo digital: la reputación construida con años de trabajo queda enjaulada en servidores privados. Si la plataforma cambia términos o cierra la cuenta, el profesional pierde todo.
+                {s.card3Text}
               </p>
             </div>
           </div>
 
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Mercado Objetivo: +45M de trabajadores remotos</span>
-            <span className="text-[#00f2ff]">Fricción transaccional estimada: &gt; USD $2.4B anuales</span>
+            <span>{s.footerMarket}</span>
+            <span className="text-[#00f2ff]">{s.footerFriction}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
-    // SLIDE 3: LA SOLUCIÓN
+    // SLIDE 3: LA SOLUCIÓN / THE SOLUTION
     // ---------------------------------------------------------
-    case 2:
+    case 2: {
+      const s = t.slide2;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-[#00f2ff] pl-4">
-            <span className="font-mono text-xs uppercase tracking-widest text-[#00f2ff]">02 / Criterio 2 (25%): Foco de Producto</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-[#00f2ff]">{s.tag}</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              ReWork: El Valor de la Confianza Garantizado por el Código
+              {s.heading}
             </h2>
           </div>
 
           <p className="text-sm text-slate-300 max-w-3xl">
-            Reemplazamos la arbitrariedad humana y las comisiones predatorias por código inmutable en Stellar: contratos inteligentes que aseguran los fondos y reglas claras para ambas partes:
+            {s.lead}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
@@ -397,9 +428,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] mb-4">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Custodia No-Custodial</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card1Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Smart Escrow en Soroban (Trustless Work). El cliente bloquea el 100% de los fondos en USDC al inicio. Los fondos se liberan por hitos verificados. Cero riesgo de impago ni estafas.
+                {s.card1Text}
               </p>
             </div>
 
@@ -407,9 +438,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4">
                 <Zap className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Liquidaciones en Segundos</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card2Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Basado en Stellar: transferencias con finalidad en 3 a 5 segundos y comisiones de centavos de dólar. Sin esperas bancarias internacionales de 7 días.
+                {s.card2Text}
               </p>
             </div>
 
@@ -417,34 +448,36 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4">
                 <Star className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Identidad Soberana (AURA)</h3>
+              <h3 className="text-lg font-bold text-white mb-2">{s.card3Title}</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Cada hito y misión completada acumula reputación profesional inmutable on-chain ligada a la clave pública de Stellar del usuario, portable a cualquier ecosistema.
+                {s.card3Text}
               </p>
             </div>
           </div>
 
           {/* Workflow Step Indicator */}
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-300">
-            <span className="flex items-center gap-1.5"><Coins className="w-4 h-4 text-[#00f2ff]" /> 1. Depósito USDC en Soroban</span>
+            <span className="flex items-center gap-1.5"><Coins className="w-4 h-4 text-[#00f2ff]" /> {s.step1}</span>
             <ArrowRight className="w-4 h-4 text-slate-600" />
-            <span className="flex items-center gap-1.5"><Code2 className="w-4 h-4 text-emerald-400" /> 2. Cumplimiento de Hito</span>
+            <span className="flex items-center gap-1.5"><Code2 className="w-4 h-4 text-emerald-400" /> {s.step2}</span>
             <ArrowRight className="w-4 h-4 text-slate-600" />
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-cyan-400" /> 3. Liberación Automática + Puntos AURA</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-cyan-400" /> {s.step3}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
-    // SLIDE 4: MÓDULOS DEL PRODUCTO
+    // SLIDE 4: MÓDULOS DEL PRODUCTO / CORE MODULES
     // ---------------------------------------------------------
-    case 3:
+    case 3: {
+      const s = t.slide3;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-emerald-400 pl-4">
-            <span className="font-mono text-xs uppercase tracking-widest text-emerald-400">03 / Foco de Producto: Ecosistema de Soluciones</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-emerald-400">{s.tag}</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Una Suite Integral para Empresas, Freelancers y DAOs
+              {s.heading}
             </h2>
           </div>
 
@@ -454,9 +487,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 <Building2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Multi-Tenant Workspaces</h3>
+                <h3 className="font-bold text-white text-base">{s.card1Title}</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Espacios de trabajo independientes (`/app/[slug]`) con control de acceso basado en roles (Superadmin, Admin, Member, Guest) protegidos por Row-Level Security en Postgres.
+                  {s.card1Text}
                 </p>
               </div>
             </div>
@@ -466,9 +499,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 <Briefcase className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Red de Servicios &amp; Marketplace</h3>
+                <h3 className="font-bold text-white text-base">{s.card2Title}</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Oferta abierta de servicios entre todos los usuarios del ecosistema ReWork sin intermediarios, con subastas y contratos de custodia obligatorios en Soroban.
+                  {s.card2Text}
                 </p>
               </div>
             </div>
@@ -478,9 +511,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Misiones de Equipo (Squad Goals)</h3>
+                <h3 className="font-bold text-white text-base">{s.card3Title}</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Incentivos y bonos grupales por objetivos comunitarios. Los fondos se fondean en conjunto y se desembolsan por votación o validación del lead técnico.
+                  {s.card3Text}
                 </p>
               </div>
             </div>
@@ -490,38 +523,40 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 <Coins className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Colectas &amp; Crowdfunding</h3>
+                <h3 className="font-bold text-white text-base">{s.card4Title}</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Financiamiento colectivo con transparencia absoluta en Stellar. Los aportantes auditan el progreso de cada hito antes de que los fondos sean liberados.
+                  {s.card4Text}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Rutas operativas: /app/global-network · /app/marketplace · /app/teams · /app/crowdfunding</span>
-            <span className="text-emerald-400">100% Funcional en Testnet</span>
+            <span>{s.footerRoutes}</span>
+            <span className="text-emerald-400">{s.footerStatus}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 5: 4 PRIMITIVAS STELLAR (DESEMPATE #1)
     // ---------------------------------------------------------
-    case 4:
+    case 4: {
+      const s = t.slide4;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-[#00f2ff] pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-[#00f2ff]">
-              04 / Criterio 3 (25%): Ejecución Técnica · Primer Criterio de Desempate
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Las 4 Implementaciones Oficiales de Stellar en ReWork
+              {s.heading}
             </h2>
           </div>
 
           <p className="text-sm text-slate-300 max-w-3xl">
-            ReWork no es un fork ni una interfaz cosmética: aprovecha la pila completa de infraestructura nativa de Stellar para erradicar la desconfianza de punta a punta:
+            {s.lead}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
@@ -532,11 +567,11 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">01 · PAGOS</span>
-                  <h3 className="font-bold text-white text-sm">QR Móvil &amp; Deep-Linking SEP-0007</h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">{s.card1Badge}</span>
+                  <h3 className="font-bold text-white text-sm">{s.card1Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Generación de URIs estándar `web+stellar:pay` compatibles con Lobstr, Freighter y xBull. Liquidación en 3-5 segundos sin copiar claves públicas.
+                  {s.card1Text}
                 </p>
               </div>
             </div>
@@ -548,11 +583,11 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00f2ff]/20 text-[#00f2ff] font-bold">02 · SMART CONTRACTS</span>
-                  <h3 className="font-bold text-white text-sm">Custodia No-Custodial en Soroban</h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00f2ff]/20 text-[#00f2ff] font-bold">{s.card2Badge}</span>
+                  <h3 className="font-bold text-white text-sm">{s.card2Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Integración robusta con Trustless Work (V1/V2). Fondos bloqueados en USDC y liberados únicamente por cumplimiento de hitos verificados.
+                  {s.card2Text}
                 </p>
               </div>
             </div>
@@ -564,11 +599,11 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">03 · DEFI &amp; YIELD</span>
-                  <h3 className="font-bold text-white text-sm">Stellar AMM &amp; Horizon Path Swaps</h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">{s.card3Badge}</span>
+                  <h3 className="font-bold text-white text-sm">{s.card3Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  La liquidez ociosa rinde hasta +12.8% APY en pools nativos con el Agente DeFi (`StellarPoolsAgent`), retiro en 1 clic y swaps directos sin slippage.
+                  {s.card3Text}
                 </p>
               </div>
             </div>
@@ -580,35 +615,37 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">04 · IDENTIDAD</span>
-                  <h3 className="font-bold text-white text-sm">AURA CV On-Chain &amp; Onboarding Dual</h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">{s.card4Badge}</span>
+                  <h3 className="font-bold text-white text-sm">{s.card4Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Reputación inmutable portable entre plataformas. Onboarding sin fricción: social login Web2 (Privy) o billetera nativa Web3 (Stellar Wallets Kit).
+                  {s.card4Text}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="p-3 bg-[#00f2ff]/5 border border-[#00f2ff]/30 rounded-xl flex items-center justify-between text-xs font-mono text-[#00f2ff]">
-            <span>Estándares: SEP-0007 · SEP-0024/0038 ready · Protocol 20+ Soroban · Horizon v28</span>
-            <span className="text-white bg-[#00f2ff]/20 px-2 py-0.5 rounded">100% Funcional</span>
+            <span>{s.footerStandards}</span>
+            <span className="text-white bg-[#00f2ff]/20 px-2 py-0.5 rounded">{s.footerFunctional}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
-    // SLIDE 6: PRODUCTO REAL / GALERÍA
+    // SLIDE 6: PRODUCTO REAL / LIVE PRODUCT
     // ---------------------------------------------------------
-    case 5:
+    case 5: {
+      const s = t.slide5;
       return (
         <div className="space-y-4">
           <div className="border-l-4 border-cyan-400 pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-cyan-400">
-              05 / Criterio 2 (25%): Foco de Producto &amp; UX Real
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Experiencia Web3 de Clase Mundial: 100% Funcional
+              {s.heading}
             </h2>
           </div>
 
@@ -625,16 +662,16 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050c14]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                   <span className="text-xs font-mono text-[#00f2ff] bg-black/70 px-2 py-1 rounded border border-[#00f2ff]/30">
-                    Contratos Soroban verificados + DEX Swaps + Red de Servicios
+                    {s.desktopOverlay}
                   </span>
                 </div>
               </div>
               <p className="text-xs font-mono text-slate-400 text-center">
-                Dashboard Web3 Desktop: Sparklines en tiempo real, Red de Servicios, Escrow Soroban y Yield Farming
+                {s.desktopCaption}
               </p>
             </div>
 
-            {/* Pristine Mobile Smartphone Mockup (Pixel-Perfect, Vector, Zero Errors) */}
+            {/* Pristine Mobile Smartphone Mockup */}
             <div className="lg:col-span-5 flex flex-col items-center">
               <div className="w-[270px] bg-[#050c14] border-4 border-slate-700 rounded-[38px] p-3 shadow-2xl relative overflow-hidden ring-1 ring-white/20">
                 {/* Dynamic Island / Speaker */}
@@ -647,10 +684,10 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 <div className="bg-[#0b121e] rounded-[24px] p-3 space-y-2.5 text-white border border-white/5">
                   {/* Top Status */}
                   <div className="flex justify-between items-center text-[10px] text-slate-400 px-1 font-mono">
-                    <span className="font-bold text-white">ReWork Mobile</span>
+                    <span className="font-bold text-white">{s.mobileHeader}</span>
                     <span className="text-emerald-400 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      Stellar Testnet
+                      {s.mobileNetwork}
                     </span>
                   </div>
 
@@ -658,7 +695,7 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                   <div className="p-3 bg-gradient-to-br from-[#00f2ff]/15 to-blue-600/10 border border-[#00f2ff]/30 rounded-2xl">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-mono">Patrimonio Total</span>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-mono">{s.mobileNetWorth}</span>
                         <p className="text-lg font-black font-mono text-white">$ 1,250.00 <span className="text-xs text-[#00f2ff]">USDC</span></p>
                       </div>
                       <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/20 px-1.5 py-0.5 rounded">
@@ -666,8 +703,8 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                       </span>
                     </div>
                     <div className="mt-2 pt-2 border-t border-white/10 flex justify-between text-[10px] font-mono text-slate-300">
-                      <span>Líquido: $350.00</span>
-                      <span className="text-emerald-400 font-bold">Stake Activo: $900.00</span>
+                      <span>{s.mobileLiquid}</span>
+                      <span className="text-emerald-400 font-bold">{s.mobileStake}</span>
                     </div>
                   </div>
 
@@ -675,25 +712,25 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 bg-purple-500/15 border border-purple-500/30 rounded-xl text-center">
                       <QrCode className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-                      <span className="text-[10px] font-bold text-purple-200 block">Cobro QR</span>
-                      <span className="text-[8px] text-purple-400/80 font-mono">SEP-0007</span>
+                      <span className="text-[10px] font-bold text-purple-200 block">{s.mobileQr}</span>
+                      <span className="text-[8px] text-purple-400/80 font-mono">{s.mobileQrSub}</span>
                     </div>
                     <div className="p-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
                       <Landmark className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                      <span className="text-[10px] font-bold text-emerald-200 block">Banco ARS</span>
-                      <span className="text-[8px] text-emerald-400/80 font-mono">Rampa Directa</span>
+                      <span className="text-[10px] font-bold text-emerald-200 block">{s.mobileBank}</span>
+                      <span className="text-[8px] text-emerald-400/80 font-mono">{s.mobileBankSub}</span>
                     </div>
                   </div>
 
                   {/* Active Escrow Item */}
                   <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl">
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="font-bold text-slate-200 truncate max-w-[130px]">Smart Contract Escrow</span>
-                      <span className="text-[8px] font-mono bg-emerald-500/20 text-emerald-400 px-1 rounded">Activo</span>
+                      <span className="font-bold text-slate-200 truncate max-w-[130px]">{s.mobileEscrowTitle}</span>
+                      <span className="text-[8px] font-mono bg-emerald-500/20 text-emerald-400 px-1 rounded">{s.mobileEscrowBadge}</span>
                     </div>
-                    <p className="text-[9px] text-slate-400 leading-tight">Auditoría Frontend — Hito 2 de 3</p>
+                    <p className="text-[9px] text-slate-400 leading-tight">{s.mobileEscrowSub}</p>
                     <div className="mt-1.5 flex justify-between items-center text-[9px] font-mono text-[#00f2ff]">
-                      <span>Custodia Soroban:</span>
+                      <span>{s.mobileEscrowCustody}</span>
                       <span className="font-bold">500.00 USDC</span>
                     </div>
                   </div>
@@ -704,189 +741,197 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               </div>
 
               <p className="text-xs font-mono text-slate-400 text-center mt-2">
-                Experiencia Mobile PWA con deep-linking, QR SEP-0007 y retiro en 1 clic
+                {s.mobileCaption}
               </p>
             </div>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 7: ARQUITECTURA TÉCNICA (DESEMPATE #1)
     // ---------------------------------------------------------
-    case 6:
+    case 6: {
+      const s = t.slide6;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-[#00f2ff] pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-[#00f2ff]">
-              06 / Criterio 3 (25%): Ejecución Técnica · Arquitectura de Producción (Desempate #1)
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Arquitectura de Grado Institucional en Stellar &amp; Soroban
+              {s.heading}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
               <Cpu className="w-6 h-6 text-[#00f2ff] mb-2" />
-              <h3 className="font-bold text-white text-sm mb-1">Soroban Smart Contracts</h3>
+              <h3 className="font-bold text-white text-sm mb-1">{s.card1Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Custodia programática con Trustless Work (V1 en producción / V2 en testnet). Bloqueo y liberación condicional en USDC.
+                {s.card1Text}
               </p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
               <Wallet className="w-6 h-6 text-emerald-400 mb-2" />
-              <h3 className="font-bold text-white text-sm mb-1">Stellar Wallets Kit</h3>
+              <h3 className="font-bold text-white text-sm mb-1">{s.card2Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Integración multi-billetera universal con Freighter, Lobstr, xBull y deep-linking móvil mediante el protocolo SEP-0007.
+                {s.card2Text}
               </p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
               <Lock className="w-6 h-6 text-purple-400 mb-2" />
-              <h3 className="font-bold text-white text-sm mb-1">Onboarding Híbrido</h3>
+              <h3 className="font-bold text-white text-sm mb-1">{s.card3Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Social login Web2 vía Privy con claves WebCrypto determinísticas para usuarios sin wallet previa, sin comprometer custodia.
+                {s.card3Text}
               </p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
               <Layers className="w-6 h-6 text-amber-400 mb-2" />
-              <h3 className="font-bold text-white text-sm mb-1">Supabase Postgres RLS</h3>
+              <h3 className="font-bold text-white text-sm mb-1">{s.card4Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Aislamiento multi-tenant estricto con Row Level Security. 0 mocks en base de datos verificado con suites de test en `scripts/`.
+                {s.card4Text}
               </p>
             </div>
           </div>
 
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl font-mono text-xs text-slate-300 flex justify-between items-center">
-            <span>Stack: Next.js 16 (Turbopack) · TypeScript 5 · Tailwind CSS v4 · Stellar SDK v14.5 · Soroban RPC</span>
-            <span className="text-[#00f2ff]">100% Verificado en Testnet</span>
+            <span>{s.footerStack}</span>
+            <span className="text-[#00f2ff]">{s.footerVerified}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 8: MODELO DE NEGOCIO (CRITERIO 4)
     // ---------------------------------------------------------
-    case 7:
+    case 7: {
+      const s = t.slide7;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-amber-400 pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-amber-400">
-              07 / Criterio 4 (25%): Foco de Negocio · Monetización Sostenible
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              El Modelo Económico de la Confianza
+              {s.heading}
             </h2>
           </div>
 
           <p className="text-sm text-slate-300 max-w-3xl">
-            ReWork alinea su modelo de ingresos con el éxito de sus usuarios: no cobra barreras de entrada ni penalizaciones, sino comisiones por valor aportado y servicios de alto valor:
+            {s.lead}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <span className="font-mono text-3xl font-extrabold text-[#00f2ff]">1%</span>
-              <h3 className="text-base font-bold text-white mt-2 mb-2">Fee por Escrow Completado</h3>
+              <span className="font-mono text-3xl font-extrabold text-[#00f2ff]">{s.card1Stat}</span>
+              <h3 className="text-base font-bold text-white mt-2 mb-2">{s.card1Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Comisión transparente del 1% retenida sólo ante la liberación exitosa de fondos mediante Soroban. 10x a 20x más económico que Upwork/Fiverr (10-20%).
+                {s.card1Text}
               </p>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <span className="font-mono text-3xl font-extrabold text-emerald-400">SaaS B2B</span>
-              <h3 className="text-base font-bold text-white mt-2 mb-2">Workspaces Pro &amp; Enterprise</h3>
+              <span className="font-mono text-3xl font-extrabold text-emerald-400">{s.card2Stat}</span>
+              <h3 className="text-base font-bold text-white mt-2 mb-2">{s.card2Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Planes por suscripción para agencias y DAOs: tesorerías multi-firma, reportes de facturación/impuestos, roles de equipo y submisiones.
+                {s.card2Text}
               </p>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <span className="font-mono text-3xl font-extrabold text-purple-400">0.25% + Yield</span>
-              <h3 className="text-base font-bold text-white mt-2 mb-2">Rampa Fiat &amp; Optimización DeFi</h3>
+              <span className="font-mono text-3xl font-extrabold text-purple-400">{s.card3Stat}</span>
+              <h3 className="text-base font-bold text-white mt-2 mb-2">{s.card3Title}</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Spread mínimo en conversión ARS/USDC con Anchors locales de Stellar (SEP-0024) y revenue share por optimización de rendimiento en AMM pools.
+                {s.card3Text}
               </p>
             </div>
           </div>
 
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Objetivo Año 1: USD $1.5M procesados en escrows</span>
-            <span className="text-amber-400">Ingresos proyectados protocolo: USD $45k - $60k</span>
+            <span>{s.footerGoal}</span>
+            <span className="text-amber-400">{s.footerRevenue}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 9: TRACCIÓN & VALIDACIÓN (CALIDAD DE CÓDIGO)
     // ---------------------------------------------------------
-    case 8:
+    case 8: {
+      const s = t.slide8;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-emerald-400 pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-emerald-400">
-              08 / Ejecución Técnica &amp; Calidad: 0 Mocks, 100% Verificable
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              De la Hipótesis a la Realidad: 0 Código Simulado
+              {s.heading}
             </h2>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
               <span className="font-mono text-3xl font-extrabold text-[#00f2ff]">100%</span>
-              <p className="text-xs font-bold text-white mt-1">Tests Pasando</p>
-              <p className="text-[11px] text-slate-400">RLS, Escrow y RPC</p>
+              <p className="text-xs font-bold text-white mt-1">{s.stat1Title}</p>
+              <p className="text-[11px] text-slate-400">{s.stat1Sub}</p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
               <span className="font-mono text-3xl font-extrabold text-emerald-400">0</span>
-              <p className="text-xs font-bold text-white mt-1">Errores TypeScript</p>
-              <p className="text-[11px] text-slate-400">npx tsc --noEmit limpio</p>
+              <p className="text-xs font-bold text-white mt-1">{s.stat2Title}</p>
+              <p className="text-[11px] text-slate-400">{s.stat2Sub}</p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
               <span className="font-mono text-3xl font-extrabold text-purple-400">0</span>
-              <p className="text-xs font-bold text-white mt-1">Mocks / Fake Data</p>
-              <p className="text-[11px] text-slate-400">Auditado forensemente</p>
+              <p className="text-xs font-bold text-white mt-1">{s.stat3Title}</p>
+              <p className="text-[11px] text-slate-400">{s.stat3Sub}</p>
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
               <span className="font-mono text-3xl font-extrabold text-amber-400">Edge</span>
-              <p className="text-xs font-bold text-white mt-1">Vercel Deploy Activo</p>
-              <p className="text-[11px] text-slate-400">Producción continua</p>
+              <p className="text-xs font-bold text-white mt-1">{s.stat4Title}</p>
+              <p className="text-[11px] text-slate-400">{s.stat4Sub}</p>
             </div>
           </div>
 
           <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-2">
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              Suites de Verificación Continua Disponibles en el Repositorio
+              {s.boxTitle}
             </h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-slate-400">
-              <li>• `scripts/detect_fake_code.mjs` (Auditoría forense de integridad 100% real)</li>
-              <li>• `scripts/test_services_health.mjs` (Horizon, Soroban RPC y Supabase)</li>
-              <li>• `scripts/test_crud_rls.mjs` (Aislamiento multi-tenant en PostgreSQL)</li>
-              <li>• `scripts/test_escrow_api.mjs` (Ciclo de vida de custodia Soroban)</li>
+              <li>{s.bullet1}</li>
+              <li>{s.bullet2}</li>
+              <li>{s.bullet3}</li>
+              <li>{s.bullet4}</li>
             </ul>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 10: COMPARATIVA COMPETITIVA
     // ---------------------------------------------------------
-    case 9:
+    case 9: {
+      const s = t.slide9;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-purple-400 pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-purple-400">
-              09 / Criterio 2 &amp; 4: Ventajas Competitivas Defendibles
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              ¿Por qué ReWork Supera las Alternativas?
+              {s.heading}
             </h2>
           </div>
 
@@ -894,135 +939,136 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
             <table className="w-full text-xs font-mono border-collapse">
               <thead>
                 <tr className="border-b border-white/10 text-slate-400">
-                  <th className="py-3 px-4 text-left font-normal">Característica</th>
-                  <th className="py-3 px-4 text-center font-normal">Plataformas Web2 (Upwork)</th>
-                  <th className="py-3 px-4 text-center font-normal">Escrow Bancario Tradicional</th>
-                  <th className="py-3 px-4 text-center font-bold text-[#00f2ff] bg-[#00f2ff]/5">ReWork sobre Stellar</th>
+                  <th className="py-3 px-4 text-left font-normal">{s.colFeature}</th>
+                  <th className="py-3 px-4 text-center font-normal">{s.colWeb2}</th>
+                  <th className="py-3 px-4 text-center font-normal">{s.colBank}</th>
+                  <th className="py-3 px-4 text-center font-bold text-[#00f2ff] bg-[#00f2ff]/5">{s.colReWork}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Comisiones</td>
-                  <td className="py-3 px-4 text-center text-red-400">10% a 20%</td>
-                  <td className="py-3 px-4 text-center text-red-400">3% a 5% + fees SWIFT</td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">~1% (Transparente)</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row1Label}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row1Web2}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row1Bank}</td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">{s.row1ReWork}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Velocidad de Cobro</td>
-                  <td className="py-3 px-4 text-center text-slate-400">7 a 14 días</td>
-                  <td className="py-3 px-4 text-center text-slate-400">3 a 5 días hábiles</td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">3 a 5 segundos</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row2Label}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row2Web2}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row2Bank}</td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">{s.row2ReWork}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Custodia de Fondos</td>
-                  <td className="py-3 px-4 text-center text-slate-400">100% Centralizada</td>
-                  <td className="py-3 px-4 text-center text-slate-400">Entidad Bancaria</td>
-                  <td className="py-3 px-4 text-center text-[#00f2ff] font-bold bg-[#00f2ff]/5">Smart Contract Soroban</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row3Label}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row3Web2}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row3Bank}</td>
+                  <td className="py-3 px-4 text-center text-[#00f2ff] font-bold bg-[#00f2ff]/5">{s.row3ReWork}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Reputación</td>
-                  <td className="py-3 px-4 text-center text-red-400">Atrapada en el sitio</td>
-                  <td className="py-3 px-4 text-center text-slate-400">Inexistente</td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">Soberana On-Chain (AURA CV)</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row4Label}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row4Web2}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row4Bank}</td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">{s.row4ReWork}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Pagos Móviles QR</td>
-                  <td className="py-3 px-4 text-center text-red-400">No</td>
-                  <td className="py-3 px-4 text-center text-red-400">No</td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">Nativo SEP-0007</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row5Label}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row5Web2}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row5Bank}</td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">{s.row5ReWork}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-bold text-white">Yield en Liquidez Ociosa</td>
-                  <td className="py-3 px-4 text-center text-red-400">0% (Retenido por la plataforma)</td>
-                  <td className="py-3 px-4 text-center text-slate-400">0% a 1%</td>
-                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">Hasta +12.8% APY (Stellar AMM)</td>
+                  <td className="py-3 px-4 font-bold text-white">{s.row6Label}</td>
+                  <td className="py-3 px-4 text-center text-red-400">{s.row6Web2}</td>
+                  <td className="py-3 px-4 text-center text-slate-400">{s.row6Bank}</td>
+                  <td className="py-3 px-4 text-center text-emerald-400 font-bold bg-[#00f2ff]/5">{s.row6ReWork}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-between text-xs font-mono text-purple-300">
-            <span>Costo 15x inferior · Liquidación en segundos · Control 100% no-custodial</span>
-            <span className="text-[#00f2ff]">Vence a Web2 y a Finanzas Tradicionales</span>
+            <span>{s.footerLeft}</span>
+            <span className="text-[#00f2ff]">{s.footerRight}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
     // SLIDE 11: ROADMAP 90 DÍAS & INSTAWARDS
     // ---------------------------------------------------------
-    case 10:
+    case 10: {
+      const s = t.slide10;
       return (
         <div className="space-y-6">
           <div className="border-l-4 border-[#00f2ff] pl-4">
             <span className="font-mono text-xs uppercase tracking-widest text-[#00f2ff]">
-              10 / Funding Readiness · Instawards &amp; Pipeline SCF 7.0
+              {s.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Roadmap a 90 Días: De Testnet a Escala con Stellar
+              {s.heading}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
             <div className="p-6 bg-white/5 border border-[#00f2ff]/30 rounded-2xl relative">
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-[#00f2ff]/20 text-[#00f2ff] font-bold">
-                Mes 1 · Instaward (USD $5.000)
+                {s.col1Badge}
               </span>
-              <h3 className="text-base font-bold text-white mt-3 mb-2">Despliegue a Mainnet &amp; Auditoría</h3>
+              <h3 className="text-base font-bold text-white mt-3 mb-2">{s.col1Title}</h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                <li>Deploy de contratos de custodia en Mainnet.</li>
-                <li>Auditoría formal con partner de SDF Audit Bank.</li>
-                <li>Lanzamiento de los 2 pilotos iniciales (Agencia + DAO).</li>
-                <li>Procesar primeros USD $10k en escrows.</li>
+                {s.col1Items.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
 
             <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">
-                Mes 2 · SCF Tranche #1 (20%)
+                {s.col2Badge}
               </span>
-              <h3 className="text-base font-bold text-white mt-3 mb-2">Rampa Fiat ARS &amp; App PWA</h3>
+              <h3 className="text-base font-bold text-white mt-3 mb-2">{s.col2Title}</h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                <li>Integración con Anchor local de pesos (ARS) SEP-0024.</li>
-                <li>Lanzamiento de la Progressive Web App (PWA).</li>
-                <li>Generador de comprobantes e impuestos automáticos.</li>
-                <li>Alcanzar 10 workspaces activos.</li>
+                {s.col2Items.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
 
             <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">
-                Mes 3 · SCF Tranche #2 &amp; #3 (70%)
+                {s.col3Badge}
               </span>
-              <h3 className="text-base font-bold text-white mt-3 mb-2">SDK Público &amp; Expansión LATAM</h3>
+              <h3 className="text-base font-bold text-white mt-3 mb-2">{s.col3Title}</h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                <li>Publicación del SDK `@rework/escrow-kit`.</li>
-                <li>Gobernanza multi-sig para tesorerías DAO.</li>
-                <li>Meta on-chain: &gt; USD $150k procesados.</li>
-                <li>1.000+ usuarios activos en Argentina y LATAM.</li>
+                {s.col3Items.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
               </ul>
             </div>
           </div>
 
           <div className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Documentos oficiales listos en docs/funding_readiness/</span>
-            <span className="text-[#00f2ff]">Formato adaptado al SCF Handbook 7.0</span>
+            <span>{s.footerDocs}</span>
+            <span className="text-[#00f2ff]">{s.footerFormat}</span>
           </div>
         </div>
       );
+    }
 
     // ---------------------------------------------------------
-    // SLIDE 12: EQUIPO Y CIERRE
+    // SLIDE 12: EQUIPO Y CIERRE / TEAM & CLOSING
     // ---------------------------------------------------------
-    case 11:
+    case 11: {
+      const s = t.slide11;
       return (
         <div className="space-y-6 text-center py-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2ff]/10 border border-[#00f2ff]/30 text-[#00f2ff] text-xs font-mono mb-2">
-            <span>11 / Builders 100% Residentes en Argentina</span>
+            <span>{s.badge}</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            El Valor de la Confianza Garantizado por el Código
+            {s.heading}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4 text-left">
@@ -1031,9 +1077,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 GD
               </div>
               <h3 className="text-base font-bold text-white">Gabriel Díaz</h3>
-              <p className="text-xs font-mono text-[#00f2ff] mb-2">Tech Lead &amp; Fullstack Web3</p>
+              <p className="text-xs font-mono text-[#00f2ff] mb-2">{s.lead1Role}</p>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Arquitectura de contratos inteligentes en Soroban, integración de Stellar Wallets Kit, Next.js 16, Supabase RLS y optimización de bases de datos distribuidas. Residente en Argentina.
+                {s.lead1Bio}
               </p>
             </div>
 
@@ -1042,9 +1088,9 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
                 MU
               </div>
               <h3 className="text-base font-bold text-white">Marco Ungaro</h3>
-              <p className="text-xs font-mono text-purple-400 mb-2">Product Lead &amp; Operations</p>
+              <p className="text-xs font-mono text-purple-400 mb-2">{s.lead2Role}</p>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Diseño de producto centrado en el usuario, validación con empresas/DAOs y coordinación de pilotos y estrategias de adopción en LATAM. Residente en Argentina.
+                {s.lead2Bio}
               </p>
             </div>
           </div>
@@ -1055,7 +1101,7 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               href="/app"
               className="px-6 py-3 rounded-xl bg-[#00f2ff] text-[#050c14] font-bold hover:bg-cyan-300 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(0,242,255,0.4)]"
             >
-              <span>Explorar Plataforma en Vivo</span>
+              <span>{s.ctaLive}</span>
               <ExternalLink className="w-4 h-4" />
             </Link>
             <a
@@ -1065,17 +1111,18 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
               className="px-6 py-3 rounded-xl bg-white/5 border border-white/15 text-white hover:border-[#00f2ff]/50 transition-all flex items-center gap-2"
             >
               <Code2 className="w-4 h-4 text-[#00f2ff]" />
-              <span>Ver Código en GitHub</span>
+              <span>{s.ctaCode}</span>
             </a>
           </div>
 
           <div className="pt-2 max-w-xl mx-auto">
             <p className="text-sm font-semibold text-[#00f2ff] font-mono">
-              &ldquo;En un mundo de intermediarios opacos, ReWork devuelve la soberanía al trabajo: el valor de la confianza garantizado por el código.&rdquo;
+              {s.closingQuote}
             </p>
           </div>
         </div>
       );
+    }
 
     default:
       return null;
