@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, ChevronRight, X, Lock } from "lucide-react";
+import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, ChevronRight, X, Lock, RefreshCw } from "lucide-react";
 import { useStaking } from "@/hooks/useStaking";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { formatCurrency, getTripleValues } from "@/lib/currency";
@@ -68,7 +68,7 @@ interface StellarPoolsAgentProps {
 }
 
 export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarPoolsAgentProps) {
-  const { stake, stakedAmount, activeApy } = useStaking();
+  const { stake, unstakePosition, stakedAmount, activeApy, positions } = useStaking();
   const { usdcBalance, refresh } = useSharedBalances();
 
   const [mounted, setMounted] = useState<boolean>(false);
@@ -76,6 +76,7 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
   const [stakeAmount, setStakeAmount] = useState<string>("50");
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
   const [transferSuccess, setTransferSuccess] = useState<boolean>(false);
+  const [unstakingId, setUnstakingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -96,16 +97,24 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
 
     setIsTransferring(true);
     setTimeout(async () => {
-      await stake(amount, 6, selectedPool.name);
+      await stake(amount, 6, selectedPool.name, selectedPool.apy);
       setIsTransferring(false);
       setTransferSuccess(true);
       refresh();
       setTimeout(() => {
         setTransferSuccess(false);
         setSelectedPool(null);
-        if (onClose) onClose();
-      }, 2000);
-    }, 1500);
+      }, 1500);
+    }, 1200);
+  };
+
+  const handleUnstake = async (posId: string) => {
+    setUnstakingId(posId);
+    setTimeout(async () => {
+      await unstakePosition(posId);
+      setUnstakingId(null);
+      refresh();
+    }, 800);
   };
 
   const content = (
@@ -187,6 +196,89 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
             </div>
           );
         })}
+      </div>
+
+      {/* Active Positions in Pools & Farming */}
+      <div className="pt-4 border-t border-border-subtle/80 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <span>Tus Fondos y Posiciones Activas en Farming</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                {positions.length} {positions.length === 1 ? "depósito" : "depósitos"}
+              </span>
+            </h4>
+          </div>
+          <div className="text-right flex items-center gap-2 sm:justify-end">
+            <span className="text-xs text-muted">Total en Yield:</span>
+            <span className="text-xs font-mono font-black text-foreground">
+              ${stakedAmount.toFixed(2)} USDC
+            </span>
+            <span className="text-[10px] text-muted font-mono">
+              (≈ ${(stakedAmount * 1280).toLocaleString()} ARS)
+            </span>
+          </div>
+        </div>
+
+        {positions.length > 0 ? (
+          <div className="grid grid-cols-1 gap-2.5">
+            {positions.map((pos) => {
+              const diffMs = Math.max(0, Date.now() - new Date(pos.startDate).getTime());
+              const posYield = (pos.amount * (pos.apy / 100) * (diffMs / (365 * 24 * 3600 * 1000))) + 0.012;
+              return (
+                <div
+                  key={pos.id}
+                  className="p-3.5 rounded-2xl bg-foreground/[0.04] border border-emerald-500/20 hover:border-emerald-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 mt-0.5">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-bold text-foreground">{pos.poolName}</span>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-400/15 text-emerald-300 border border-emerald-400/20">
+                          +{pos.apy}% APY
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted mt-1 font-mono">
+                        <span>Capital: <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
+                        <span>•</span>
+                        <span>ARS: <strong className="text-muted font-normal">${(pos.amount * 1280).toLocaleString()}</strong></span>
+                        <span>•</span>
+                        <span className="text-emerald-400">
+                          Rendimiento: <strong className="text-emerald-300 font-bold">+{posYield.toFixed(4)} USDC</strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:self-center shrink-0">
+                    <button
+                      onClick={() => handleUnstake(pos.id)}
+                      disabled={unstakingId === pos.id}
+                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {unstakingId === pos.id ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Retirando...</span>
+                        </>
+                      ) : (
+                        <span>Retirar Fondos</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl border border-dashed border-border-subtle bg-foreground/[0.02] text-center text-xs text-muted">
+            No tienes fondos colocados en pools actualmente. Haz click en &ldquo;Trasladar Liquidez&rdquo; en cualquiera de los pools arriba para comenzar a generar intereses.
+          </div>
+        )}
       </div>
 
       {/* Transfer Modal overlay */}

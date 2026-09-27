@@ -18,7 +18,8 @@ import {
   Calendar,
   Layers,
   ChevronRight,
-  Coins
+  Coins,
+  RefreshCw
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
@@ -30,11 +31,21 @@ import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
 
 export default function GoalsPage() {
   const { connected, address } = useWallet();
-  const { usdcBalance, xlmBalance } = useSharedBalances();
-  const { stakedAmount, activeApy, accruedYield, stake, positions } = useStaking();
+  const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
+  const { stakedAmount, activeApy, accruedYield, stake, unstakePosition, positions } = useStaking();
 
   // Currency Toggle
   const [currency, setCurrency] = useState<SupportedCurrency>("USDC");
+  const [unstakingId, setUnstakingId] = useState<string | null>(null);
+
+  const handleUnstake = async (posId: string) => {
+    setUnstakingId(posId);
+    setTimeout(async () => {
+      await unstakePosition(posId);
+      setUnstakingId(null);
+      refresh();
+    }, 800);
+  };
 
   // Simulator Inputs
   const [initialCapital, setInitialCapital] = useState<number>(500); // in USDC
@@ -335,6 +346,79 @@ export default function GoalsPage() {
               El interés compuesto genera pagos por bloque en Soroban. Puedes retirar tus rendimientos o
               reinvertirlos cuando gustes.
             </p>
+          </div>
+
+          {/* Active Positions in Farming Card */}
+          <div className="glass-card p-6 rounded-3xl border border-emerald-500/20 bg-foreground/[0.02] space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  Tus Fondos y Posiciones Activas ({positions.length})
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsPoolsAgentOpen(true)}
+                className="text-[10px] font-bold text-accent-teal hover:underline flex items-center gap-1"
+              >
+                + Trasladar a Pool
+              </button>
+            </div>
+
+            {positions.length > 0 ? (
+              <div className="space-y-3">
+                {positions.map((pos) => {
+                  const diffMs = Math.max(0, Date.now() - new Date(pos.startDate).getTime());
+                  const posYield = (pos.amount * (pos.apy / 100) * (diffMs / (365 * 24 * 3600 * 1000))) + 0.012;
+                  return (
+                    <div
+                      key={pos.id}
+                      className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle hover:border-emerald-500/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-emerald-500/20">
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-foreground">{pos.poolName}</span>
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">
+                              +{pos.apy}% APY
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted mt-1 font-mono">
+                            <span>Capital: <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
+                            <span>•</span>
+                            <span>ARS: ${(pos.amount * 1280).toLocaleString()}</span>
+                            <span>•</span>
+                            <span className="text-emerald-400 font-bold">+{posYield.toFixed(4)} USDC</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleUnstake(pos.id)}
+                        disabled={unstakingId === pos.id}
+                        className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1 self-start sm:self-center"
+                      >
+                        {unstakingId === pos.id ? (
+                          <>
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            <span>Retirando...</span>
+                          </>
+                        ) : (
+                          <span>Retirar</span>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl border border-dashed border-border-subtle text-center text-xs text-muted">
+                No tienes fondos colocados en pools actualmente. Selecciona un pool para comenzar a generar intereses.
+              </div>
+            )}
           </div>
         </div>
 
