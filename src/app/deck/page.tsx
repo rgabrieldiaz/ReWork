@@ -32,6 +32,7 @@ import {
   Star,
   Landmark
 } from "lucide-react";
+import { ReWorkIcon, ReWorkLogo } from "@/components/ReWorkLogo";
 
 export default function PresentationDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -142,12 +143,12 @@ export default function PresentationDeckPage() {
       {/* Top Header / Presentation Navigation (Screen Only) */}
       <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center font-bold text-[#00f2ff] shadow-[0_0_12px_rgba(0,242,255,0.3)]">
-            RW
+          <div className="w-9 h-9 rounded-xl bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+            <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
           </div>
           <div>
-            <span className="font-extrabold tracking-tight text-white flex items-center gap-2">
-              ReWork <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">Scale Track</span>
+            <span className="font-extrabold tracking-tight text-white flex items-center gap-2 font-mono">
+              re<span className="text-[#00f2ff]">work</span> <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">Scale Track</span>
             </span>
             <p className="text-[11px] text-slate-400 font-mono hidden sm:block">Argentina Builder Challenge (BAF × Stellar)</p>
           </div>
@@ -280,12 +281,12 @@ function SlideRenderer({ slideIndex }: { slideIndex: number }) {
             <span>Argentina Builder Challenge · Stellar × BAF · Track Scale</span>
           </div>
 
-          <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-4">
-            Re<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ff] via-cyan-400 to-blue-500">Work</span>
-          </h1>
+          <div className="mb-6 flex justify-center">
+            <ReWorkLogo className="h-16 sm:h-20 w-auto" theme="cyan" glow />
+          </div>
 
           <p className="text-xl sm:text-2xl font-light text-slate-300 italic mb-4 max-w-2xl">
-            &ldquo;El valor de la confianza, garantizado por código.&rdquo;
+            &ldquo;El valor de la confianza garantizado por el código.&rdquo;
           </p>
 
           <p className="text-sm sm:text-base text-slate-400 max-w-2xl mb-10 leading-relaxed font-sans">

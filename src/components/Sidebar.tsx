@@ -10,6 +10,7 @@ import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ChevronDown, Plus } from "lucide-react";
+import { ReWorkIcon } from "@/components/ReWorkLogo";
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const pathname = usePathname();
@@ -57,14 +58,11 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             `}>
                 <div className={`flex items-center relative transition-all duration-300 ${isSidebarCollapsed ? 'justify-center py-8' : 'justify-between p-8'}`}>
                     <div className={`flex items-center overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'justify-center w-full' : 'gap-3'}`}>
-                        <div className="w-8 h-8 bg-accent-teal rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
-                                <path clipRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" fillRule="evenodd"></path>
-                            </svg>
+                        <div className="w-9 h-9 bg-accent-teal/15 rounded-xl border border-accent-teal/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(0,242,255,0.2)]">
+                            <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
                         </div>
-                        <span className={`text-xl font-bold tracking-tight whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'hidden opacity-0 w-0' : 'block w-auto opacity-100'}`}>
-                            Re<span className="text-accent-teal">Work</span>
+                        <span className={`text-xl font-black tracking-tight whitespace-nowrap transition-all duration-300 font-mono ${isSidebarCollapsed ? 'hidden opacity-0 w-0' : 'block w-auto opacity-100 text-foreground'}`}>
+                            re<span className="text-accent-teal">work</span>
                         </span>
                     </div>
 

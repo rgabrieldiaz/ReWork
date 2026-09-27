@@ -14,6 +14,7 @@ import { BankTransferModal } from "@/components/BankTransferModal";
 import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { getTripleValues, SupportedCurrency, formatCurrency, DEFAULT_RATES } from "@/lib/currency";
+import { ReWorkIcon } from "@/components/ReWorkLogo";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network, isMobile } = useWallet();
@@ -136,11 +137,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     <div>
                         <h1 className="text-sm text-muted font-medium tracking-widest uppercase">{t.header.controlPanel}</h1>
                         <div className="flex items-center gap-2 mt-1">
-                            <div className="w-6 h-6 bg-accent-teal rounded-md flex items-center justify-center flex-shrink-0 dark:hidden">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path><path clipRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" fillRule="evenodd"></path></svg>
+                            <div className="w-7 h-7 bg-accent-teal/15 rounded-lg border border-accent-teal/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(0,242,255,0.2)]">
+                                <ReWorkIcon className="w-4 h-4" theme="cyan" glow />
                             </div>
-                            <p className="text-xl font-bold hidden dark:block">ReWork</p>
-                            <p className="text-xl font-bold dark:hidden">Re<span className="text-accent-teal">Work</span></p>
+                            <p className="text-xl font-black tracking-tight font-mono">
+                                re<span className="text-accent-teal">work</span>
+                            </p>
                         </div>
                     </div>
                 )}

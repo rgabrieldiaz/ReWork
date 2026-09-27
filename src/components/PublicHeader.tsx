@@ -4,18 +4,19 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { ReWorkIcon } from "@/components/ReWorkLogo";
 
 const NavContent = ({ language, setLanguage, t, className = "" }: any) => (
   <div className={`flex items-center justify-between px-6 max-w-7xl mx-auto w-full relative ${className}`}>
     <div className="flex items-center gap-2">
-      <Link href="/" className="flex items-center gap-2">
-        {/* Isotipo */}
-        <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center border border-accent-teal/30 shadow-[0_0_15px_rgba(0,242,255,0.15)] hover:border-accent-teal transition-colors">
-          <svg className="w-6 h-6 text-accent-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
+      <Link href="/" className="flex items-center gap-2.5 group">
+        {/* Isotipo Oficial ReWork */}
+        <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center border border-accent-teal/30 shadow-[0_0_15px_rgba(0,242,255,0.2)] group-hover:border-accent-teal group-hover:scale-105 transition-all">
+          <ReWorkIcon className="w-6 h-6" theme="cyan" glow />
         </div>
-        <span className="text-xl font-bold tracking-tight hidden sm:block text-foreground">ReWork</span>
+        <span className="text-xl font-black tracking-tight hidden sm:block text-foreground font-mono">
+          re<span className="text-accent-teal">work</span>
+        </span>
       </Link>
     </div>
     

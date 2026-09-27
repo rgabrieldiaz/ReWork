@@ -18,8 +18,40 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
-  title: "ReWork",
-  description: "Stellar Incentives Dashboard",
+  metadataBase: new URL("https://rework.network"),
+  title: "ReWork — El Valor de la Confianza Garantizado por el Código",
+  description: "Plataforma descentralizada de Workspaces B2B, Custodia Inteligente en Soroban y Pagos Móviles QR (SEP-0007) sobre Stellar.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "ReWork — El Valor de la Confianza Garantizado por el Código",
+    description: "Workspaces Descentralizados · Escrow en Soroban · Pagos SEP-0007 · DeFi Stellar",
+    url: "https://rework.network",
+    siteName: "ReWork",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "ReWork — Stellar × BAF",
+      },
+    ],
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ReWork — El Valor de la Confianza Garantizado por el Código",
+    description: "Workspaces Descentralizados · Escrow en Soroban · Pagos SEP-0007 · DeFi Stellar",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
