@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Sparkles, TrendingUp, ShieldCheck, ArrowRight, CheckCircle2, ChevronRight, X, Lock, RefreshCw } from "lucide-react";
+import { Bot, TrendingUp, CheckCircle2, ChevronRight, X, Lock, RefreshCw } from "lucide-react";
 import { useStaking } from "@/hooks/useStaking";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
-import { formatCurrency, getTripleValues } from "@/lib/currency";
+import { useSettings } from "@/hooks/useSettings";
 import { toast } from "sonner";
 
 export interface StellarPool {
@@ -19,7 +19,7 @@ export interface StellarPool {
   description: string;
 }
 
-const STELLAR_POOLS: StellarPool[] = [
+const STELLAR_POOLS_BASE: StellarPool[] = [
   {
     id: "pool-1",
     name: "Stellar AMM Nativo (USDC / XLM)",
@@ -69,8 +69,9 @@ interface StellarPoolsAgentProps {
 }
 
 export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarPoolsAgentProps) {
-  const { stake, unstakePosition, stakedAmount, activeApy, positions } = useStaking();
+  const { stake, unstakePosition, stakedAmount, positions } = useStaking();
   const { usdcBalance, refresh } = useSharedBalances();
+  const { t, language } = useSettings();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [selectedPool, setSelectedPool] = useState<StellarPool | null>(null);
@@ -83,6 +84,43 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
     setMounted(true);
   }, []);
 
+  const getPoolLocalized = (basePool: StellarPool) => {
+    if (basePool.id === "pool-1") {
+      return {
+        ...basePool,
+        name: language === "en" ? "Stellar Native AMM (USDC / XLM)" : "Stellar AMM Nativo (USDC / XLM)",
+        description: t.poolsAgent.pool1Desc,
+        riskLabel: t.poolsAgent.riskLow,
+        riskType: "low" as const,
+      };
+    }
+    if (basePool.id === "pool-2") {
+      return {
+        ...basePool,
+        name: "RWA Real-World Yield Vault",
+        description: t.poolsAgent.pool2Desc,
+        riskLabel: t.poolsAgent.riskLow,
+        riskType: "low" as const,
+      };
+    }
+    if (basePool.id === "pool-3") {
+      return {
+        ...basePool,
+        name: language === "en" ? "Argentine Pesos Pool (ARST / USDC)" : "Pool Pesos Argentinos (ARST / USDC)",
+        description: t.poolsAgent.pool3Desc,
+        riskLabel: t.poolsAgent.riskMedium,
+        riskType: "medium" as const,
+      };
+    }
+    return {
+      ...basePool,
+      name: "Soroswap Smart Auto-Compounder",
+      description: t.poolsAgent.pool4Desc,
+      riskLabel: t.poolsAgent.riskModerate,
+      riskType: "moderate" as const,
+    };
+  };
+
   const handleOpenTransfer = (pool: StellarPool) => {
     setSelectedPool(pool);
     setTransferSuccess(false);
@@ -92,13 +130,15 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
     if (!selectedPool) return;
     const amount = parseFloat(stakeAmount) || 0;
     if (amount <= 0) {
-      toast.error("Por favor ingresa un monto válido a transferir.");
+      toast.error(t.poolsAgent.errAmount);
       return;
     }
 
+    const localizedPool = getPoolLocalized(selectedPool);
+
     setIsTransferring(true);
     setTimeout(async () => {
-      await stake(amount, 6, selectedPool.name, selectedPool.apy);
+      await stake(amount, 6, localizedPool.name, selectedPool.apy);
       setIsTransferring(false);
       setTransferSuccess(true);
       refresh();
@@ -118,6 +158,8 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
     }, 800);
   };
 
+  const selectedLocalized = selectedPool ? getPoolLocalized(selectedPool) : null;
+
   const content = (
     <div className="space-y-6">
       {/* Agent banner */}
@@ -128,13 +170,13 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-foreground">Agente DeFi de Rendimiento ReWork</h3>
+              <h3 className="text-sm font-bold text-foreground">{t.poolsAgent.title}</h3>
               <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
-                OPTIMIZADOR ACTIVO
+                {t.poolsAgent.badge}
               </span>
             </div>
             <p className="text-xs text-muted">
-              Detecta automáticamente las mejores oportunidades con APY de la red de Stellar para tu liquidez.
+              {t.poolsAgent.subtitle}
             </p>
           </div>
         </div>
@@ -142,8 +184,8 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
 
       {/* Pools List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {STELLAR_POOLS.map((pool) => {
-          const triple = getTripleValues(100);
+        {STELLAR_POOLS_BASE.map((basePool) => {
+          const pool = getPoolLocalized(basePool);
           return (
             <div
               key={pool.id}
@@ -177,20 +219,22 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                   </span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      pool.risk === "Bajo"
+                      pool.riskType === "low"
                         ? "text-emerald-400 bg-emerald-400/10"
-                        : "text-amber-400 bg-amber-400/10"
+                        : pool.riskType === "medium"
+                        ? "text-amber-400 bg-amber-400/10"
+                        : "text-purple-400 bg-purple-400/10"
                     }`}
                   >
-                    Riesgo {pool.risk}
+                    {t.poolsAgent.riskLabel} {pool.riskLabel}
                   </span>
                 </div>
 
                 <button
-                  onClick={() => handleOpenTransfer(pool)}
+                  onClick={() => handleOpenTransfer(basePool)}
                   className="px-3 py-1.5 bg-accent-teal/10 hover:bg-accent-teal text-accent-teal hover:text-background font-bold text-xs rounded-xl border border-accent-teal/30 transition-all flex items-center gap-1"
                 >
-                  Trasladar Liquidez
+                  {t.poolsAgent.moveLiquidityBtn}
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -205,14 +249,14 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-              <span>Tus Fondos y Posiciones Activas en Farming</span>
+              <span>{t.poolsAgent.activeFarmingTitle}</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                {positions.length} {positions.length === 1 ? "depósito" : "depósitos"}
+                {positions.length} {positions.length === 1 ? t.poolsAgent.depositSingle : t.poolsAgent.depositPlural}
               </span>
             </h4>
           </div>
           <div className="text-right flex items-center gap-2 sm:justify-end">
-            <span className="text-xs text-muted">Total en Yield:</span>
+            <span className="text-xs text-muted">{t.poolsAgent.totalInYield}</span>
             <span className="text-xs font-mono font-black text-foreground">
               ${stakedAmount.toFixed(2)} USDC
             </span>
@@ -244,12 +288,12 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted mt-1 font-mono">
-                        <span>Capital: <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
+                        <span>{t.poolsAgent.capital} <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
                         <span>•</span>
                         <span>ARS: <strong className="text-muted font-normal">${(pos.amount * 1280).toLocaleString()}</strong></span>
                         <span>•</span>
                         <span className="text-emerald-400">
-                          Rendimiento: <strong className="text-emerald-300 font-bold">+{posYield.toFixed(4)} USDC</strong>
+                          {t.poolsAgent.yieldLabel} <strong className="text-emerald-300 font-bold">+{posYield.toFixed(4)} USDC</strong>
                         </span>
                       </div>
                     </div>
@@ -264,10 +308,10 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                       {unstakingId === pos.id ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Retirando...</span>
+                          <span>{t.poolsAgent.unstaking}</span>
                         </>
                       ) : (
-                        <span>Retirar Fondos</span>
+                        <span>{t.poolsAgent.unstakeFunds}</span>
                       )}
                     </button>
                   </div>
@@ -277,13 +321,13 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
           </div>
         ) : (
           <div className="p-4 rounded-2xl border border-dashed border-border-subtle bg-foreground/[0.02] text-center text-xs text-muted">
-            No tienes fondos colocados en pools actualmente. Haz click en &ldquo;Trasladar Liquidez&rdquo; en cualquiera de los pools arriba para comenzar a generar intereses.
+            {t.poolsAgent.noPositions}
           </div>
         )}
       </div>
 
       {/* Transfer Modal overlay */}
-      {selectedPool && (
+      {selectedPool && selectedLocalized && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in">
           <div className="relative w-full max-w-md glass-card border border-border-subtle p-6 rounded-3xl bg-card shadow-2xl">
             <button
@@ -298,25 +342,28 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                 <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold">¡Liquidez Trasladada Exitosamente!</h3>
+                <h3 className="text-lg font-bold">{t.poolsAgent.successTitle}</h3>
                 <p className="text-xs text-muted">
-                  Tus fondos ahora están generando {selectedPool.apy}% APY en {selectedPool.name}.
+                  {t.poolsAgent.successDesc
+                    .replace("{amount}", stakeAmount)
+                    .replace("{apy}", selectedPool.apy.toString())
+                    .replace("{name}", selectedLocalized.name)}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-accent-teal mb-1">
                   <Lock className="w-5 h-5" />
-                  <h3 className="font-bold text-base">Trasladar a {selectedPool.name}</h3>
+                  <h3 className="font-bold text-base">{t.poolsAgent.modalTitle.replace("{name}", selectedLocalized.name)}</h3>
                 </div>
                 <p className="text-xs text-muted">
-                  Ingresa el monto que deseas colocar en el pool para empezar a devengar rendimiento.
+                  {t.poolsAgent.modalSubtitle}
                 </p>
 
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
                   <div className="flex justify-between text-xs text-muted">
-                    <span>Monto a Bloquear</span>
-                    <span>Disponible: {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                    <span>{t.poolsAgent.amountLabel}</span>
+                    <span>{t.poolsAgent.available} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -331,8 +378,8 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs flex justify-between items-center text-emerald-400 font-mono">
-                  <span>Rendimiento Proyectado:</span>
-                  <span className="font-bold">+{selectedPool.apy}% Anual</span>
+                  <span>{t.poolsAgent.projectedYield}</span>
+                  <span className="font-bold">+{selectedPool.apy}% {t.poolsAgent.annual}</span>
                 </div>
 
                 <button
@@ -340,7 +387,7 @@ export function StellarPoolsAgent({ isOpen, onClose, compact = false }: StellarP
                   disabled={isTransferring || parseFloat(stakeAmount) <= 0}
                   className="w-full py-3.5 bg-accent-teal hover:bg-accent-teal/90 text-background font-bold rounded-2xl text-xs uppercase tracking-wider transition-all disabled:opacity-50"
                 >
-                  {isTransferring ? "Aprobando en Stellar Network..." : "Confirmar Traslado de Liquidez"}
+                  {isTransferring ? t.poolsAgent.approving : t.poolsAgent.confirmDeposit}
                 </button>
               </div>
             )}

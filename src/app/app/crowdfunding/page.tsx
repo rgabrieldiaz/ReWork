@@ -16,7 +16,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(key.length - 4)}`;
 
 export default function ColectasPage() {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { connected, address: publicKey, sign } = useWallet();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
@@ -662,7 +662,7 @@ export default function ColectasPage() {
 
                             <div className="flex justify-between items-center p-6 border-b border-border-subtle relative z-10">
                                 <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                                    <Heart className="w-5 h-5 text-red-500" fill="currentColor" /> Colectas ReWork
+                                    <Heart className="w-5 h-5 text-red-500" fill="currentColor" /> {t.colectas.aboutTitle}
                                 </h2>
                                 <button onClick={() => setIsInfoModalOpen(false)} className="text-muted hover:text-foreground transition-colors">
                                     <X className="w-5 h-5" />
@@ -671,24 +671,24 @@ export default function ColectasPage() {
 
                             <div className="p-6 relative z-10">
                                 <p className="text-muted leading-relaxed mb-6">
-                                    Fomentá la colaboración y logren objetivos juntos. Cada aporte se gestiona mediante escrows no custodiales de Trustless Work, garantizando seguridad y transparencia total.
+                                    {t.colectas.aboutDesc}
                                 </p>
 
                                 <div className="bg-foreground/5 border border-accent-teal/20 rounded-xl p-4 mb-6">
                                     <h3 className="text-foreground font-semibold mb-2 flex items-center gap-2">
-                                        <ShieldCheck className="w-4 h-4 text-accent-teal" /> Escrow Seguro
+                                        <ShieldCheck className="w-4 h-4 text-accent-teal" /> {t.colectas.secureEscrow}
                                     </h3>
                                     <p className="text-sm text-muted">
-                                        Todos los aportes quedan retenidos de manera segura en un contrato sin custodia y son liberados por código, asegurando la transparencia total del dinero.
+                                        {t.colectas.secureEscrowDesc}
                                     </p>
                                 </div>
                                 <a
-                                    href="https://docs.trustlesswork.com/trustless-work/es"
+                                    href={language === 'es' ? "https://docs.trustlesswork.com/trustless-work/es" : "https://docs.trustlesswork.com/trustless-work"}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors gap-2"
                                 >
-                                    Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
+                                    {t.colectas.officialDocs || (language === 'es' ? "Docs Oficiales TW" : "Official TW Docs")} <ArrowUpRight className="w-4 h-4" />
                                 </a>
                             </div>
                         </div>

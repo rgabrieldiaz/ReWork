@@ -30,10 +30,11 @@ interface AuctionDetailModalProps {
     onCancel: (auction: Auction) => Promise<void>;
     loadingBids: Record<number, boolean>;
     t: any; // Translations
+    language?: string;
 }
 
 // Reuse countdown logic
-function useCountdown(endTime: string | null) {
+function useCountdown(endTime: string | null, endedText: string = "Finalizado") {
     const [timeLeft, setTimeLeft] = useState<{ str: string; isEnded: boolean }>({ str: "", isEnded: false });
 
     useEffect(() => {
@@ -45,7 +46,7 @@ function useCountdown(endTime: string | null) {
             const diff = target - now;
 
             if (diff <= 0) {
-                setTimeLeft({ str: "Finalizado", isEnded: true });
+                setTimeLeft({ str: endedText, isEnded: true });
             } else {
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -62,14 +63,14 @@ function useCountdown(endTime: string | null) {
         updateTime();
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
-    }, [endTime]);
+    }, [endTime, endedText]);
 
     return timeLeft;
 }
 
-export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, onBid, onCancel, loadingBids, t }: AuctionDetailModalProps) {
+export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, onBid, onCancel, loadingBids, t, language = 'es' }: AuctionDetailModalProps) {
     const [bidAmount, setBidAmount] = useState<number>(0);
-    const { str: timeLeftStr, isEnded } = useCountdown(auction?.end_time || null);
+    const { str: timeLeftStr, isEnded } = useCountdown(auction?.end_time || null, t?.marketplace?.finished || (language === 'es' ? "Finalizado" : "Ended"));
 
     useEffect(() => {
         if (auction) {
@@ -127,7 +128,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                     {auction.is_direct_buy ? `${auction.base_price} ${currency}` : `${auction.current_bid || auction.base_price} ${currency}`}
                                 </span>
                                 <span className="text-[10px] text-white/90 uppercase font-black tracking-widest bg-white/10 px-2.5 py-1 rounded border border-white/20 backdrop-blur-md">
-                                    {auction.condition === 'nuevo' ? '✨ Nuevo' : '♻️ Usado'}
+                                    {auction.condition === 'nuevo' ? (language === 'es' ? '✨ Nuevo' : '✨ New') : (language === 'es' ? '♻️ Usado' : '♻️ Used')}
                                 </span>
                             </div>
                         </div>
@@ -144,11 +145,11 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                         <div className="flex items-center gap-2 mb-2">
                             {auction.is_direct_buy ? (
                                 <span className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
-                                    🛍️ Compra Directa
+                                    🛍️ {t?.marketplace?.itemDirectBuy || (language === 'es' ? 'Compra Directa' : 'Direct Buy')}
                                 </span>
                             ) : (
                                 <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
-                                    🔨 Subasta
+                                    🔨 {t?.marketplace?.tabAuctions || (language === 'es' ? 'Subasta' : 'Auction')}
                                 </span>
                             )}
                             {isFinished && !isCancelled && (
@@ -158,7 +159,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                             )}
                             {isCancelled && (
                                 <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
-                                    Cancelado
+                                    {t?.marketplace?.cancelledByUser || (language === 'es' ? 'Cancelado' : 'Cancelled')}
                                 </span>
                             )}
                         </div>
@@ -169,12 +170,12 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                         {/* Seller Details */}
                         <div className="flex items-center justify-between bg-muted/10 border border-border-subtle p-4 rounded-2xl">
                             <div>
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Vendedor</span>
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">{language === 'es' ? 'Vendedor' : 'Seller'}</span>
                                 <UserBadge address={auction.seller} />
                             </div>
                             {!auction.is_direct_buy && (
                                 <div className="text-right">
-                                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Historial</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">{language === 'es' ? 'Historial' : 'History'}</span>
                                     <span className="text-sm font-mono font-medium flex items-center justify-end gap-1.5 text-foreground">
                                         <History className="w-3.5 h-3.5" />
                                         {auction.bid_count} {t.marketplace.bidsCount}
@@ -188,12 +189,12 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                             {auction.is_direct_buy ? (
                                 <div className="flex justify-between items-end">
                                     <div className="flex flex-col">
-                                        <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">Precio Fijo</span>
+                                        <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">{t?.marketplace?.fixedPrice || (language === 'es' ? 'Precio Fijo' : 'Fixed Price')}</span>
                                         <span className="text-3xl font-mono font-black text-foreground">{auction.base_price} <span className="text-accent-teal">{currency}</span></span>
                                     </div>
                                     {isFinished && auction.current_winner_address && (
                                         <div className="text-right">
-                                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Comprador</span>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">{language === 'es' ? 'Comprador' : 'Buyer'}</span>
                                             <UserBadge address={auction.current_winner_address} />
                                         </div>
                                     )}
@@ -202,12 +203,12 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
-                                            <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">Mejor Oferta</span>
+                                            <span className="text-[11px] uppercase font-bold tracking-wider text-muted mb-1">{language === 'es' ? 'Mejor Oferta' : 'Highest Bid'}</span>
                                             <span className="text-3xl font-mono font-black text-foreground">{auction.current_bid || auction.base_price} <span className="text-accent-teal">{currency}</span></span>
                                         </div>
                                         {auction.end_time && !isFinished && !isCancelled && (
                                             <div className="text-right">
-                                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Tiempo Restante</span>
+                                                <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">{language === 'es' ? 'Tiempo Restante' : 'Time Remaining'}</span>
                                                 <span className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-3 py-1.5 text-sm font-bold rounded-xl flex items-center justify-end gap-1.5 font-mono shadow-[0_0_10px_rgba(0,242,255,0.1)]">
                                                     <Clock className="w-4 h-4" /> {timeLeftStr}
                                                 </span>
@@ -224,7 +225,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                             )}
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">Precio Inicial</span>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted mb-1 block">{t?.marketplace?.basePrice || (language === 'es' ? 'Precio Inicial' : 'Starting Price')}</span>
                                             <span className="text-sm font-mono text-muted">{auction.base_price} {currency}</span>
                                         </div>
                                     </div>
@@ -276,7 +277,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                     ) : (
-                                        auction.is_direct_buy ? "Comprar Ahora" : "Pujar"
+                                        auction.is_direct_buy ? (t?.marketplace?.buyNow || (language === 'es' ? "Comprar Ahora" : "Buy Now")) : (language === 'es' ? "Pujar" : "Place Bid")
                                     )}
                                     {!isLoading && <div className="absolute inset-0 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />}
                                 </button>
@@ -288,7 +289,7 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-2 p-3 bg-foreground/5 border border-border-subtle rounded-xl text-muted text-sm">
                                         <AlertCircle className="w-4 h-4 text-accent-teal shrink-0" />
-                                        Eres el vendedor de este artículo.
+                                        {language === 'es' ? "Eres el vendedor de este artículo." : "You are the seller of this item."}
                                     </div>
                                     <button
                                         onClick={async () => {
@@ -312,17 +313,29 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 dark:from-blue-500/5 to-transparent -z-10" />
                         <ShieldCheck className="w-6 h-6 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Contrato Escrow Inteligente</h4>
+                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">{t?.marketplace?.secureEscrow || (language === 'es' ? "Contrato Escrow Inteligente" : "Smart Escrow Contract")}</h4>
                             <p className="text-xs text-blue-800/80 dark:text-blue-200/70 mt-1 mb-2 leading-relaxed">
-                                Los fondos serán custodiados on-chain por <strong>Trustless Work</strong>.
-                                <br />
-                                {auction.is_direct_buy
-                                    ? "El pago se libera apenas confirmas la recepción del artículo."
-                                    : "El pago se libera al finalizar exitosamente la subasta."}
+                                {language === 'es' ? (
+                                    <>
+                                        Los fondos serán custodiados on-chain por <strong>Trustless Work</strong>.
+                                        <br />
+                                        {auction.is_direct_buy
+                                            ? "El pago se libera apenas confirmas la recepción del artículo."
+                                            : "El pago se libera al finalizar exitosamente la subasta."}
+                                    </>
+                                ) : (
+                                    <>
+                                        Funds will be held on-chain by <strong>Trustless Work</strong>.
+                                        <br />
+                                        {auction.is_direct_buy
+                                            ? "Payment is released as soon as you confirm receiving the item."
+                                            : "Payment is released upon successful completion of the auction."}
+                                    </>
+                                )}
                             </p>
                             <div className="flex items-center gap-2 text-[10px] font-mono text-blue-700 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-200 dark:border-blue-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse" />
-                                Fee estimado de red: ~0.00001 XLM
+                                {language === 'es' ? "Fee estimado de red: ~0.00001 XLM" : "Estimated network fee: ~0.00001 XLM"}
                             </div>
                         </div>
                     </div>

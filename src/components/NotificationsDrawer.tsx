@@ -17,7 +17,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const { respondToJoinRequest, respondToMissionProposal } = useSquads();
     const [activeTab, setActiveTab] = useState<'activity' | 'community'>('activity');
-    const { t } = useSettings();
+    const { t, language } = useSettings();
 
     if (!isOpen) return null;
 
@@ -58,7 +58,9 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border-subtle">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-bold">Notificaciones</h2>
+                        <h2 className="text-xl font-bold">
+                            {language === 'es' ? "Notificaciones" : "Notifications"}
+                        </h2>
                         {unreadCount > 0 && (
                             <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                 {unreadCount}
@@ -71,7 +73,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                 onClick={markAllAsRead}
                                 className="text-xs font-semibold text-accent-teal hover:text-accent-teal/80 transition-colors mr-2 flex items-center gap-1"
                             >
-                                <CheckCircle className="w-4 h-4" /> Marcar leídas
+                                <CheckCircle className="w-4 h-4" /> {language === 'es' ? "Marcar leídas" : "Mark as read"}
                             </button>
                         )}
                         <button
@@ -89,13 +91,13 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                         onClick={() => setActiveTab('activity')}
                         className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'activity' ? 'bg-accent-teal text-black shadow-lg shadow-accent-teal/20' : 'bg-foreground/5 text-muted hover:text-foreground hover:bg-foreground/10'}`}
                     >
-                        Actividad
+                        {language === 'es' ? "Actividad" : "Activity"}
                     </button>
                     <button
                         onClick={() => setActiveTab('community')}
                         className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'community' ? 'bg-accent-teal text-black shadow-lg shadow-accent-teal/20' : 'bg-foreground/5 text-muted hover:text-foreground hover:bg-foreground/10'}`}
                     >
-                        Comunidad
+                        {language === 'es' ? "Comunidad" : "Community"}
                     </button>
                 </div>
 
@@ -104,8 +106,12 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                     {filteredNotifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
                             <Bell className="w-12 h-12 text-muted mb-4" />
-                            <h3 className="text-lg font-bold mb-2">No hay notificaciones</h3>
-                            <p className="text-sm text-muted">Aún no tienes alertas recientes en esta pestaña.</p>
+                            <h3 className="text-lg font-bold mb-2">
+                                {language === 'es' ? "No hay notificaciones" : "No notifications"}
+                            </h3>
+                            <p className="text-sm text-muted">
+                                {language === 'es' ? "Aún no tienes alertas recientes en esta pestaña." : "You have no recent alerts in this tab."}
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -143,7 +149,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                 }}
                                                                 className="px-3 py-1 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
                                                             >
-                                                                Aceptar
+                                                                {language === 'es' ? "Aceptar" : "Accept"}
                                                             </button>
                                                             <button
                                                                 onClick={async (e) => {
@@ -152,7 +158,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                 }}
                                                                 className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded hover:bg-red-500/20 transition-colors uppercase tracking-wider"
                                                             >
-                                                                Rechazar
+                                                                {language === 'es' ? "Rechazar" : "Reject"}
                                                             </button>
                                                         </div>
                                                     ) : notif.payload?.type === 'team_mission_proposal' && notif.action_status === 'pending' ? (
@@ -171,16 +177,11 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                 <button
                                                                     onClick={async (e) => {
                                                                         e.stopPropagation();
-                                                                        // userId logic here: we need the current user's ID
-                                                                        // Since we are in the notification drawer, we assume the user seeing it is the target
-                                                                        // We'll need to fetch user profile or use a stable ID from the notification
-                                                                        // Most reliable is to use the user_profile_id from the notification table which is the target
-                                                                        // But respondToMissionProposal needs the internal UUID
                                                                         await respondToMissionProposal(notif.id, notif.payload.squadId, notif.payload.targetUserId, 'accept');
                                                                     }}
                                                                     className="flex-1 px-3 py-2 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
                                                                 >
-                                                                    Aceptar Misión
+                                                                    {language === 'es' ? "Aceptar Misión" : "Accept Mission"}
                                                                 </button>
                                                                 <button
                                                                     onClick={async (e) => {
@@ -189,7 +190,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                     }}
                                                                     className="px-3 py-2 bg-foreground/10 text-muted text-[10px] font-bold rounded hover:bg-foreground/20 transition-colors uppercase tracking-wider"
                                                                 >
-                                                                    Ignorar
+                                                                    {language === 'es' ? "Ignorar" : "Ignore"}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -202,7 +203,7 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                 }}
                                                                 className="px-3 py-1 bg-accent-teal text-black text-[10px] font-bold rounded hover:bg-accent-teal/80 transition-colors uppercase tracking-wider shadow-lg shadow-accent-teal/10"
                                                             >
-                                                                Aceptar Invitación
+                                                                {language === 'es' ? "Aceptar Invitación" : "Accept Invite"}
                                                             </button>
                                                             <button
                                                                 onClick={async (e) => {
@@ -211,12 +212,12 @@ export function NotificationsDrawer({ isOpen, onClose }: NotificationsDrawerProp
                                                                 }}
                                                                 className="px-3 py-1 bg-foreground/10 text-muted text-[10px] font-bold rounded hover:bg-foreground/20 transition-colors uppercase tracking-wider"
                                                             >
-                                                                Ignorar
+                                                                {language === 'es' ? "Ignorar" : "Ignore"}
                                                             </button>
                                                         </div>
                                                     ) : (notif.payload?.type === 'join_request' || notif.payload?.type === 'team_mission_proposal' || notif.payload?.type === 'team_invite') && notif.action_status !== 'pending' ? (
                                                         <span className={`text-[10px] font-bold uppercase tracking-wider ${notif.action_status === 'accepted' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                            {notif.action_status === 'accepted' ? 'Aceptada' : 'Rechazada'}
+                                                            {notif.action_status === 'accepted' ? (language === 'es' ? 'Aceptada' : 'Accepted') : (language === 'es' ? 'Rechazada' : 'Rejected')}
                                                         </span>
                                                     ) : notif.action_url && notif.action_text && (
                                                         <Link

@@ -20,7 +20,7 @@ interface Course {
 }
 
 export default function CapacitacionPage() {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { addPoints } = useProfile();
     const [completedCourses, setCompletedCourses] = useState<Set<number>>(new Set());
     const [activeCourse, setActiveCourse] = useState<Course | null>(null);
@@ -41,7 +41,7 @@ export default function CapacitacionPage() {
         setTimeout(() => setToast(null), 4000);
     };
 
-    const courses: Course[] = [
+    const courses_es: Course[] = [
         {
             id: 1,
             title: "Fundamentos de Blockchain",
@@ -120,6 +120,87 @@ export default function CapacitacionPage() {
         },
     ];
 
+    const courses_en: Course[] = [
+        {
+            id: 1,
+            title: "Blockchain Fundamentals",
+            description: "Core concepts, cryptography, and decentralized security.",
+            duration: "45 min",
+            modules: 3,
+            icon: Lock,
+            color: "text-blue-500",
+            bgWrapper: "bg-blue-500/10",
+            progress: completedCourses.has(1) ? 100 : 0,
+            points: 50,
+            content: [
+                "What is a blockchain? A blockchain is a distributed, immutable ledger of transactions verified by multiple nodes on the network.",
+                "Public-key cryptography: your Freighter wallet uses a keypair (public/private) to sign transactions securely without revealing your private key.",
+                "Consensus on Stellar: the Stellar Consensus Protocol (SCP) enables fast and efficient agreements without mining, using trusted validators.",
+            ]
+        },
+        {
+            id: 2,
+            title: "Finance with Stellar Network",
+            description: "Corporate swaps, transactions, and anchored real-world assets.",
+            duration: "1h 20m",
+            modules: 5,
+            icon: ZapIcon,
+            color: "text-accent-teal",
+            bgWrapper: "bg-accent-teal/10",
+            progress: completedCourses.has(2) ? 100 : 0,
+            points: 75,
+            content: [
+                "USDC on Stellar: Circle natively issues USDC on Stellar, enabling stable transactions with minimal fees (0.00001 XLM per operation).",
+                "Trustlines: before receiving a non-native asset (such as USDC), your account must establish a trustline to the token issuer.",
+                "Path Payments: Stellar allows assets to be swapped automatically using the decentralized order book, without requiring an intermediary.",
+                "Soroban Smart Contracts: Stellar smart contracts enable automated agreements such as Trustless Work escrows.",
+                "Anchored Assets: SAPs (Stellar Asset Protocols) allow real-world assets (like fiat dollars or stocks) to be represented on the blockchain.",
+            ]
+        },
+        {
+            id: 3,
+            title: "Advanced Smart Contracts",
+            description: "Operational and process automation using Soroban.",
+            duration: "2h 15m",
+            modules: 8,
+            icon: BookOpen,
+            color: "text-purple-500",
+            bgWrapper: "bg-purple-500/10",
+            progress: completedCourses.has(3) ? 100 : 0,
+            points: 100,
+            content: [
+                "Soroban SDK: written in Rust, Soroban enables efficient and secure smart contracts with on-chain state access.",
+                "Escrow types: single-release (one payment upon delivery), milestone-based (stage payments), and multi-release (multiple recipients).",
+                "Trustless Work: the platform abstracts Soroban complexity by providing a REST API to deploy escrows without custom contract code.",
+                "Contract security: immutability, transparency, and on-chain verification are the main advantages over traditional contracts.",
+                "Use cases: conditional salaries, freelancer escrows, verified crowdfunding, and token-gated access.",
+                "Contract invocation: XDR (External Data Representation) is the standard binary format for Stellar transactions.",
+                "Testing with Soroban CLI: you can simulate and test contracts locally before deploying to testnet.",
+                "Best practices: always verify transaction outcome (SUCCESS/FAILED) before updating your application database.",
+            ]
+        },
+        {
+            id: 4,
+            title: "Cloud & Web3 Cybersecurity",
+            description: "Distributed data protection and web3 infrastructure hardening.",
+            duration: "50 min",
+            modules: 4,
+            icon: Award,
+            color: "text-orange-500",
+            bgWrapper: "bg-orange-500/10",
+            progress: completedCourses.has(4) ? 100 : 0,
+            points: 60,
+            content: [
+                "Key management: never share your private key. Use hardware wallets or secure extensions like Freighter for all operations.",
+                "Web3 Phishing: always verify website URLs before connecting your wallet. Legitimate dApps never ask for your seed phrase.",
+                "Supabase RLS: Row Level Security policies ensure each user only accesses data that belongs to them.",
+                "On-chain audit: any transaction can be publicly audited on Stellar Expert, ensuring total transparency.",
+            ]
+        },
+    ];
+
+    const courses = language === 'en' ? courses_en : courses_es;
+
     const handleStartCourse = (course: Course) => {
         if (completedCourses.has(course.id)) return;
         setActiveCourse(course);
@@ -137,12 +218,12 @@ export default function CapacitacionPage() {
         if (!activeCourse || isCompleting) return;
         setIsCompleting(true);
         try {
-            await addPoints(activeCourse.points, `Curso completado: ${activeCourse.title}`);
+            await addPoints(activeCourse.points, language === 'es' ? `Curso completado: ${activeCourse.title}` : `Course completed: ${activeCourse.title}`);
             const updated = new Set([...completedCourses, activeCourse.id]);
             setCompletedCourses(updated);
             localStorage.setItem("rework_completed_courses", JSON.stringify([...updated]));
             setActiveCourse(null);
-            showToast(`🎓 ¡Curso completado! +${activeCourse.points} puntos ganados.`);
+            showToast(language === 'es' ? `🎓 ¡Curso completado! +${activeCourse.points} puntos ganados.` : `🎓 Course completed! +${activeCourse.points} points earned.`);
         } catch (err) {
             console.error(err);
         } finally {
@@ -223,7 +304,7 @@ export default function CapacitacionPage() {
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-border-subtle relative z-10">
                             <div>
-                                <p className="text-xs text-muted mb-1">Módulo {currentModule + 1} de {activeCourse.modules}</p>
+                                <p className="text-xs text-muted mb-1">{language === 'es' ? `Módulo ${currentModule + 1} de ${activeCourse.modules}` : `Module ${currentModule + 1} of ${activeCourse.modules}`}</p>
                                 <h2 className="text-lg font-bold">{activeCourse.title}</h2>
                             </div>
                             <button onClick={() => setActiveCourse(null)} className="text-muted hover:text-foreground transition-colors">
@@ -252,7 +333,7 @@ export default function CapacitacionPage() {
                                     onClick={handleNextModule}
                                     className="w-full py-3 bg-foreground/10 hover:bg-foreground/15 text-foreground font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                                 >
-                                    Siguiente módulo <ChevronRight className="w-4 h-4" />
+                                    {language === 'es' ? "Siguiente módulo" : "Next module"} <ChevronRight className="w-4 h-4" />
                                 </button>
                             ) : (
                                 <button
@@ -260,7 +341,9 @@ export default function CapacitacionPage() {
                                     disabled={isCompleting}
                                     className="w-full py-3 bg-accent-teal hover:bg-accent-teal/80 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)] disabled:opacity-60"
                                 >
-                                    {isCompleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</> : <><CheckCircle className="w-4 h-4" /> Finalizar y ganar +{activeCourse.points} pts</>}
+                                    {isCompleting 
+                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> {language === 'es' ? "Procesando..." : "Processing..."}</> 
+                                        : <><CheckCircle className="w-4 h-4" /> {language === 'es' ? `Finalizar y ganar +${activeCourse.points} pts` : `Complete & earn +${activeCourse.points} pts`}</>}
                                 </button>
                             )}
                         </div>

@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import QRCode from "qrcode";
-import { X, QrCode, ArrowDownLeft, ArrowUpRight, Copy, Check, ShieldCheck, Wallet, RefreshCw, Landmark } from "lucide-react";
+import { X, QrCode, ArrowDownLeft, ArrowUpRight, Copy, Check, ShieldCheck, Wallet, RefreshCw } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
-import { formatCurrency, convertCurrency, getTripleValues, SupportedCurrency } from "@/lib/currency";
+import { useSettings } from "@/hooks/useSettings";
+import { getTripleValues, SupportedCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
 interface QRPaymentsModalProps {
@@ -16,8 +17,9 @@ interface QRPaymentsModalProps {
 }
 
 export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRPaymentsModalProps) {
-  const { connected, address } = useWallet();
+  const { address } = useWallet();
   const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
+  const { t, language } = useSettings();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"receive" | "pay">(defaultTab);
@@ -108,7 +110,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
 
   const handleExecutePayment = async () => {
     if (!recipient) {
-      toast.error("Por favor ingresa o escanea una dirección de destino válida.");
+      toast.error(t.qrModal.errDestination);
       return;
     }
     setIsProcessing(true);
@@ -137,15 +139,15 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
               <QrCode className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight">Pagos & Cobros con QR</h2>
-              <p className="text-[11px] text-muted hidden sm:block">Red de Pagos ReWork sobre Stellar • Liquidación Instantánea</p>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight">{t.qrModal.title}</h2>
+              <p className="text-[11px] text-muted hidden sm:block">{t.qrModal.subtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 sm:p-2.5 rounded-xl text-muted hover:text-foreground bg-foreground/5 hover:bg-foreground/15 border border-border-subtle transition-all flex items-center justify-center flex-shrink-0"
-            title="Cerrar ventana"
-            aria-label="Cerrar"
+            title={t.qrModal.closeBtn}
+            aria-label={t.qrModal.closeBtn}
           >
             <X className="w-5 h-5" />
           </button>
@@ -165,7 +167,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
             }`}
           >
             <ArrowDownLeft className="w-4 h-4" />
-            Cobrar (Mi QR)
+            {t.qrModal.tabReceive}
           </button>
           <button
             onClick={() => setActiveTab("pay")}
@@ -176,7 +178,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
             }`}
           >
             <ArrowUpRight className="w-4 h-4" />
-            Pagar / Lector
+            {t.qrModal.tabPay}
           </button>
         </div>
 
@@ -186,7 +188,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
             {/* Amount & Currency */}
             <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-3">
               <div className="flex justify-between items-center text-xs font-semibold text-muted">
-                <span>Monto a Cobrar</span>
+                <span>{t.qrModal.receiveAmountLabel}</span>
                 <div className="flex gap-1 bg-foreground/10 p-1 rounded-lg">
                   {(["ARS", "USDC", "XLM"] as SupportedCurrency[]).map((curr) => (
                     <button
@@ -219,15 +221,21 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
               {/* Triple Currency Breakdown */}
               <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border-subtle text-[11px] font-mono">
                 <div className="text-center p-1.5 rounded-lg bg-foreground/5">
-                  <span className="text-muted block text-[10px]">PESOS ARS</span>
+                  <span className="text-muted block text-[10px]">
+                    {language === "en" ? "ARS PESOS" : "PESOS ARS"}
+                  </span>
                   <span className="font-bold text-foreground">{tripleReceive.formatted.ars}</span>
                 </div>
                 <div className="text-center p-1.5 rounded-lg bg-foreground/5">
-                  <span className="text-muted block text-[10px]">DÓLARES USDC</span>
+                  <span className="text-muted block text-[10px]">
+                    {language === "en" ? "USDC DOLLARS" : "DÓLARES USDC"}
+                  </span>
                   <span className="font-bold text-accent-teal">{tripleReceive.formatted.usdc}</span>
                 </div>
                 <div className="text-center p-1.5 rounded-lg bg-foreground/5">
-                  <span className="text-muted block text-[10px]">STELLAR XLM</span>
+                  <span className="text-muted block text-[10px]">
+                    {language === "en" ? "XLM STELLAR" : "STELLAR XLM"}
+                  </span>
                   <span className="font-bold text-indigo-400">{tripleReceive.formatted.xlm}</span>
                 </div>
               </div>
@@ -237,7 +245,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
             <div className="flex flex-col items-center justify-center p-4 bg-background/50 rounded-2xl border border-border-subtle relative group">
               {qrDataUrl ? (
                 <div className="p-3 bg-slate-950 rounded-2xl border-2 border-accent-teal/30 shadow-xl shadow-accent-teal/10">
-                  <img src={qrDataUrl} alt="QR Code de Pago ReWork" className="w-52 h-52 rounded-xl" />
+                  <img src={qrDataUrl} alt="QR Code" className="w-52 h-52 rounded-xl" />
                 </div>
               ) : (
                 <div className="w-52 h-52 flex items-center justify-center text-muted">
@@ -245,16 +253,16 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                 </div>
               )}
               <p className="text-[11px] text-muted text-center mt-3">
-                Escaneá este código desde cualquier billetera de ReWork o compatible con Stellar
+                {t.qrModal.scanInstruction}
               </p>
             </div>
 
             {/* Address copy */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-foreground/5 border border-border-subtle">
               <div className="truncate mr-3">
-                <span className="text-[10px] uppercase font-bold text-muted block">Tu Dirección Stellar</span>
+                <span className="text-[10px] uppercase font-bold text-muted block">{t.qrModal.yourAddressLabel}</span>
                 <span className="text-xs font-mono text-foreground truncate block">
-                  {address || "Billetera no conectada"}
+                  {address || t.qrModal.walletNotConnected}
                 </span>
               </div>
               <button
@@ -262,7 +270,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                 className="px-3 py-1.5 bg-accent-teal/10 hover:bg-accent-teal/20 text-accent-teal text-xs font-bold rounded-lg border border-accent-teal/20 flex items-center gap-1.5 transition-colors shrink-0"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copiado" : "Copiar"}
+                {copied ? t.qrModal.copiedBtn : t.qrModal.copyBtn}
               </button>
             </div>
           </div>
@@ -276,9 +284,9 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
                   <Check className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">¡Pago Enviado con Éxito!</h3>
+                <h3 className="text-xl font-bold text-foreground">{t.qrModal.paySuccessTitle}</h3>
                 <p className="text-xs text-muted max-w-xs mx-auto">
-                  La transacción fue liquidada en la red Stellar en segundos con comisión de $0.00001 USD.
+                  {t.qrModal.paySuccessDesc}
                 </p>
               </div>
             ) : (
@@ -286,12 +294,12 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                 {/* Scanner trigger simulation */}
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-semibold text-muted">Lector de QR</span>
+                    <span className="text-xs font-semibold text-muted">{t.qrModal.payScannerTitle}</span>
                     <button
                       onClick={handleSimulateScan}
                       className="text-xs text-accent-teal font-bold hover:underline"
                     >
-                      Cargar Ejemplo de QR
+                      {t.qrModal.loadExampleBtn}
                     </button>
                   </div>
                   <div className="flex items-center gap-3">
@@ -299,7 +307,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                       type="text"
                       value={recipient}
                       onChange={(e) => setRecipient(e.target.value)}
-                      placeholder="Pegar dirección Stellar o escanear QR..."
+                      placeholder={t.qrModal.destinationPlaceholder}
                       className="w-full bg-background border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono outline-none focus:border-accent-teal text-foreground"
                     />
                   </div>
@@ -308,7 +316,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                 {/* Amount to pay */}
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-3">
                   <div className="flex justify-between items-center text-xs font-semibold text-muted">
-                    <span>Monto a Pagar</span>
+                    <span>{t.qrModal.payAmountLabel}</span>
                     <div className="flex gap-1 bg-foreground/10 p-1 rounded-lg">
                       {(["USDC", "ARS", "XLM"] as SupportedCurrency[]).map((curr) => (
                         <button
@@ -338,15 +346,15 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
 
                   {/* Equivalences */}
                   <div className="flex justify-between text-[11px] font-mono text-muted pt-2 border-t border-border-subtle">
-                    <span>Equivalente en ARS: {triplePay.formatted.ars}</span>
-                    <span>Equivalente en USDC: {triplePay.formatted.usdc}</span>
+                    <span>{t.qrModal.equivArs} {triplePay.formatted.ars}</span>
+                    <span>{t.qrModal.equivUsdc} {triplePay.formatted.usdc}</span>
                   </div>
                 </div>
 
                 {/* Available Balance Indicator */}
                 <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-accent-teal/5 border border-accent-teal/20 text-xs">
                   <span className="text-muted flex items-center gap-1.5">
-                    <Wallet className="w-4 h-4 text-accent-teal" /> Tu Saldo Disponible:
+                    <Wallet className="w-4 h-4 text-accent-teal" /> {t.qrModal.availableBalance}
                   </span>
                   <span className="font-mono font-bold text-accent-teal">
                     {usdcBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"} USDC •{" "}
@@ -363,12 +371,12 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
                   {isProcessing ? (
                     <>
                       <RefreshCw className="w-5 h-5 animate-spin" />
-                      Procesando en Stellar Network...
+                      {t.qrModal.processingPay}
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-5 h-5" />
-                      Confirmar y Pagar {payAmount} {payCurrency}
+                      {t.qrModal.confirmPayBtn.replace("{amount}", payAmount).replace("{curr}", payCurrency)}
                     </>
                   )}
                 </button>
@@ -384,7 +392,7 @@ export function QRPaymentsModal({ isOpen, onClose, defaultTab = "receive" }: QRP
             onClick={onClose}
             className="w-full sm:w-auto px-6 py-2 rounded-xl border border-border-subtle text-muted hover:text-foreground hover:bg-foreground/5 text-xs font-bold transition-all text-center"
           >
-            Cerrar
+            {t.qrModal.closeBtn}
           </button>
         </div>
       </div>

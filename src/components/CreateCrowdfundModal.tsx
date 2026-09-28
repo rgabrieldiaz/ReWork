@@ -5,6 +5,7 @@ import { X, Loader2, Smile, ShieldCheck, Image as ImageIcon, UserCircle, Wallet,
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useSettings } from "@/hooks/useSettings";
 
 interface CreateCrowdfundModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ interface Squad {
 
 export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, workspaceId }: CreateCrowdfundModalProps) {
     const { address: publicKey } = useWallet();
+    const { t, language } = useSettings();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [goalAmount, setGoalAmount] = useState("");
@@ -207,8 +209,8 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                 {/* Left Column: Preview & Image Selection */}
                 <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 flex flex-col gap-5 relative">
                     <div>
-                        <h3 className="text-xl font-bold tracking-tight mb-1 text-white">Previsualización</h3>
-                        <p className="text-sm text-muted">Así se verá tu colecta en el listado.</p>
+                        <h3 className="text-xl font-bold tracking-tight mb-1 text-white">{language === 'es' ? "Previsualización" : "Preview"}</h3>
+                        <p className="text-sm text-muted">{language === 'es' ? "Así se verá tu colecta en el listado." : "This is how your crowdfund will look in the list."}</p>
                     </div>
 
                     <div className="aspect-square w-full bg-neutral-900/50 border border-border-subtle rounded-3xl flex flex-col overflow-hidden shadow-inner relative group isolate">
@@ -224,14 +226,14 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         </div>
 
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-5 pt-12">
-                            <h4 className="font-bold text-lg text-white leading-tight line-clamp-1 mb-1">{title || "Nombre de la Colecta"}</h4>
-                            <p className="text-xs text-muted/80 line-clamp-1 mb-4">{description || "Descripción corta del objetivo..."}</p>
+                            <h4 className="font-bold text-lg text-white leading-tight line-clamp-1 mb-1">{title || (language === 'es' ? "Nombre de la Colecta" : "Crowdfund Name")}</h4>
+                            <p className="text-xs text-muted/80 line-clamp-1 mb-4">{description || (language === 'es' ? "Descripción corta del objetivo..." : "Short description of the goal...")}</p>
 
                             {/* Progress Bar Preview */}
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-[11px] font-medium text-muted">
-                                    <span>Recaudado: 0 {currency}</span>
-                                    <span>Meta: {goalAmount || "0"} {currency}</span>
+                                    <span>{language === 'es' ? "Recaudado:" : "Raised:"} 0 {currency}</span>
+                                    <span>{language === 'es' ? "Meta:" : "Goal:"} {goalAmount || "0"} {currency}</span>
                                 </div>
                                 <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
                                     <div className="h-full bg-accent-teal w-[5%] rounded-full opacity-50"></div>
@@ -241,14 +243,14 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                     </div>
 
                     <div className="space-y-3 relative z-10">
-                        <label className="block text-sm font-bold text-foreground">Imagen o Emoji</label>
+                        <label className="block text-sm font-bold text-foreground">{language === 'es' ? "Imagen o Emoji" : "Image or Emoji"}</label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={image}
                                 onChange={e => setImage(e.target.value)}
                                 className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-12 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
-                                placeholder="Pega una URL o elige un emoji..."
+                                placeholder={language === 'es' ? "Pega una URL o elige un emoji..." : "Paste a URL or choose an emoji..."}
                             />
                             <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                             <button
@@ -286,7 +288,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         >
                             <div className="flex items-center gap-3">
                                 <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0" />
-                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
+                                <h4 className="text-sm font-bold text-blue-100">{t?.colectas?.secureEscrow || (language === 'es' ? "Contrato Escrow Inteligente" : "Smart Escrow Contract")}</h4>
                             </div>
                             {isEscrowExpanded ? (
                                 <ChevronUp className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
@@ -298,13 +300,23 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         {isEscrowExpanded && (
                             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                                 <p className="text-xs text-blue-200/70 mb-3 leading-relaxed">
-                                    Al publicar, se creará un Smart Escrow no custodial en <strong>Trustless Work</strong>.
-                                    <br />
-                                    Los aportes estarán seguros y el creador podrá liquidarlos según las reglas del contrato.
+                                    {language === 'es' ? (
+                                        <>
+                                            Al publicar, se creará un Smart Escrow no custodial en <strong>Trustless Work</strong>.
+                                            <br />
+                                            Los aportes estarán seguros y el creador podrá liquidarlos según las reglas del contrato.
+                                        </>
+                                    ) : (
+                                        <>
+                                            Upon publishing, a non-custodial Smart Escrow will be created on <strong>Trustless Work</strong>.
+                                            <br />
+                                            Contributions will be safe and the creator can claim them according to contract rules.
+                                        </>
+                                    )}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                    Fee estimado de red: ~0.00001 XLM
+                                    {language === 'es' ? "Fee estimado de red: ~0.00001 XLM" : "Estimated network fee: ~0.00001 XLM"}
                                 </div>
                             </div>
                         )}
@@ -316,9 +328,9 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-                                Crear Nueva Colecta
+                                {language === 'es' ? "Crear Nueva Colecta" : "Create New Crowdfund"}
                             </h2>
-                            <p className="text-sm text-muted mt-1">Lanza tu campaña de recaudación segura.</p>
+                            <p className="text-sm text-muted mt-1">{language === 'es' ? "Lanza tu campaña de recaudación segura." : "Launch your secure fundraising campaign."}</p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90">
                             <X className="w-5 h-5" />
@@ -335,7 +347,9 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
 
                         {/* Title */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Título de la Colecta <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Título de la Colecta" : "Crowdfund Title"} <span className="text-accent-teal">*</span>
+                            </label>
                             <input
                                 required
                                 type="text"
@@ -343,38 +357,40 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                placeholder="Ej. Servidor Anual, Torneo LAN..."
+                                placeholder={language === 'es' ? "Ej. Servidor Anual, Torneo LAN..." : "e.g. Annual Server, Team Hackathon..."}
                             />
                         </div>
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Descripción</label>
+                            <label className="block text-sm font-bold text-foreground">{language === 'es' ? "Descripción" : "Description"}</label>
                             <textarea
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all placeholder:text-muted/60 min-h-[100px] resize-none"
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                placeholder="Explica brevemente para qué son los fondos..."
+                                placeholder={language === 'es' ? "Explica brevemente para qué son los fondos..." : "Briefly explain what the funds will be used for..."}
                             />
                         </div>
 
                         {/* Privacy Selection */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-bold text-foreground">Visibilidad <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Visibilidad" : "Visibility"} <span className="text-accent-teal">*</span>
+                            </label>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setPrivacy('public')}
                                     className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'public' ? 'bg-accent-teal/10 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.05)]' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Globe className="w-4 h-4" /> Público
+                                    <Globe className="w-4 h-4" /> {language === 'es' ? "Público" : "Public"}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setPrivacy('private')}
                                     className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'private' ? 'bg-orange-500/10 border-orange-500 text-white shadow-[0_0_15px_rgba(255,165,0,0.05)]' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Users className="w-4 h-4" /> Solo Equipo
+                                    <Users className="w-4 h-4" /> {language === 'es' ? "Solo Equipo" : "Team Only"}
                                 </button>
                             </div>
 
@@ -385,18 +401,18 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                         onChange={(e) => setSelectedSquadId(e.target.value)}
                                         className="w-full bg-neutral-900/50 border border-orange-500/30 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors appearance-none cursor-pointer mt-3"
                                     >
-                                        <option value="" disabled>Selecciona tu equipo...</option>
+                                        <option value="" disabled>{language === 'es' ? "Selecciona tu equipo..." : "Select your team..."}</option>
                                         {userSquads.map((squad) => (
                                             <option key={squad.id} value={squad.id} className="bg-neutral-900">
                                                 {squad.name}
                                             </option>
                                         ))}
                                         {userSquads.length === 0 && (
-                                            <option value="" disabled>No estás en ningún equipo</option>
+                                            <option value="" disabled>{language === 'es' ? "No estás en ningún equipo" : "You are not in any team"}</option>
                                         )}
                                     </select>
                                     <p className="text-[10px] text-muted mt-2 px-1">
-                                        Solo los miembros del equipo seleccionado podrán ver y aportar a esta colecta.
+                                        {language === 'es' ? "Solo los miembros del equipo seleccionado podrán ver y aportar a esta colecta." : "Only members of the selected team will be able to view and contribute to this crowdfund."}
                                     </p>
                                 </div>
                             )}
@@ -405,7 +421,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         {/* Goal & Currency */}
                         <div className="space-y-3">
                             <label className="block text-sm font-bold text-foreground">
-                                Meta de Recaudación <span className="text-accent-teal">*</span>
+                                {language === 'es' ? "Meta de Recaudación" : "Funding Goal"} <span className="text-accent-teal">*</span>
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
                                 <div className="relative group">
@@ -445,10 +461,12 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         {/* Duration Group */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-end">
-                                <label className="block text-sm font-bold text-foreground">Duración en Días <span className="text-accent-teal">*</span></label>
+                                <label className="block text-sm font-bold text-foreground">
+                                    {language === 'es' ? "Duración en Días" : "Duration in Days"} <span className="text-accent-teal">*</span>
+                                </label>
                                 <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-                                    Finaliza: {endTime}
+                                    {language === 'es' ? "Finaliza:" : "Ends:"} {endTime}
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -467,7 +485,9 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
 
                         {/* Destination Account */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Cuenta Destino (Billetera Stellar) <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Cuenta Destino (Billetera Stellar)" : "Destination Account (Stellar Wallet)"} <span className="text-accent-teal">*</span>
+                            </label>
                             <div className="relative">
                                 <input
                                     required
@@ -481,17 +501,17 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                     type="button"
                                     onClick={() => publicKey && setDestinationAccount(publicKey)}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-accent-teal/10 hover:bg-accent-teal/20 text-accent-teal border border-accent-teal/20 rounded-xl transition-all group/wallet"
-                                    title="Usar mi wallet"
+                                    title={language === 'es' ? "Usar mi wallet" : "Use my wallet"}
                                 >
                                     <Wallet className="w-5 h-5 group-hover/wallet:scale-110 transition-transform" />
-                                    <span className="sr-only">Usar mi wallet</span>
+                                    <span className="sr-only">{language === 'es' ? "Usar mi wallet" : "Use my wallet"}</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Tags */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Etiquetas</label>
+                            <label className="block text-sm font-bold text-foreground">{language === 'es' ? "Etiquetas" : "Tags"}</label>
                             <div className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl p-2 focus-within:border-accent-teal transition-all min-h-[56px] flex flex-wrap gap-2 items-center">
                                 {tags.map((tag, idx) => (
                                     <div key={idx} className="flex items-center gap-1.5 bg-accent-teal/10 border border-accent-teal/30 text-accent-teal px-3 py-1.5 rounded-xl text-xs font-bold animate-in zoom-in duration-200">
@@ -524,7 +544,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                             setTags(tags.slice(0, -1));
                                         }
                                     }}
-                                    placeholder={tags.length === 0 ? "Ej. Equipo, Sorprendelo..." : "Sigue sumando..."}
+                                    placeholder={tags.length === 0 ? (language === 'es' ? "Ej. Equipo, Sorprendelo..." : "e.g. Team, Hackathon...") : (language === 'es' ? "Sigue sumando..." : "Add more...")}
                                 />
                             </div>
                         </div>
@@ -537,7 +557,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                 className="flex-1 py-4 text-sm font-bold text-muted hover:text-white bg-neutral-900/50 hover:bg-neutral-800 border border-border-subtle rounded-2xl transition-all"
                                 disabled={loading}
                             >
-                                Cancelar
+                                {language === 'es' ? "Cancelar" : "Cancel"}
                             </button>
                             <button
                                 type="submit"
@@ -545,7 +565,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                 className="flex-[2] bg-accent-teal hover:bg-accent-teal/80 text-black font-black text-sm py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)]"
                             >
                                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Crear Colecta
+                                {language === 'es' ? "Crear Colecta" : "Create Crowdfund"}
                             </button>
                         </div>
                     </form>

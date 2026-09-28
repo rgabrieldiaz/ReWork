@@ -40,7 +40,7 @@ interface WorkspaceMember {
 
 export default function AdminDashboard() {
     const router = useRouter();
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { activeWorkspace } = useWorkspace();
 
     const [loading, setLoading] = useState(true);
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
     };
 
     const revokeAccess = async (memberId: string) => {
-        if (!confirm("¿Estás seguro de que querés revocar el acceso a este miembro?")) return;
+        if (!confirm(language === 'es' ? "¿Estás seguro de que querés revocar el acceso a este miembro?" : "Are you sure you want to revoke access for this member?")) return;
         setUpdatingMemberId(memberId);
         const { error } = await supabase
             .from('workspace_members')
@@ -148,13 +148,13 @@ export default function AdminDashboard() {
         return (
             <div className="p-8 flex flex-col items-center justify-center text-center py-20">
                 <ShieldAlert className="w-16 h-16 text-red-500 mb-4 opacity-50" />
-                <h1 className="text-2xl font-bold mb-2">Acceso Restringido</h1>
-                <p className="text-muted max-w-md">No tenés permisos de administrador para este espacio o el espacio no es Premium.</p>
+                <h1 className="text-2xl font-bold mb-2">{language === 'es' ? "Acceso Restringido" : "Restricted Access"}</h1>
+                <p className="text-muted max-w-md">{language === 'es' ? "No tenés permisos de administrador para este espacio o el espacio no es Premium." : "You do not have administrator permissions for this space or the space is not Premium."}</p>
                 <button 
                     onClick={() => router.push('/app')}
                     className="mt-6 flex items-center gap-2 text-accent-teal font-bold hover:underline"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Volver al Tablero
+                    <ArrowLeft className="w-4 h-4" /> {language === 'es' ? "Volver al Tablero" : "Return to Dashboard"}
                 </button>
             </div>
         );
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
                     onClick={() => router.push('/app')}
                     className="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-4 text-sm"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Volver
+                    <ArrowLeft className="w-4 h-4" /> {language === 'es' ? "Volver" : "Back"}
                 </button>
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-4">
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
                             <Shield className="w-6 h-6 text-accent-teal" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Panel Administrativo</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">{language === 'es' ? "Panel Administrativo" : "Admin Panel"}</h1>
                             <p className="text-muted">{workspace.name} · Premium Workspace</p>
                         </div>
                     </div>
@@ -191,18 +191,18 @@ export default function AdminDashboard() {
                         <div className="p-6 border-b border-border-subtle flex items-center justify-between">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <Users className="w-5 h-5 text-accent-teal" />
-                                Gestión de Miembros
+                                {language === 'es' ? "Gestión de Miembros" : "Member Management"}
                             </h2>
-                            <span className="text-xs font-bold text-muted uppercase tracking-widest">{members.length} Miembros</span>
+                            <span className="text-xs font-bold text-muted uppercase tracking-widest">{members.length} {language === 'es' ? "Miembros" : "Members"}</span>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-foreground/5 text-xs font-bold text-muted uppercase tracking-wider">
                                     <tr>
-                                        <th className="px-6 py-4">Usuario</th>
-                                        <th className="px-6 py-4">Rol</th>
-                                        <th className="px-6 py-4">Puntos Cura</th>
-                                        <th className="px-6 py-4 text-right">Acciones</th>
+                                        <th className="px-6 py-4">{language === 'es' ? "Usuario" : "User"}</th>
+                                        <th className="px-6 py-4">{language === 'es' ? "Rol" : "Role"}</th>
+                                        <th className="px-6 py-4">{language === 'es' ? "Puntos AURA" : "AURA Points"}</th>
+                                        <th className="px-6 py-4 text-right">{language === 'es' ? "Acciones" : "Actions"}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border-subtle">
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest ${
                                                     member.role === 'admin' || member.role === 'owner' ? 'bg-accent-teal/10 border-accent-teal/30 text-accent-teal' : 'bg-foreground/5 border-border-subtle text-muted'
                                                 }`}>
-                                                    {member.role === 'owner' ? 'Fundador' : member.role}
+                                                    {member.role === 'owner' ? (language === 'es' ? 'Fundador' : 'Owner') : member.role}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                                                             onClick={() => updateMemberRole(member.id, member.role)}
                                                             disabled={updatingMemberId === member.id}
                                                             className="p-2 rounded-lg bg-foreground/5 border border-border-subtle hover:bg-accent-teal/10 hover:text-accent-teal transition-all disabled:opacity-50"
-                                                            title={member.role === 'admin' ? 'Degradar a Miembro' : 'Promover a Admin'}
+                                                            title={member.role === 'admin' ? (language === 'es' ? 'Degradar a Miembro' : 'Demote to Member') : (language === 'es' ? 'Promover a Admin' : 'Promote to Admin')}
                                                         >
                                                             {member.role === 'admin' ? <Shield className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
                                                         </button>
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                                                             onClick={() => revokeAccess(member.id)}
                                                             disabled={updatingMemberId === member.id}
                                                             className="p-2 rounded-lg bg-foreground/5 border border-border-subtle hover:bg-red-500/10 hover:text-red-400 transition-all disabled:opacity-50"
-                                                            title="Revocar Acceso"
+                                                            title={language === 'es' ? "Revocar Acceso" : "Revoke Access"}
                                                         >
                                                             <UserMinus className="w-4 h-4" />
                                                         </button>
@@ -267,9 +267,9 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <BarChart3 className="w-5 h-5 text-accent-teal" />
-                                Crecimiento AURA del Equipo
+                                {language === 'es' ? "Crecimiento AURA del Equipo" : "Team AURA Growth"}
                             </h3>
-                            <span className="text-xs text-muted">Últimos 30 días</span>
+                            <span className="text-xs text-muted">{language === 'es' ? "Últimos 30 días" : "Last 30 days"}</span>
                         </div>
                         
                         <div className="h-48 flex items-end gap-2 px-2">
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex justify-between mt-4 text-[10px] font-bold text-muted uppercase tracking-widest px-2">
                             <span>Feb</span>
-                            <span>Marzo</span>
+                            <span>{language === 'es' ? "Marzo" : "March"}</span>
                         </div>
                     </section>
                 </div>
@@ -302,14 +302,14 @@ export default function AdminDashboard() {
                         
                         <div className="flex items-center gap-2 mb-6">
                             <Wallet className="w-5 h-5 text-accent-teal" />
-                            <h3 className="font-bold">Tesorería Corporativa</h3>
+                            <h3 className="font-bold">{language === 'es' ? "Tesorería Corporativa" : "Corporate Treasury"}</h3>
                         </div>
 
                         <div className="space-y-4 relative z-10">
                             <div className="p-4 rounded-2xl bg-background/50 border border-border-subtle">
                                 <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">Stellar Address</p>
                                 <p className="text-xs font-mono text-accent-teal truncate max-w-full">
-                                    {workspace?.treasury_address || 'No configurada'}
+                                    {workspace?.treasury_address || (language === 'es' ? 'No configurada' : 'Not configured')}
                                 </p>
                             </div>
 
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
 
                             <button className="w-full flex items-center justify-center gap-2 py-3 bg-accent-teal text-background font-bold rounded-xl hover:bg-accent-teal/90 transition-all text-sm">
                                 <Activity className="w-4 h-4" />
-                                Ver Transacciones
+                                {language === 'es' ? "Ver Transacciones" : "View Transactions"}
                             </button>
                         </div>
                     </section>
@@ -335,14 +335,18 @@ export default function AdminDashboard() {
                     <section className="glass-card p-6">
                         <h3 className="font-bold mb-6 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-accent-teal" />
-                            Políticas de Espacio
+                            {language === 'es' ? "Políticas de Espacio" : "Workspace Policies"}
                         </h3>
 
                         <div className="space-y-6">
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold">Ocultar Red Global</p>
-                                    <p className="text-xs text-muted leading-tight mt-0.5">Los miembros no verán misiones externas fuera de este workspace.</p>
+                                    <p className="text-sm font-bold">{language === 'es' ? "Ocultar Red Global" : "Hide Global Network"}</p>
+                                    <p className="text-xs text-muted leading-tight mt-0.5">
+                                        {language === 'es' 
+                                            ? "Los miembros no verán misiones externas fuera de este workspace." 
+                                            : "Members won't see external missions outside this workspace."}
+                                    </p>
                                 </div>
                                 <button 
                                     onClick={togglePolicy}
@@ -354,8 +358,12 @@ export default function AdminDashboard() {
 
                             <div className="flex items-center justify-between gap-4 opacity-50">
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold">Aprobación Manual de AURA</p>
-                                    <p className="text-xs text-muted leading-tight mt-0.5">Requiere revisión administrativa para otorgar puntos.</p>
+                                    <p className="text-sm font-bold">{language === 'es' ? "Aprobación Manual de AURA" : "Manual AURA Approval"}</p>
+                                    <p className="text-xs text-muted leading-tight mt-0.5">
+                                        {language === 'es' 
+                                            ? "Requiere revisión administrativa para otorgar puntos." 
+                                            : "Requires administrative review before awarding points."}
+                                    </p>
                                 </div>
                                 <div className="w-12 h-6 rounded-full bg-foreground/20 relative">
                                     <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white opacity-50" />
@@ -366,7 +374,9 @@ export default function AdminDashboard() {
                         <div className="mt-8 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
                             <p className="text-[10px] text-orange-200/80 leading-relaxed italic">
-                                "Como administrador, sos responsable de la integridad de este espacio y de la distribución justa de recompensas."
+                                {language === 'es'
+                                    ? '"Como administrador, sos responsable de la integridad de este espacio y de la distribución justa de recompensas."'
+                                    : '"As an administrator, you are responsible for the integrity of this workspace and the fair distribution of rewards."'}
                             </p>
                         </div>
                     </section>

@@ -23,7 +23,7 @@ interface Bounty {
 export default function GlobalNetworkPage() {
     const { connected, address } = useWallet();
     const { profile } = useProfile();
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const [bounties, setBounties] = useState<Bounty[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -54,12 +54,12 @@ export default function GlobalNetworkPage() {
 
     const handleApply = async (bounty: Bounty) => {
         if (!connected || !profile) {
-            toast.error("Conectá tu wallet y perfil para postularte.");
+            toast.error(language === 'es' ? "Conectá tu wallet y perfil para postularte." : "Connect your wallet and profile to apply.");
             return;
         }
 
         if (appliedIds.includes(bounty.id)) {
-            toast.info("Ya te has postulado a este servicio.");
+            toast.info(language === 'es' ? "Ya te has postulado a este servicio." : "You have already applied to this service.");
             return;
         }
 
@@ -67,10 +67,12 @@ export default function GlobalNetworkPage() {
         
         try {
             setAppliedIds(prev => [...prev, bounty.id]);
-            toast.success(`¡Postulación enviada con éxito! Tu CV Aura (${profile.points || 0} pts) ha sido compartido con el creador.`);
+            toast.success(language === 'es' 
+                ? `¡Postulación enviada con éxito! Tu CV Aura (${profile.points || 0} pts) ha sido compartido con el creador.` 
+                : `Application sent successfully! Your Aura CV (${profile.points || 0} pts) was shared with the creator.`);
         } catch (err) {
             console.error('Error applying:', err);
-            toast.error("Error al procesar la postulación.");
+            toast.error(language === 'es' ? "Error al procesar la postulación." : "Error processing application.");
         } finally {
             setApplyingId(null);
         }
@@ -90,17 +92,17 @@ export default function GlobalNetworkPage() {
                             <Globe className="w-6 h-6 text-accent-teal" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Red de Servicios</h1>
-                            <p className="text-muted">Ofrecé y contratá servicios con todos los miembros y empresas del ecosistema ReWork sin intermediarios.</p>
+                            <h1 className="text-3xl font-bold tracking-tight">{t.nav.servicesNetwork || (language === 'es' ? "Red de Servicios" : "Services Network")}</h1>
+                            <p className="text-muted">{language === 'es' ? "Ofrecé y contratá servicios con todos los miembros y empresas del ecosistema ReWork sin intermediarios." : "Offer and contract services with all members and companies of the ReWork ecosystem without intermediaries."}</p>
                         </div>
                     </div>
 
                     <button 
-                        onClick={() => toast.info("Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo.", { duration: 5000 })}
+                        onClick={() => toast.info(language === 'es' ? "Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo." : "To publish a service on the Services Network, create a goal with the 'Global Service / Bounty' switch toggled from Squad Goals.", { duration: 5000 })}
                         className="flex items-center gap-2 px-5 py-2.5 bg-accent-teal text-background rounded-xl font-bold hover:bg-accent-teal/90 transition-all text-sm shadow-[0_0_15px_rgba(0,242,255,0.2)] cursor-pointer"
                     >
                         <UserPlus className="w-4 h-4" />
-                        Ofrecer Servicio
+                        {language === 'es' ? "Ofrecer Servicio" : "Offer Service"}
                     </button>
                 </div>
 
@@ -109,7 +111,7 @@ export default function GlobalNetworkPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent-teal transition-colors" />
                         <input
                             type="text"
-                            placeholder="Buscar servicios, tecnología, desarrollo, diseño..."
+                            placeholder={language === 'es' ? "Buscar servicios, tecnología, desarrollo, diseño..." : "Search services, tech, development, design..."}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-foreground/5 border border-border-subtle focus:border-accent-teal/50 rounded-xl py-3 pl-10 pr-4 outline-none transition-all"
@@ -117,11 +119,11 @@ export default function GlobalNetworkPage() {
                     </div>
                     <button className="flex items-center gap-2 px-4 py-3 bg-foreground/5 border border-border-subtle rounded-xl hover:bg-foreground/10 transition-all text-sm font-medium">
                         <Filter className="w-4 h-4" />
-                        Filtros
+                        {language === 'es' ? "Filtros" : "Filters"}
                     </button>
                     <div className="ml-auto flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest bg-accent-teal/5 border border-accent-teal/10 px-4 py-2 rounded-full">
                         <Sparkles className="w-3 h-3 text-accent-teal" />
-                        {bounties.length} Servicios Activos
+                        {bounties.length} {language === 'es' ? "Servicios Activos" : "Active Services"}
                     </div>
                 </div>
             </header>
@@ -156,14 +158,14 @@ export default function GlobalNetworkPage() {
                             <div className="flex items-center justify-between pt-4 border-t border-border-subtle relative z-10">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="w-4 h-4 text-accent-teal/60" />
-                                    <span className="text-xs font-medium text-muted">Aura Verificada</span>
+                                    <span className="text-xs font-medium text-muted">{language === 'es' ? "Aura Verificada" : "Verified Aura"}</span>
                                 </div>
                                 <button
                                     onClick={() => handleApply(bounty)}
                                     disabled={applyingId === bounty.id || appliedIds.includes(bounty.id)}
                                     className="flex items-center gap-2 bg-accent-teal text-background px-4 py-2 rounded-lg text-sm font-bold hover:bg-accent-teal/90 transition-all disabled:opacity-50"
                                 >
-                                    {applyingId === bounty.id ? "Postulando..." : appliedIds.includes(bounty.id) ? "Postulado ✓" : "Postularse"}
+                                    {applyingId === bounty.id ? (language === 'es' ? "Postulando..." : "Applying...") : appliedIds.includes(bounty.id) ? (language === 'es' ? "Postulado ✓" : "Applied ✓") : (language === 'es' ? "Postularse" : "Apply")}
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -177,9 +179,11 @@ export default function GlobalNetworkPage() {
                     <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-border-subtle">
                         <Globe className="w-8 h-8 text-muted" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">No se encontraron servicios ni misiones</h3>
+                    <h3 className="text-xl font-bold mb-2">{language === 'es' ? "No se encontraron servicios ni misiones" : "No services or missions found"}</h3>
                     <p className="text-muted max-w-md mx-auto">
-                        Sé el primero en ofrecer un servicio o buscar una tarea en la comunidad de ReWork sin intermediarios.
+                        {language === 'es' 
+                            ? "Sé el primero en ofrecer un servicio o buscar una tarea en la comunidad de ReWork sin intermediarios." 
+                            : "Be the first to offer a service or search for a task in the ReWork community without intermediaries."}
                     </p>
                 </div>
             )}
@@ -190,16 +194,17 @@ export default function GlobalNetworkPage() {
                 <div className="relative z-10 flex-1">
                     <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
                         <Sparkles className="text-accent-teal" />
-                        Tu Perfil Aura es tu CV en la Red de Servicios
+                        {language === 'es' ? "Tu Perfil Aura es tu CV en la Red de Servicios" : "Your Aura Profile is your CV in the Services Network"}
                     </h2>
                     <p className="text-muted max-w-2xl">
-                        Cada servicio completado, cada punto ganado y cada pago liberado por Escrow fortalece tu reputación global. 
-                        No necesitás enviar archivos adjuntos ni intermediarios: tu historial on-chain habla por vos.
+                        {language === 'es' 
+                            ? "Cada servicio completado, cada punto ganado y cada pago liberado por Escrow fortalece tu reputación global. No necesitás enviar archivos adjuntos ni intermediarios: tu historial on-chain habla por vos." 
+                            : "Every completed service, every point earned, and every payment released via Escrow strengthens your global reputation. No attachments or intermediaries required: your on-chain history speaks for you."}
                     </p>
                 </div>
                 <div className="relative z-10 text-center md:text-right">
                     <p className="text-3xl font-black text-accent-teal mb-1">{profile?.points || 0}</p>
-                    <p className="text-xs font-bold text-muted uppercase tracking-widest">Aura acumulado</p>
+                    <p className="text-xs font-bold text-muted uppercase tracking-widest">{language === 'es' ? "Aura acumulado" : "Accrued Aura"}</p>
                 </div>
             </div>
         </div>

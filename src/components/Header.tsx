@@ -20,7 +20,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { connected, address, network, isMobile } = useWallet();
     const { profile, loading: profileLoading } = useProfile();
     const { authenticated } = usePrivy();
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { xlmBalance, usdcBalance, loading: balanceLoading } = useSharedBalances();
     const { stakedAmount, activeApy, accruedYield, activeCurrency, setActiveCurrency } = useStaking();
     const { unreadCount } = useNotifications();
@@ -88,7 +88,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             {/* Líquido Disponible */}
                             <div className="hidden xl:flex flex-col">
                                 <span className="text-[10px] text-muted font-medium uppercase tracking-wider">
-                                    Líquido
+                                    {language === 'es' ? "Líquido" : "Liquid"}
                                 </span>
                                 <span className="font-mono text-sm font-bold text-foreground">
                                     {balanceLoading ? "..." : tripleLiquid.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
@@ -101,7 +101,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             {/* En Stake */}
                             <div className="hidden md:flex flex-col">
                                 <span className="text-[10px] text-muted font-medium uppercase tracking-wider">
-                                    En Stake
+                                    {language === 'es' ? "En Stake" : "Staked"}
                                 </span>
                                 <span className="font-mono text-sm font-bold text-foreground">
                                     {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
@@ -114,7 +114,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 <div className="flex flex-col text-left">
                                     <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400/90">
-                                            Rendimiento Vivo
+                                            {language === 'es' ? "Rendimiento Vivo" : "Live Yield"}
                                         </span>
                                         <span className="text-[9px] font-bold text-emerald-300 bg-emerald-400/20 px-1 py-0.2 rounded flex items-center gap-0.5">
                                             <TrendingUp className="w-2.5 h-2.5" />
@@ -172,7 +172,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         <button
                             onClick={() => setIsQrModalOpen(true)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 text-xs font-bold transition-all shadow-sm"
-                            title="Cobros y Pagos con QR"
+                            title={language === 'es' ? "Cobros y Pagos con QR" : "QR Payments & Collections"}
                         >
                             <QrCode className="w-3.5 h-3.5 text-purple-400" />
                             <span className="hidden lg:inline">QR</span>
@@ -182,15 +182,15 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         <button
                             onClick={() => setIsBankModalOpen(true)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-xs font-bold transition-all shadow-sm"
-                            title="Retiro en Pesos a Banco"
+                            title={language === 'es' ? "Retiro en Pesos a Banco" : "Bank Withdrawal in ARS"}
                         >
                             <Landmark className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="hidden lg:inline">Banco ARS</span>
+                            <span className="hidden lg:inline">{language === 'es' ? "Banco ARS" : "ARS Bank"}</span>
                         </button>
 
                         {/* Mi AURA */}
                         <div className="hidden xl:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
-                            <span className="text-xs text-muted font-bold tracking-wider uppercase">Mi AURA</span>
+                            <span className="text-xs text-muted font-bold tracking-wider uppercase">{language === 'es' ? "Mi AURA" : "My AURA"}</span>
                             <div className="w-px h-5 bg-border-subtle"></div>
                             <span className="flex items-center text-accent-teal glow-teal">
                                 <span className="text-lg font-black">{profile?.points || 0}</span>
@@ -210,7 +210,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     <div className="glass-card p-4 shadow-2xl border border-border-subtle overflow-hidden">
                                         <div className="absolute top-0 right-0 w-16 h-16 bg-accent-teal/5 rounded-bl-full -mr-8 -mt-8"></div>
                                         
-                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">Balances Multi-Moneda</p>
+                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 border-b border-border-subtle pb-2">{language === 'es' ? "Balances Multi-Moneda" : "Multi-Currency Balances"}</p>
                                         
                                         <div className="space-y-2.5">
                                             <div className="flex items-center justify-between">
@@ -240,7 +240,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                             <div className="flex items-center justify-between pt-1 border-t border-border-subtle">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">ARS Equivalente</span>
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">{language === 'es' ? "ARS Equivalente" : "ARS Equivalent"}</span>
                                                 </div>
                                                 <span className="font-mono text-xs font-bold text-muted">
                                                     {tripleLiquid.formatted.ars}
@@ -255,7 +255,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                                 rel="noopener noreferrer"
                                                 className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
                                             >
-                                                Ver en Explorer
+                                                {language === 'es' ? "Ver en Explorer" : "View on Explorer"}
                                                 <ExternalLink className="w-3 h-3" />
                                             </a>
                                         </div>

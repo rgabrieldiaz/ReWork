@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSettings } from "@/hooks/useSettings";
 import { toast } from "sonner";
 
 interface CreateAuctionModalProps {
@@ -24,6 +25,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     const { connected, address } = useWallet();
     const { addPoints } = useProfile();
     const { activeWorkspace } = useWorkspace();
+    const { t, language } = useSettings();
     const [loading, setLoading] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [isEscrowExpanded, setIsEscrowExpanded] = useState(false);
@@ -200,20 +202,22 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                         </span>
                                     )}
                                 </div>
-                                <span className={`text-[10px] text-white/90 uppercase font-black tracking-widest ${isDirectBuy ? 'bg-accent-teal/20 border-accent-teal/30' : 'bg-purple-500/20 border-purple-500/30'} px-2.5 py-1 rounded border backdrop-blur-md`}>{condition}</span>
+                                <span className={`text-[10px] text-white/90 uppercase font-black tracking-widest ${isDirectBuy ? 'bg-accent-teal/20 border-accent-teal/30' : 'bg-purple-500/20 border-purple-500/30'} px-2.5 py-1 rounded border backdrop-blur-md`}>
+                                    {condition === 'nuevo' ? (language === 'es' ? '✨ Nuevo' : '✨ New') : (language === 'es' ? '♻️ Usado' : '♻️ Used')}
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-3 relative z-10">
-                        <label className="block text-sm font-bold text-foreground">Imagen o Emoji</label>
+                        <label className="block text-sm font-bold text-foreground">{language === 'es' ? 'Imagen o Emoji' : 'Image or Emoji'}</label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={image}
                                 onChange={e => setImage(e.target.value)}
                                 className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-12 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
-                                placeholder="Pega una URL o elige un emoji..."
+                                placeholder={language === 'es' ? "Pega una URL o elige un emoji..." : "Paste a URL or choose an emoji..."}
                             />
                             <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                             <button
@@ -251,7 +255,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         >
                             <div className="flex items-center gap-3">
                                 <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0" />
-                                <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
+                                <h4 className="text-sm font-bold text-blue-100">{t?.marketplace?.secureEscrow || (language === 'es' ? "Contrato Escrow Inteligente" : "Smart Escrow Contract")}</h4>
                             </div>
                             {isEscrowExpanded ? (
                                 <ChevronUp className="w-4 h-4 text-blue-400/50 group-hover/escrow:text-blue-400 transition-colors" />
@@ -263,15 +267,27 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         {isEscrowExpanded && (
                             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                                 <p className="text-xs text-blue-200/70 mb-3 leading-relaxed">
-                                    Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
-                                    <br />
-                                    {isDirectBuy
-                                        ? "El pago se libera apenas el comprador confirma."
-                                        : "El pago se libera al finalizar el plazo de la subasta."}
+                                    {language === 'es' ? (
+                                        <>
+                                            Al publicar, se creará un Escrow on-chain usando <strong>Trustless Work</strong>.
+                                            <br />
+                                            {isDirectBuy
+                                                ? "El pago se libera apenas el comprador confirma."
+                                                : "El pago se libera al finalizar el plazo de la subasta."}
+                                        </>
+                                    ) : (
+                                        <>
+                                            Upon listing, an on-chain Escrow will be created using <strong>Trustless Work</strong>.
+                                            <br />
+                                            {isDirectBuy
+                                                ? "Payment is released as soon as the buyer confirms."
+                                                : "Payment is released upon completion of the auction period."}
+                                        </>
+                                    )}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                    Fee estimado de red: ~0.00001 XLM
+                                    {language === 'es' ? "Fee estimado de red: ~0.00001 XLM" : "Estimated network fee: ~0.00001 XLM"}
                                 </div>
                             </div>
                         )}
@@ -283,9 +299,9 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-                                {isDirectBuy ? "Crear Venta Directa" : "Crear Nueva Subasta"}
+                                {isDirectBuy ? (language === 'es' ? "Crear Venta Directa" : "Create Direct Sale") : (language === 'es' ? "Crear Nueva Subasta" : "Create New Auction")}
                             </h2>
-                            <p className="text-sm text-muted mt-1">Configura parámetros comerciales inteligentes.</p>
+                            <p className="text-sm text-muted mt-1">{language === 'es' ? "Configura parámetros comerciales inteligentes." : "Configure smart trade parameters."}</p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90">
                             <X className="w-5 h-5" />
@@ -300,21 +316,23 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                             onClick={() => setIsDirectBuy(false)}
                             className={`flex-[0.5] relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center transition-colors ${!isDirectBuy ? 'text-white' : 'text-muted hover:text-white'}`}
                         >
-                            Subasta 🔨
+                            {language === 'es' ? "Subasta 🔨" : "Auction 🔨"}
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsDirectBuy(true)}
                             className={`flex-[0.5] relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center transition-colors ${isDirectBuy ? 'text-white' : 'text-muted hover:text-white'}`}
                         >
-                            Compra Directa 🛍️
+                            {language === 'es' ? "Compra Directa 🛍️" : "Direct Buy 🛍️"}
                         </button>
                     </div>
 
                     <form id="create-auction-form" onSubmit={handleSubmit} className="space-y-6 flex-1">
                         {/* Title */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Título de la Publicación <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Título de la Publicación" : "Listing Title"} <span className="text-accent-teal">*</span>
+                            </label>
                             <input
                                 required
                                 type="text"
@@ -322,14 +340,14 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-3 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                placeholder="Ej. Lentes VR Oculus Quest 3, Licencia Figma..."
+                                placeholder={language === 'es' ? "Ej. Lentes VR Oculus Quest 3, Licencia Figma..." : "e.g. VR Headset, Figma License..."}
                             />
                         </div>
 
                         {/* Price & Currency */}
                         <div className="space-y-3">
                             <label className="block text-sm font-bold text-foreground">
-                                {isDirectBuy ? "Precio de Venta y Moneda" : "Precio Base y Moneda"} <span className="text-accent-teal">*</span>
+                                {isDirectBuy ? (language === 'es' ? "Precio de Venta y Moneda" : "Selling Price & Currency") : (language === 'es' ? "Precio Base y Moneda" : "Starting Price & Currency")} <span className="text-accent-teal">*</span>
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
                                 <div className="relative group">
@@ -368,21 +386,23 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
                         {/* Privacy Selection */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-bold text-foreground">Visibilidad <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Visibilidad" : "Visibility"} <span className="text-accent-teal">*</span>
+                            </label>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setPrivacy('public')}
                                     className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'public' ? 'bg-accent-teal/10 border-accent-teal text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Globe className="w-4 h-4" /> Público
+                                    <Globe className="w-4 h-4" /> {language === 'es' ? "Público" : "Public"}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setPrivacy('private')}
                                     className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'private' ? 'bg-orange-500/10 border-orange-500 text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Users className="w-4 h-4" /> Solo Equipo
+                                    <Users className="w-4 h-4" /> {language === 'es' ? "Solo Equipo" : "Team Only"}
                                 </button>
                             </div>
 
@@ -393,18 +413,18 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                         onChange={(e) => setSelectedSquadId(e.target.value)}
                                         className="w-full bg-neutral-900/50 border border-orange-500/30 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-orange-500 transition-colors appearance-none cursor-pointer"
                                     >
-                                        <option value="" disabled>Selecciona tu equipo...</option>
+                                        <option value="" disabled>{language === 'es' ? "Selecciona tu equipo..." : "Select your team..."}</option>
                                         {userSquads.map((squad) => (
-                                            <option key={squad.id} value={squad.id} className="bg-neutral-900">
+                                             <option key={squad.id} value={squad.id} className="bg-neutral-900">
                                                 {squad.name}
                                             </option>
                                         ))}
                                         {userSquads.length === 0 && (
-                                            <option value="" disabled>No estás en ningún equipo</option>
+                                            <option value="" disabled>{language === 'es' ? "No estás en ningún equipo" : "You are not in any team"}</option>
                                         )}
                                     </select>
                                     <p className="text-[10px] text-muted mt-2 px-1">
-                                        Solo los miembros del equipo seleccionado podrán ver y pujar por este artículo.
+                                        {language === 'es' ? "Solo los miembros del equipo seleccionado podrán ver y pujar por este artículo." : "Only members of the selected team can view and bid on this item."}
                                     </p>
                                 </div>
                             )}
@@ -414,10 +434,12 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                         {!isDirectBuy && (
                             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="flex justify-between items-end">
-                                    <label className="block text-sm font-bold text-foreground">Duración <span className="text-accent-teal">*</span></label>
+                                    <label className="block text-sm font-bold text-foreground">
+                                        {language === 'es' ? "Duración" : "Duration"} <span className="text-accent-teal">*</span>
+                                    </label>
                                     <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-                                        Finaliza: {endTime}
+                                        {language === 'es' ? "Finaliza:" : "Ends:"} {endTime}
                                     </span>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
@@ -428,7 +450,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                             onClick={() => setDurationDays(days)}
                                             className={`flex-1 min-w-[50px] py-3 px-2 rounded-xl text-sm font-bold transition-all border ${durationDays === days ? 'bg-accent-teal/15 border-accent-teal text-white shadow-[0_0_15px_rgba(0,242,255,0.1)] ring-1 ring-accent-teal/30' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                         >
-                                            {days}{days === 1 ? 'd' : 'd'}
+                                            {days}d
                                         </button>
                                     ))}
                                 </div>
@@ -437,21 +459,23 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
 
                         {/* Condition Group */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-bold text-foreground">Estado del Artículo</label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Estado del Artículo" : "Item Condition"}
+                            </label>
                             <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setCondition('nuevo')}
                                     className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'nuevo' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                 >
-                                    ✨ Nuevo
+                                    {language === 'es' ? "✨ Nuevo" : "✨ New"}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setCondition('usado')}
                                     className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${condition === 'usado' ? 'bg-white/10 border-white text-white shadow-inner' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border hover:bg-neutral-800'}`}
                                 >
-                                    ♻️ Usado
+                                    {language === 'es' ? "♻️ Usado" : "♻️ Used"}
                                 </button>
                             </div>
                         </div>
@@ -460,7 +484,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                     <div className="mt-6 pt-4 border-t border-border-subtle pb-4">
                         <div className="flex flex-col sm:flex-row justify-end gap-3 lg:gap-4">
                             <button type="button" onClick={onClose} className="px-6 py-3 text-sm font-bold text-muted hover:text-white transition-colors border border-border-subtle bg-transparent rounded-2xl">
-                                Cancelar
+                                {language === 'es' ? "Cancelar" : "Cancel"}
                             </button>
                             <button
                                 type="submit"
@@ -475,7 +499,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                     </svg>
                                 )}
                                 <span className={loading ? "opacity-90" : "flex items-center gap-2"}>
-                                    {loading ? "Procesando..." : (isDirectBuy ? "Crear Venta Directa" : "Publicar Subasta")}
+                                    {loading ? (language === 'es' ? "Procesando..." : "Processing...") : (isDirectBuy ? (language === 'es' ? "Crear Venta Directa" : "Create Direct Sale") : (language === 'es' ? "Publicar Subasta" : "Publish Auction"))}
                                 </span>
                                 {/* Subtle shine effect */}
                                 {!loading && <div className="absolute inset-0 -translate-x-full transition-transform duration-1000 group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />}

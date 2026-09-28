@@ -1,22 +1,16 @@
 "use client";
 
-import React, { useState, useId } from "react";
+import React, { useState } from "react";
 import {
   Target,
   TrendingUp,
   Clock,
   Sparkles,
-  ArrowRight,
-  ShieldCheck,
   Lock,
   Users,
   Landmark,
-  Bot,
   QrCode,
-  DollarSign,
   CheckCircle2,
-  Calendar,
-  Layers,
   ChevronRight,
   Coins,
   RefreshCw
@@ -24,6 +18,7 @@ import {
 import { useWallet } from "@/hooks/useWallet";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useStaking } from "@/hooks/useStaking";
+import { useSettings } from "@/hooks/useSettings";
 import { formatCurrency, getTripleValues, SupportedCurrency, DEFAULT_RATES } from "@/lib/currency";
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
@@ -34,6 +29,7 @@ export default function GoalsPage() {
   const { connected, address } = useWallet();
   const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
   const { stakedAmount, activeApy, accruedYield, stake, unstakePosition, positions } = useStaking();
+  const { t } = useSettings();
 
   // Currency Toggle
   const [currency, setCurrency] = useState<SupportedCurrency>("USDC");
@@ -125,7 +121,7 @@ export default function GoalsPage() {
 
   const handleExecuteTransfer = () => {
     if (!transferTarget) {
-      toast.error("Ingresa un usuario o dirección Stellar de destino.");
+      toast.error(t.goalsPage.transferErrorToast);
       return;
     }
     setTransferSuccess(true);
@@ -147,21 +143,20 @@ export default function GoalsPage() {
               <Target className="w-5 h-5" />
             </span>
             <span className="text-xs font-bold font-mono tracking-widest uppercase text-accent-teal">
-              ReWork Financial Goals • Smart Yield Simulator
+              {t.goalsPage.badge}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            Crear Objetivo de Rendimiento
+            {t.goalsPage.title}
           </h1>
           <p className="text-sm text-muted max-w-xl mt-1">
-            Diseñá tu meta patrimonial, proyectá el crecimiento compuesto de tus activos en Stellar y elegí cómo
-            rentabilizarlos o transferirlos.
+            {t.goalsPage.subtitle}
           </p>
         </div>
 
         {/* Currency Selector */}
         <div className="flex items-center gap-2 p-1.5 bg-foreground/5 rounded-2xl border border-border-subtle shrink-0">
-          <span className="text-xs text-muted font-bold px-2">Moneda:</span>
+          <span className="text-xs text-muted font-bold px-2">{t.goalsPage.currencyLabel}</span>
           {(["USDC", "ARS", "XLM"] as SupportedCurrency[]).map((c) => (
             <button
               key={c}
@@ -185,17 +180,17 @@ export default function GoalsPage() {
           <div className="glass-card p-6 rounded-3xl border border-border-subtle space-y-5">
             <div className="flex items-center justify-between border-b border-border-subtle pb-4">
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-accent-teal" /> Parámetros del Objetivo
+                <Sparkles className="w-4 h-4 text-accent-teal" /> {t.goalsPage.parametersTitle}
               </h2>
               <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-400/10 px-2.5 py-0.5 rounded-full border border-emerald-400/20">
-                {selectedStrategyApy}% APY Proyectado
+                {selectedStrategyApy}% {t.goalsPage.projectedApy}
               </span>
             </div>
 
             {/* Input 1: Capital Inicial */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold text-muted">
-                <label>Capital a Invertir / Fondos</label>
+                <label>{t.goalsPage.capitalLabel}</label>
                 <span className="font-mono text-foreground font-bold">
                   {currency === "ARS"
                     ? formatCurrency(initialCapital * DEFAULT_RATES.USDC_TO_ARS, "ARS")
@@ -214,14 +209,14 @@ export default function GoalsPage() {
                   onChange={(e) => setInitialCapital(Math.max(0, parseFloat(e.target.value) || 0))}
                   className="w-full bg-transparent text-lg font-bold font-mono outline-none border-none text-foreground"
                 />
-                <span className="text-xs font-mono font-bold text-muted">USDC Base</span>
+                <span className="text-xs font-mono font-bold text-muted">{t.goalsPage.baseUsdc}</span>
               </div>
             </div>
 
             {/* Input 2: Meta de Ganancia Deseada */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold text-muted">
-                <label>Meta de Ganancia Esperada</label>
+                <label>{t.goalsPage.targetProfitLabel}</label>
                 <span className="font-mono text-emerald-400 font-bold">
                   {currency === "ARS"
                     ? formatCurrency(targetProfit * DEFAULT_RATES.USDC_TO_ARS, "ARS")
@@ -240,7 +235,7 @@ export default function GoalsPage() {
                   onChange={(e) => setTargetProfit(Math.max(1, parseFloat(e.target.value) || 0))}
                   className="w-full bg-transparent text-lg font-bold font-mono outline-none border-none text-foreground"
                 />
-                <span className="text-xs font-mono font-bold text-muted">USDC Ganancia</span>
+                <span className="text-xs font-mono font-bold text-muted">{t.goalsPage.profitUsdc}</span>
               </div>
             </div>
 
@@ -248,9 +243,11 @@ export default function GoalsPage() {
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold text-muted">
                 <label className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-accent-teal" /> Plazo de Inversión
+                  <Clock className="w-3.5 h-3.5 text-accent-teal" /> {t.goalsPage.durationLabel}
                 </label>
-                <span className="font-mono font-bold text-accent-teal">{durationMonths} Meses</span>
+                <span className="font-mono font-bold text-accent-teal">
+                  {durationMonths} {durationMonths === 1 ? t.goalsPage.month : t.goalsPage.months}
+                </span>
               </div>
               <input
                 type="range"
@@ -261,21 +258,21 @@ export default function GoalsPage() {
                 className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-accent-teal"
               />
               <div className="flex justify-between text-[10px] font-mono text-muted">
-                <span>1 Mes</span>
-                <span>12 Meses (1 Año)</span>
-                <span>24 Meses</span>
-                <span>36 Meses</span>
+                <span>{t.goalsPage.range1m}</span>
+                <span>{t.goalsPage.range12m}</span>
+                <span>{t.goalsPage.range24m}</span>
+                <span>{t.goalsPage.range36m}</span>
               </div>
             </div>
 
             {/* Strategy Preset Selector */}
             <div className="space-y-2 pt-2 border-t border-border-subtle">
-              <label className="text-xs font-semibold text-muted block">Estrategia de Rendimiento en Stellar</label>
+              <label className="text-xs font-semibold text-muted block">{t.goalsPage.strategyLabel}</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { name: "Conservador", apy: 8.5, label: "RWA T-Bills" },
-                  { name: "Equilibrado", apy: 12.8, label: "AMM Nativo" },
-                  { name: "Agresivo", apy: 19.5, label: "Pool ARST" },
+                  { name: t.goalsPage.stratConservative, apy: 8.5, label: t.goalsPage.stratConservativeLabel },
+                  { name: t.goalsPage.stratBalanced, apy: 12.8, label: t.goalsPage.stratBalancedLabel },
+                  { name: t.goalsPage.stratAggressive, apy: 19.5, label: t.goalsPage.stratAggressiveLabel },
                 ].map((strat) => (
                   <button
                     key={strat.name}
@@ -302,7 +299,7 @@ export default function GoalsPage() {
               }}
               className="w-full py-3.5 bg-accent-teal hover:bg-accent-teal/90 text-background font-bold rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-accent-teal/20 transition-all text-xs uppercase tracking-wider"
             >
-              <Lock className="w-4 h-4" /> Activar Objetivo en Stake Ahora
+              <Lock className="w-4 h-4" /> {t.goalsPage.activateStakeBtn}
             </button>
           </div>
 
@@ -312,17 +309,17 @@ export default function GoalsPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  Tu Rendimiento Acumulado en Vivo
+                  {t.goalsPage.liveYieldTitle}
                 </h3>
               </div>
               <span className="text-[10px] font-mono text-muted bg-foreground/5 px-2 py-0.5 rounded-full">
-                Streaming por Segundo
+                {t.goalsPage.streamingPerSecond}
               </span>
             </div>
 
             <div className="flex items-baseline justify-between">
               <div>
-                <span className="text-xs text-muted block">Ganancia Devengada:</span>
+                <span className="text-xs text-muted block">{t.goalsPage.accruedYieldLabel}</span>
                 <div className="text-3xl font-black font-mono text-emerald-400 glow-green">
                   {currency === "ARS"
                     ? formatCurrency(accruedYield * DEFAULT_RATES.USDC_TO_ARS, "ARS")
@@ -332,7 +329,7 @@ export default function GoalsPage() {
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xs text-muted block">Capital en Stake:</span>
+                <span className="text-xs text-muted block">{t.goalsPage.stakedCapitalLabel}</span>
                 <span className="text-base font-bold font-mono text-foreground">
                   {currency === "ARS"
                     ? formatCurrency(stakedAmount * DEFAULT_RATES.USDC_TO_ARS, "ARS")
@@ -344,8 +341,7 @@ export default function GoalsPage() {
             </div>
 
             <p className="text-[11px] text-muted">
-              El interés compuesto genera pagos por bloque en Soroban. Puedes retirar tus rendimientos o
-              reinvertirlos cuando gustes.
+              {t.goalsPage.liveYieldDesc}
             </p>
           </div>
 
@@ -355,14 +351,14 @@ export default function GoalsPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  Tus Fondos y Posiciones Activas ({positions.length})
+                  {t.goalsPage.activePositionsTitle} ({positions.length})
                 </h3>
               </div>
               <button
                 onClick={() => setIsPoolsAgentOpen(true)}
                 className="text-[10px] font-bold text-accent-teal hover:underline flex items-center gap-1"
               >
-                + Trasladar a Pool
+                {t.goalsPage.moveToPoolBtn}
               </button>
             </div>
 
@@ -388,7 +384,7 @@ export default function GoalsPage() {
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted mt-1 font-mono">
-                            <span>Capital: <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
+                            <span>{t.goalsPage.capital}: <strong className="text-foreground">${pos.amount.toFixed(2)} USDC</strong></span>
                             <span>•</span>
                             <span>ARS: ${(pos.amount * 1280).toLocaleString()}</span>
                             <span>•</span>
@@ -405,10 +401,10 @@ export default function GoalsPage() {
                         {unstakingId === pos.id ? (
                           <>
                             <RefreshCw className="w-3 h-3 animate-spin" />
-                            <span>Retirando...</span>
+                            <span>{t.goalsPage.unstaking}</span>
                           </>
                         ) : (
-                          <span>Retirar</span>
+                          <span>{t.goalsPage.unstake}</span>
                         )}
                       </button>
                     </div>
@@ -417,7 +413,7 @@ export default function GoalsPage() {
               </div>
             ) : (
               <div className="p-4 rounded-2xl border border-dashed border-border-subtle text-center text-xs text-muted">
-                No tienes fondos colocados en pools actualmente. Selecciona un pool para comenzar a generar intereses.
+                {t.goalsPage.noPositions}
               </div>
             )}
           </div>
@@ -430,14 +426,14 @@ export default function GoalsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <span className="text-xs font-mono text-accent-teal uppercase tracking-widest font-bold block">
-                  Simulación de Proyección
+                  {t.goalsPage.chartBadge}
                 </span>
-                <h3 className="text-xl font-bold text-foreground">Curva de Rendimiento en el Tiempo</h3>
+                <h3 className="text-xl font-bold text-foreground">{t.goalsPage.chartTitle}</h3>
               </div>
 
               {/* Progress towards Goal */}
               <div className="text-left sm:text-right">
-                <span className="text-xs text-muted block">Cumplimiento del Objetivo:</span>
+                <span className="text-xs text-muted block">{t.goalsPage.goalProgressLabel}</span>
                 <span
                   className={`text-lg font-black font-mono ${
                     goalProgressPercent >= 100 ? "text-emerald-400" : "text-accent-teal"
@@ -524,14 +520,14 @@ export default function GoalsPage() {
               <div className="flex flex-wrap items-center justify-between text-xs font-mono text-muted pt-3 border-t border-border-subtle mt-2">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-accent-teal"></span>
-                  Con ReWork Yield ({selectedStrategyApy}% APY)
+                  {t.goalsPage.legendWithYield.replace("{apy}", selectedStrategyApy.toString())}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-0.5 bg-slate-500"></span>
-                  Ahorro Tradicional (0% APY)
+                  {t.goalsPage.legendTraditional}
                 </span>
                 <span className="text-foreground font-bold">
-                  Final: {formatCurrency(projectedFinalCapital, currency)}
+                  {t.goalsPage.legendFinal}: {formatCurrency(projectedFinalCapital, currency)}
                 </span>
               </div>
             </div>
@@ -539,27 +535,27 @@ export default function GoalsPage() {
             {/* Metrics Breakdown in 3 Currencies */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-bold block mb-1">Pesos Argentinos (ARS)</span>
+                <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardArs}</span>
                 <span className="text-base font-bold font-mono text-foreground block">
                   {tripleProfit.formatted.ars}
                 </span>
-                <span className="text-[10px] text-muted">Ganancia Proyectada</span>
+                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-bold block mb-1">Dólares (USDC)</span>
+                <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardUsdc}</span>
                 <span className="text-base font-bold font-mono text-accent-teal block">
                   {tripleProfit.formatted.usdc}
                 </span>
-                <span className="text-[10px] text-muted">Ganancia Proyectada</span>
+                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-bold block mb-1">Stellar (XLM)</span>
+                <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardXlm}</span>
                 <span className="text-base font-bold font-mono text-indigo-400 block">
                   {tripleProfit.formatted.xlm}
                 </span>
-                <span className="text-[10px] text-muted">Ganancia Proyectada</span>
+                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
               </div>
             </div>
           </div>
@@ -576,14 +572,14 @@ export default function GoalsPage() {
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-foreground group-hover:text-accent-teal transition-colors">
-                  📈 Obtener Rendimiento & Ahorro
+                  {t.goalsPage.actionEarnTitle}
                 </h4>
                 <p className="text-xs text-muted mt-1">
-                  Coloca tu liquidez en vaults y pools optimizados con APY en la red de Stellar.
+                  {t.goalsPage.actionEarnDesc}
                 </p>
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-accent-teal mt-4">
-                <span>Explorar Pools</span>
+                <span>{t.goalsPage.actionEarnBtn}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -598,14 +594,14 @@ export default function GoalsPage() {
                   <Users className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-foreground group-hover:text-indigo-400 transition-colors">
-                  👥 Compartir & Transferir P2P
+                  {t.goalsPage.actionTransferTitle}
                 </h4>
                 <p className="text-xs text-muted mt-1">
-                  Transfiere fondos al instante a cualquier miembro de ReWork sin comisiones.
+                  {t.goalsPage.actionTransferDesc}
                 </p>
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-indigo-400 mt-4">
-                <span>Transferir a Usuario</span>
+                <span>{t.goalsPage.actionTransferBtn}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -620,14 +616,14 @@ export default function GoalsPage() {
                   <Landmark className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-foreground group-hover:text-emerald-400 transition-colors">
-                  💸 Transferir en Pesos al Banco
+                  {t.goalsPage.actionBankTitle}
                 </h4>
                 <p className="text-xs text-muted mt-1">
-                  Retirá tus activos convertidos a Pesos Argentinos a cualquier CBU, CVU o Alias bancario.
+                  {t.goalsPage.actionBankDesc}
                 </p>
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-emerald-400 mt-4">
-                <span>Retirar a Banco (CBU/CVU)</span>
+                <span>{t.goalsPage.actionBankBtn}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -642,14 +638,14 @@ export default function GoalsPage() {
                   <QrCode className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-foreground group-hover:text-purple-400 transition-colors">
-                  🎯 Cobrar & Pagar con QR
+                  {t.goalsPage.actionQrTitle}
                 </h4>
                 <p className="text-xs text-muted mt-1">
-                  Generá un código QR para cobrar o usá el lector para abonar consumos o servicios.
+                  {t.goalsPage.actionQrDesc}
                 </p>
               </div>
               <div className="flex items-center gap-1 text-xs font-bold text-purple-400 mt-4">
-                <span>Abrir Pasarela QR</span>
+                <span>{t.goalsPage.actionQrBtn}</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -671,25 +667,29 @@ export default function GoalsPage() {
                 <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold">¡Objetivo Activado en Stake!</h3>
+                <h3 className="text-lg font-bold">{t.goalsPage.stakeSuccessTitle}</h3>
                 <p className="text-xs text-muted">
-                  Tus {newStakeAmount} USDC están generando {selectedStrategyApy}% APY compuesto.
+                  {t.goalsPage.stakeSuccessDesc
+                    .replace("{amount}", newStakeAmount)
+                    .replace("{apy}", selectedStrategyApy.toString())}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-accent-teal">
                   <Lock className="w-5 h-5" />
-                  <h3 className="text-lg font-bold">Bloquear en Stake ReWork</h3>
+                  <h3 className="text-lg font-bold">{t.goalsPage.stakeModalTitle}</h3>
                 </div>
                 <p className="text-xs text-muted">
-                  Bloquea fondos durante {durationMonths} meses para garantizar la tasa de {selectedStrategyApy}% APY.
+                  {t.goalsPage.stakeModalDesc
+                    .replace("{months}", durationMonths.toString())
+                    .replace("{apy}", selectedStrategyApy.toString())}
                 </p>
 
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
                   <div className="flex justify-between text-xs text-muted">
-                    <span>Monto a Bloquear</span>
-                    <span>Disponible: {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                    <span>{t.goalsPage.stakeAmountLabel}</span>
+                    <span>{t.goalsPage.available} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -703,7 +703,7 @@ export default function GoalsPage() {
                 </div>
 
                 <div className="p-3 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-xs flex justify-between font-mono">
-                  <span className="text-muted">Rendimiento estimado:</span>
+                  <span className="text-muted">{t.goalsPage.estimatedYield}</span>
                   <span className="text-emerald-400 font-bold">
                     +{((parseFloat(newStakeAmount) || 0) * (selectedStrategyApy / 100) * (durationMonths / 12)).toFixed(2)} USDC
                   </span>
@@ -714,13 +714,13 @@ export default function GoalsPage() {
                     onClick={() => setIsStakeModalOpen(false)}
                     className="flex-1 py-3 bg-foreground/10 hover:bg-foreground/20 text-foreground font-bold rounded-xl text-xs"
                   >
-                    Cancelar
+                    {t.goalsPage.cancel}
                   </button>
                   <button
                     onClick={handleExecuteStake}
                     className="flex-1 py-3 bg-accent-teal hover:bg-accent-teal/90 text-background font-bold rounded-xl text-xs uppercase tracking-wider"
                   >
-                    Confirmar Stake
+                    {t.goalsPage.confirmStake}
                   </button>
                 </div>
               </div>
@@ -738,36 +738,38 @@ export default function GoalsPage() {
                 <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold">¡Transferencia P2P Exitosa!</h3>
+                <h3 className="text-lg font-bold">{t.goalsPage.transferSuccessTitle}</h3>
                 <p className="text-xs text-muted">
-                  Se enviaron {transferAmount} USDC a {transferTarget} sin comisiones.
+                  {t.goalsPage.transferSuccessDesc
+                    .replace("{amount}", transferAmount)
+                    .replace("{target}", transferTarget)}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-indigo-400">
                   <Users className="w-5 h-5" />
-                  <h3 className="text-lg font-bold">Transferir a Miembro de ReWork</h3>
+                  <h3 className="text-lg font-bold">{t.goalsPage.transferModalTitle}</h3>
                 </div>
                 <p className="text-xs text-muted">
-                  Envía fondos al instante usando el correo electrónico o la clave pública de Stellar.
+                  {t.goalsPage.transferModalDesc}
                 </p>
 
                 <div>
-                  <label className="text-xs font-bold text-muted block mb-1">Destinatario (Email o Wallet)</label>
+                  <label className="text-xs font-bold text-muted block mb-1">{t.goalsPage.transferRecipientLabel}</label>
                   <input
                     type="text"
                     value={transferTarget}
                     onChange={(e) => setTransferTarget(e.target.value)}
-                    placeholder="mail.de.celular.2017@gmail.com o GDWVAT..."
+                    placeholder={t.goalsPage.transferRecipientPlaceholder}
                     className="w-full bg-background border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono outline-none focus:border-indigo-400 text-foreground"
                   />
                 </div>
 
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
                   <div className="flex justify-between text-xs text-muted">
-                    <span>Monto a Enviar</span>
-                    <span>Disponible: {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                    <span>{t.goalsPage.transferAmountLabel}</span>
+                    <span>{t.goalsPage.available} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -785,13 +787,13 @@ export default function GoalsPage() {
                     onClick={() => setIsTransferModalOpen(false)}
                     className="flex-1 py-3 bg-foreground/10 hover:bg-foreground/20 text-foreground font-bold rounded-xl text-xs"
                   >
-                    Cancelar
+                    {t.goalsPage.cancel}
                   </button>
                   <button
                     onClick={handleExecuteTransfer}
                     className="flex-1 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider"
                   >
-                    Enviar Transferencia
+                    {t.goalsPage.sendTransfer}
                   </button>
                 </div>
               </div>

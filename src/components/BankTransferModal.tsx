@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Landmark, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw } from "lucide-react";
+import { X, Landmark, CheckCircle2, RefreshCw } from "lucide-react";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
-import { formatCurrency, convertCurrency, DEFAULT_RATES } from "@/lib/currency";
+import { useSettings } from "@/hooks/useSettings";
+import { formatCurrency, DEFAULT_RATES } from "@/lib/currency";
 import { toast } from "sonner";
 
 interface BankTransferModalProps {
@@ -14,6 +15,7 @@ interface BankTransferModalProps {
 
 export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   const { usdcBalance, refresh } = useSharedBalances();
+  const { t, language } = useSettings();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [usdcAmount, setUsdcAmount] = useState<string>("50");
@@ -45,11 +47,11 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
 
   const handleTransfer = () => {
     if (numericUsdc <= 0) {
-      toast.error("Por favor ingresa un monto mayor a 0.");
+      toast.error(t.bankTransferModal.errAmount);
       return;
     }
     if (!cbuAlias.trim()) {
-      toast.error("Por favor ingresa un CBU, CVU o Alias válido.");
+      toast.error(t.bankTransferModal.errCbu);
       return;
     }
 
@@ -66,7 +68,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
         usdcAmount: numericUsdc,
         pesosReceiving,
         rate: DEFAULT_RATES.USDC_TO_ARS,
-        date: new Date().toLocaleString("es-AR"),
+        date: new Date().toLocaleString(language === "en" ? "en-US" : "es-AR"),
       });
       refresh();
     }, 2000);
@@ -90,15 +92,15 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
               <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight">Retiro a Cuenta Bancaria (ARS)</h2>
-              <p className="text-[11px] text-muted hidden sm:block">Convertí tus activos de ReWork a Pesos en tu banco</p>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight">{t.bankTransferModal.title}</h2>
+              <p className="text-[11px] text-muted hidden sm:block">{t.bankTransferModal.subtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 sm:p-2.5 rounded-xl text-muted hover:text-foreground bg-foreground/5 hover:bg-foreground/15 border border-border-subtle transition-all flex items-center justify-center flex-shrink-0"
-            title="Cerrar ventana"
-            aria-label="Cerrar"
+            title={t.bankTransferModal.closeTitle}
+            aria-label={t.bankTransferModal.closeAria}
           >
             <X className="w-5 h-5" />
           </button>
@@ -113,38 +115,38 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
               <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">¡Transferencia Bancaria Procesada!</h3>
+              <h3 className="text-lg font-bold text-foreground">{t.bankTransferModal.successTitle}</h3>
               <p className="text-xs text-muted">
-                Los pesos están en camino a tu cuenta mediante liquidación Transferencias 3.0.
+                {t.bankTransferModal.successDesc}
               </p>
             </div>
 
             {/* Receipt Summary */}
             <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2.5 text-xs font-mono">
               <div className="flex justify-between border-b border-border-subtle pb-2">
-                <span className="text-muted">Comprobante</span>
+                <span className="text-muted">{t.bankTransferModal.receiptId}</span>
                 <span className="font-bold text-foreground">{successReceipt.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Monto debitado</span>
+                <span className="text-muted">{t.bankTransferModal.receiptDebited}</span>
                 <span className="font-bold text-accent-teal">{successReceipt.usdcAmount} USDC</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Pesos acreditados</span>
+                <span className="text-muted">{t.bankTransferModal.receiptCredited}</span>
                 <span className="font-bold text-emerald-400 text-sm">
                   {formatCurrency(successReceipt.pesosReceiving, "ARS")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Tipo de Cambio</span>
+                <span className="text-muted">{t.bankTransferModal.receiptExchangeRate}</span>
                 <span>1 USDC = $ {successReceipt.rate} ARS</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Destinatario</span>
+                <span className="text-muted">{t.bankTransferModal.receiptRecipient}</span>
                 <span className="text-foreground">{successReceipt.accountHolder}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">CBU / CVU / Alias</span>
+                <span className="text-muted">{t.bankTransferModal.receiptAccount}</span>
                 <span className="text-foreground">{successReceipt.cbuAlias}</span>
               </div>
             </div>
@@ -153,7 +155,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
               onClick={handleReset}
               className="w-full py-3.5 bg-accent-teal text-background font-bold rounded-2xl hover:bg-accent-teal/90 transition-all text-xs uppercase tracking-wider"
             >
-              Cerrar y Volver a ReWork
+              {t.bankTransferModal.closeAndReturn}
             </button>
           </div>
         ) : (
@@ -161,8 +163,8 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
             {/* Amount input */}
             <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
               <div className="flex justify-between items-center text-xs font-semibold text-muted">
-                <span>Monto a Transferir (USDC)</span>
-                <span>Saldo disponible: {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                <span>{t.bankTransferModal.amountLabel}</span>
+                <span>{t.bankTransferModal.availableBalance} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -175,7 +177,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
                 <span className="text-lg font-bold font-mono text-accent-teal">USDC</span>
               </div>
               <div className="pt-2 border-t border-border-subtle flex justify-between items-center text-xs">
-                <span className="text-muted">Recibes en tu banco:</span>
+                <span className="text-muted">{t.bankTransferModal.receivingInBank}</span>
                 <span className="font-mono font-bold text-emerald-400 text-sm">
                   {formatCurrency(pesosReceiving, "ARS")}
                 </span>
@@ -185,29 +187,29 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
             {/* Bank details input */}
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-muted block mb-1">CBU, CVU o Alias</label>
+                <label className="text-xs font-bold text-muted block mb-1">{t.bankTransferModal.cbuLabel}</label>
                 <input
                   type="text"
                   value={cbuAlias}
                   onChange={(e) => setCbuAlias(e.target.value)}
-                  placeholder="Ej: mi.alias.mp o 00000031000..."
+                  placeholder={t.bankTransferModal.cbuPlaceholder}
                   className="w-full bg-background border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs font-mono outline-none focus:border-accent-teal text-foreground"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-muted block mb-1">Titular de la Cuenta</label>
+                  <label className="text-xs font-bold text-muted block mb-1">{t.bankTransferModal.holderLabel}</label>
                   <input
                     type="text"
                     value={accountHolder}
                     onChange={(e) => setAccountHolder(e.target.value)}
-                    placeholder="Nombre completo"
+                    placeholder={t.bankTransferModal.holderPlaceholder}
                     className="w-full bg-background border border-border-subtle rounded-xl px-3 py-2 text-xs outline-none focus:border-accent-teal text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-muted block mb-1">CUIT / CUIL</label>
+                  <label className="text-xs font-bold text-muted block mb-1">{t.bankTransferModal.cuitLabel}</label>
                   <input
                     type="text"
                     value={cuit}
@@ -222,12 +224,12 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
             {/* Rate & fee info */}
             <div className="p-3 rounded-xl bg-accent-teal/5 border border-accent-teal/20 text-[11px] text-muted space-y-1">
               <div className="flex justify-between">
-                <span>Cotización Dólar Cripto:</span>
+                <span>{t.bankTransferModal.rateLabel}</span>
                 <span className="font-bold text-foreground">1 USDC = $ {DEFAULT_RATES.USDC_TO_ARS} ARS</span>
               </div>
               <div className="flex justify-between">
-                <span>Comisión de transferencia:</span>
-                <span className="font-bold text-emerald-400">Gratis (Bonificada)</span>
+                <span>{t.bankTransferModal.feeLabel}</span>
+                <span className="font-bold text-emerald-400">{t.bankTransferModal.feeFree}</span>
               </div>
             </div>
 
@@ -240,12 +242,12 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
               {isProcessing ? (
                 <>
                   <RefreshCw className="w-5 h-5 animate-spin" />
-                  Liquidando pesos con el banco...
+                  {t.bankTransferModal.processing}
                 </>
               ) : (
                 <>
                   <Landmark className="w-5 h-5" />
-                  Transferir {formatCurrency(pesosReceiving, "ARS")} a Cuenta Bancaria
+                  {t.bankTransferModal.transferAction.replace("{amount}", formatCurrency(pesosReceiving, "ARS"))}
                 </>
               )}
             </button>
@@ -259,7 +261,7 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
             onClick={onClose}
             className="w-full sm:w-auto px-6 py-2 rounded-xl border border-border-subtle text-muted hover:text-foreground hover:bg-foreground/5 text-xs font-bold transition-all text-center"
           >
-            Cerrar
+            {t.bankTransferModal.closeBtn}
           </button>
         </div>
       </div>

@@ -16,7 +16,7 @@ export default function Web3IdentityPage() {
     const { connected, address } = useWallet();
     const { profile } = useProfile();
     const { xlmBalance, usdcBalance } = useBalances(address || null);
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const [copied, setCopied] = useState(false);
 
     const copyAddress = () => {
@@ -29,12 +29,12 @@ export default function Web3IdentityPage() {
     const badges = [
         { icon: Star, label: "Early Adopter", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
         { icon: Zap, label: "Fast Mover", color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" },
-        { icon: Shield, label: "Verified Member", color: "text-accent-teal", bg: "bg-accent-teal/10 border-accent-teal/20" },
+        { icon: Shield, label: language === 'es' ? "Miembro Verificado" : "Verified Member", color: "text-accent-teal", bg: "bg-accent-teal/10 border-accent-teal/20" },
     ];
 
     const trustlessLinks = [
         { label: "Stellar Explorer", url: address ? `https://stellar.expert/explorer/testnet/account/${address}` : "https://stellar.expert/explorer/testnet" },
-        { label: "Documentación Trustless Work", url: "https://docs.trustlesswork.com/trustless-work/es" },
+        { label: language === 'es' ? "Documentación Trustless Work" : "Trustless Work Documentation", url: language === 'es' ? "https://docs.trustlesswork.com/trustless-work/es" : "https://docs.trustlesswork.com/trustless-work" },
         { label: "Stellar Network Docs", url: "https://developers.stellar.org/" },
     ];
 
@@ -47,14 +47,14 @@ export default function Web3IdentityPage() {
                         <span className="w-10 h-10 rounded-xl bg-accent-teal/10 border border-accent-teal/20 flex items-center justify-center">
                             <Globe className="w-5 h-5 text-accent-teal" />
                         </span>
-                        Red de Valores Web3
+                        {language === 'es' ? "Red de Valores Web3" : "Web3 Value Network"}
                     </h1>
-                    <p className="text-muted mt-1 text-sm">Tu identidad soberana y reputación en la blockchain de Stellar.</p>
+                    <p className="text-muted mt-1 text-sm">{language === 'es' ? "Tu identidad soberana y reputación en la blockchain de Stellar." : "Your sovereign identity and reputation on the Stellar blockchain."}</p>
                 </div>
                 {connected && (
                     <span className="flex items-center gap-2 px-3 py-1.5 bg-accent-teal/10 border border-accent-teal/20 rounded-full text-xs font-bold text-accent-teal">
                         <span className="w-2 h-2 rounded-full bg-accent-teal animate-pulse" />
-                        Wallet Conectada
+                        {language === 'es' ? "Wallet Conectada" : "Wallet Connected"}
                     </span>
                 )}
             </div>
@@ -62,8 +62,8 @@ export default function Web3IdentityPage() {
             {!connected ? (
                 <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                     <Wallet className="w-12 h-12 mb-4 text-neutral-600" />
-                    <p className="font-semibold text-foreground/60 mb-1">Conecta tu wallet Stellar</p>
-                    <p className="text-sm">Para ver tu identidad soberana en la red Stellar.</p>
+                    <p className="font-semibold text-foreground/60 mb-1">{language === 'es' ? "Conecta tu wallet Stellar" : "Connect your Stellar wallet"}</p>
+                    <p className="text-sm">{language === 'es' ? "Para ver tu identidad soberana en la red Stellar." : "To view your sovereign identity on the Stellar network."}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -79,7 +79,7 @@ export default function Web3IdentityPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h2 className="text-xl font-bold">
-                                            {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'Identidad Anónima'}
+                                            {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : (language === 'es' ? 'Identidad Anónima' : 'Anonymous Identity')}
                                         </h2>
                                         <CheckCircle className="w-5 h-5 text-accent-teal flex-shrink-0" />
                                     </div>
@@ -89,7 +89,7 @@ export default function Web3IdentityPage() {
                                         <button
                                             onClick={copyAddress}
                                             className="shrink-0 text-muted hover:text-accent-teal transition-colors"
-                                            title="Copiar dirección"
+                                            title={language === 'es' ? "Copiar dirección" : "Copy address"}
                                         >
                                             {copied ? <CheckCircle className="w-4 h-4 text-accent-teal" /> : <Copy className="w-4 h-4" />}
                                         </button>
@@ -102,7 +102,7 @@ export default function Web3IdentityPage() {
                         <div className="bg-card rounded-2xl border border-border-subtle p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Award className="w-5 h-5 text-accent-teal" />
-                                <h3 className="font-semibold text-foreground">Credenciales Verificables</h3>
+                                <h3 className="font-semibold text-foreground">{language === 'es' ? "Credenciales Verificables" : "Verifiable Credentials"}</h3>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 {badges.map((badge, i) => (
@@ -118,7 +118,7 @@ export default function Web3IdentityPage() {
                         <div className="bg-card rounded-2xl border border-border-subtle p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Link2 className="w-5 h-5 text-accent-teal" />
-                                <h3 className="font-semibold text-foreground">Recursos On-Chain</h3>
+                                <h3 className="font-semibold text-foreground">{language === 'es' ? "Recursos On-Chain" : "On-Chain Resources"}</h3>
                             </div>
                             <div className="space-y-2">
                                 {trustlessLinks.map((link, i) => (
@@ -143,7 +143,7 @@ export default function Web3IdentityPage() {
                         <div className="bg-card rounded-2xl border border-border-subtle p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Activity className="w-5 h-5 text-accent-teal" />
-                                <h3 className="font-semibold text-foreground">Saldos en Red</h3>
+                                <h3 className="font-semibold text-foreground">{language === 'es' ? "Saldos en Red" : "Network Balances"}</h3>
                             </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center p-3 bg-background/50 rounded-xl border border-border-subtle">
@@ -165,7 +165,7 @@ export default function Web3IdentityPage() {
 
                         {/* Reputation Score */}
                         <div className="bg-card rounded-2xl border border-border-subtle p-6">
-                            <h3 className="font-semibold text-foreground mb-4">Reputación ReWork</h3>
+                            <h3 className="font-semibold text-foreground mb-4">{language === 'es' ? "Reputación ReWork" : "ReWork Reputation"}</h3>
                             <div className="flex flex-col items-center">
                                 <div className="relative w-24 h-24 mb-3">
                                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -180,9 +180,9 @@ export default function Web3IdentityPage() {
                                     </div>
                                 </div>
                                 <p className="text-sm font-semibold text-foreground">
-                                    {(profile?.points || 0) >= 500 ? 'Colaborador Senior' : (profile?.points || 0) >= 100 ? 'Colaborador Activo' : 'Nuevo Miembro'}
+                                    {(profile?.points || 0) >= 500 ? (language === 'es' ? 'Colaborador Senior' : 'Senior Collaborator') : (profile?.points || 0) >= 100 ? (language === 'es' ? 'Colaborador Activo' : 'Active Collaborator') : (language === 'es' ? 'Nuevo Miembro' : 'New Member')}
                                 </p>
-                                <p className="text-xs text-muted text-center mt-1">Basado en actividad en la plataforma</p>
+                                <p className="text-xs text-muted text-center mt-1">{language === 'es' ? "Basado en actividad en la plataforma" : "Based on platform activity"}</p>
                             </div>
                         </div>
 
@@ -190,8 +190,8 @@ export default function Web3IdentityPage() {
                         <div className="p-4 bg-accent-teal/5 border border-accent-teal/20 rounded-2xl flex items-start gap-3">
                             <Shield className="w-5 h-5 text-accent-teal flex-shrink-0 mt-0.5" />
                             <div>
-                                <p className="text-xs font-semibold text-accent-teal mb-1">Identidad Soberana</p>
-                                <p className="text-xs text-muted leading-relaxed">Tu wallet Stellar actúa como identificador descentralizado. Nadie más controla tu identidad.</p>
+                                <p className="text-xs font-semibold text-accent-teal mb-1">{language === 'es' ? "Identidad Soberana" : "Sovereign Identity"}</p>
+                                <p className="text-xs text-muted leading-relaxed">{language === 'es' ? "Tu wallet Stellar actúa como identificador descentralizado. Nadie más controla tu identidad." : "Your Stellar wallet acts as a decentralized identifier. Nobody else controls your identity."}</p>
                             </div>
                         </div>
                     </div>

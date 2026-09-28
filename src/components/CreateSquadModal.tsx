@@ -13,7 +13,7 @@ interface CreateSquadModalProps {
 }
 
 export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateSquadModalProps) {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { createSquad } = useSquads();
 
     const [name, setName] = useState("");
@@ -42,7 +42,7 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
         setError(null);
 
         if (!name.trim() || !description.trim()) {
-            setError((t.colaboradores?.squads as any)?.fillFields || "Completa los campos obligatorios.");
+            setError((t.colaboradores?.squads as any)?.fillFields || (language === 'es' ? "Completa los campos obligatorios." : "Fill in all required fields."));
             return;
         }
 
@@ -75,7 +75,7 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                     <div className="relative z-10">
                         <h3 className="text-muted text-sm font-semibold uppercase tracking-wider mb-6">
-                            {(t.colaboradores?.squads as any)?.preview || "Vista Previa del Equipo"}
+                            {(t.colaboradores?.squads as any)?.preview || (language === 'es' ? "Vista Previa del Equipo" : "Team Preview")}
                         </h3>
                         {/* Squad Card Preview */}
                         <div className="glass-card p-8 rounded-3xl border border-border-subtle hover:border-accent-teal/50 transition-all group relative overflow-hidden shadow-lg hover:shadow-[0_0_30px_rgba(0,242,255,0.1)] flex flex-col">
@@ -100,21 +100,21 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                             <div className="relative z-10 flex-1 flex flex-col">
                                 <h2 className="text-2xl font-bold mb-2 group-hover:text-accent-teal transition-colors flex items-center justify-between">
-                                    {name || "Nombre del Equipo"}
+                                    {name || (language === 'es' ? "Nombre del Equipo" : "Team Name")}
                                     <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
                                 </h2>
                                 <p className="text-muted text-sm mb-6 line-clamp-2 min-h-[2.5rem]">
-                                    {description || "Agrega una descripción para contarle a la empresa el propósito y la cultura del equipo..."}
+                                    {description || (language === 'es' ? "Agrega una descripción para contarle a la empresa el propósito y la cultura del equipo..." : "Add a description to tell the workspace about your team purpose and culture...")}
                                 </p>
 
                                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-border-subtle">
                                     <div className="flex items-center">
                                         <div className="flex -space-x-3">
                                             <div className="w-8 h-8 rounded-full border-2 border-card bg-accent-teal flex items-center justify-center overflow-hidden z-20 shadow-sm">
-                                                <span className="text-[10px] font-bold text-black border-accent-teal">TÚ</span>
+                                                <span className="text-[10px] font-bold text-black border-accent-teal">{language === 'es' ? "TÚ" : "YOU"}</span>
                                             </div>
                                         </div>
-                                        <span className="ml-3 text-xs text-muted font-mono font-bold tracking-tight uppercase">1 {(t.colaboradores?.squads as any)?.members || "Miembros"}</span>
+                                        <span className="ml-3 text-xs text-muted font-mono font-bold tracking-tight uppercase">1 {(t.colaboradores?.squads as any)?.members || (language === 'es' ? "Miembros" : "Members")}</span>
                                     </div>
                                 </div>
                             </div>
@@ -125,8 +125,10 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
                         <div className="bg-card border border-border-subtle rounded-xl p-4 flex gap-4 items-start shadow-sm">
                             <Shield className="w-6 h-6 text-accent-teal shrink-0 mt-0.5" />
                             <div>
-                                <h4 className="font-semibold text-sm mb-1">{(t.colaboradores?.squads as any)?.leaderRole || "Mando y Control"}</h4>
-                                <p className="text-xs text-muted">Aparecerás automáticamente como líder del Equipo ("Leader") y podrás invitar a otros compañeros.</p>
+                                <h4 className="font-semibold text-sm mb-1">{(t.colaboradores?.squads as any)?.leaderRole || (language === 'es' ? "Mando y Control" : "Command & Control")}</h4>
+                                <p className="text-xs text-muted">
+                                    {language === 'es' ? 'Aparecerás automáticamente como líder del Equipo ("Leader") y podrás invitar a otros compañeros.' : 'You will automatically appear as team leader ("Leader") and can invite other teammates.'}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -143,15 +145,19 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                     <div className="max-w-md mx-auto relative z-10">
                         <h2 className="text-2xl font-bold tracking-tight mb-2">
-                            {(t.colaboradores?.squads as any)?.create || "Crear Nuevo Equipo"}
+                            {(t.colaboradores?.squads as any)?.create || (language === 'es' ? "Crear Nuevo Equipo" : "Create New Team")}
                         </h2>
-                        <p className="text-muted mb-8 text-sm">Organiza misiones, comparte fondos y lidera iniciativas.</p>
+                        <p className="text-muted mb-8 text-sm">
+                            {language === 'es' ? "Organiza misiones, comparte fondos y lidera iniciativas." : "Organize missions, share pools, and lead initiatives."}
+                        </p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* Icon and Name */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Nombre e Identidad</label>
+                                <label className="text-sm font-semibold text-foreground">
+                                    {language === 'es' ? "Nombre e Identidad" : "Name & Identity"}
+                                </label>
                                 <div className="flex gap-3">
                                     <div className="relative" ref={emojiPickerRef}>
                                         <button
@@ -181,7 +187,7 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             className="w-full h-12 bg-neutral-900 border border-border-subtle rounded-xl pl-4 pr-4 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
-                                            placeholder="Ej: Backend Warriors"
+                                            placeholder={language === 'es' ? "Ej: Backend Warriors" : "e.g. Backend Warriors"}
                                             required
                                             maxLength={50}
                                         />
@@ -191,14 +197,16 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                             {/* Specialty / Category */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Etiqueta de Especialidad</label>
+                                <label className="text-sm font-semibold text-foreground">
+                                    {language === 'es' ? "Etiqueta de Especialidad" : "Specialty Tag"}
+                                </label>
                                 <div className="relative">
                                     <input
                                         type="text"
                                         value={specialty}
                                         onChange={(e) => setSpecialty(e.target.value)}
                                         className="w-full h-12 bg-neutral-900 border border-border-subtle rounded-xl px-4 text-foreground focus:outline-none focus:border-accent-teal transition-colors"
-                                        placeholder="Ej: Rust/Soroban, Marketing..."
+                                        placeholder={language === 'es' ? "Ej: Rust/Soroban, Marketing..." : "e.g. Rust/Soroban, Marketing..."}
                                         maxLength={40}
                                     />
                                 </div>
@@ -206,13 +214,15 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
 
                             {/* Description */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Propósito del Equipo</label>
+                                <label className="text-sm font-semibold text-foreground">
+                                    {language === 'es' ? "Propósito del Equipo" : "Team Purpose"}
+                                </label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={4}
                                     className="w-full bg-neutral-900 border border-border-subtle rounded-xl p-4 text-foreground focus:outline-none focus:border-accent-teal transition-colors resize-none"
-                                    placeholder="Describe la cultura, el objetivo a largo plazo o las reglas para sumarse a este equipo..."
+                                    placeholder={language === 'es' ? "Describe la cultura, el objetivo a largo plazo o las reglas para sumarse a este equipo..." : "Describe the culture, long-term goal, or requirements to join this team..."}
                                     required
                                     maxLength={300}
                                 />
@@ -238,10 +248,10 @@ export default function CreateSquadModal({ isOpen, onClose, onCreated }: CreateS
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Creando Equipo...
+                                            {language === 'es' ? "Creando Equipo..." : "Creating Team..."}
                                         </>
                                     ) : (
-                                        "Crear Equipo"
+                                        language === 'es' ? "Crear Equipo" : "Create Team"
                                     )}
                                 </button>
                             </div>

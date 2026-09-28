@@ -42,7 +42,7 @@ interface Auction {
 export type { Auction };
 
 // Custom hook to calculate time left
-function useCountdown(endTime: string | null) {
+function useCountdown(endTime: string | null, endedText: string = "Finalizado") {
     const [timeLeft, setTimeLeft] = useState<{ str: string; isEnded: boolean }>({ str: "", isEnded: false });
 
     useEffect(() => {
@@ -54,7 +54,7 @@ function useCountdown(endTime: string | null) {
             const diff = target - now;
 
             if (diff <= 0) {
-                setTimeLeft({ str: "Finalizado", isEnded: true });
+                setTimeLeft({ str: endedText, isEnded: true });
             } else {
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -71,7 +71,7 @@ function useCountdown(endTime: string | null) {
         updateTime();
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
-    }, [endTime]);
+    }, [endTime, endedText]);
 
     return timeLeft;
 }
@@ -99,7 +99,7 @@ export default function MarketplacePage() {
     const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
     const { connected, address, sign } = useWallet();
     const { addPoints } = useProfile();
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
 
@@ -432,7 +432,7 @@ export default function MarketplacePage() {
     };
 
     const handleCancelAuction = async (auction: Auction) => {
-        if (!confirm("¿Seguro que deseas cancelar esta publicación? Esta acción no se puede deshacer.")) return;
+        if (!confirm(language === 'es' ? "¿Seguro que deseas cancelar esta publicación? Esta acción no se puede deshacer." : "Are you sure you want to cancel this listing? This action cannot be undone.")) return;
 
         try {
             if (auction.bid_count === 0) {
@@ -443,7 +443,7 @@ export default function MarketplacePage() {
                 });
 
                 if (!res.ok) {
-                    throw new Error("Error en la respuesta del servidor al cancelar.");
+                    throw new Error(language === 'es' ? "Error en la respuesta del servidor al cancelar." : "Server error while cancelling listing.");
                 }
 
                 // Update to cancelled instead of hard delete
@@ -451,17 +451,17 @@ export default function MarketplacePage() {
                 if (error) throw error;
 
                 setAuctions(prev => prev.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a));
-                toast.success("Publicación cancelada exitosamente.");
+                toast.success(language === 'es' ? "Publicación cancelada exitosamente." : "Listing cancelled successfully.");
             } else {
                 // Soft cancel if bids exist (safety feature, though button should be disabled)
                 const updatedAuctions = auctions.map(a => a.id === auction.id ? { ...a, status: 'cancelled' } : a);
                 setAuctions(updatedAuctions);
                 if (selectedAuction?.id === auction.id) setSelectedAuction(null);
-                toast.info("Subasta cancelada.");
+                toast.info(language === 'es' ? "Subasta cancelada." : "Auction cancelled.");
             }
         } catch (error) {
             console.error("Error cancelando subasta:", error);
-            toast.error("Error al intentar cancelar la subasta.");
+            toast.error(language === 'es' ? "Error al intentar cancelar la subasta." : "Error while cancelling auction.");
         }
     };
 
@@ -470,10 +470,10 @@ export default function MarketplacePage() {
             const { error } = await supabase.from("auctions").update({ status: 'finished' }).eq("id", id);
             if (error) throw error;
             setAuctions(prev => prev.map(a => a.id === id ? { ...a, status: 'finished' } : a));
-            toast.success("Activos reclamados exitosamente.");
+            toast.success(language === 'es' ? "Activos reclamados exitosamente." : "Assets claimed successfully.");
         } catch (error: any) {
             console.error("Error reclamando activos:", error);
-            toast.error("Error al reclamar los activos.");
+            toast.error(language === 'es' ? "Error al reclamar los activos." : "Error while claiming assets.");
         }
     };
 
@@ -614,6 +614,7 @@ export default function MarketplacePage() {
                             onSelect={() => setSelectedAuction(item)}
                             onClaim={(e: any) => { e.stopPropagation(); handleClaimBack(item.id); }}
                             t={t}
+                            language={language}
                         />
                     ))}
                 </div>
@@ -635,6 +636,7 @@ export default function MarketplacePage() {
                 onCancel={handleCancelAuction}
                 loadingBids={loadingIds}
                 t={t}
+                language={language}
             />
 
             {/* Info Modal */}
@@ -667,12 +669,12 @@ export default function MarketplacePage() {
                                     </p>
                                 </div>
                                 <a
-                                    href="https://docs.trustlesswork.com/trustless-work/es"
+                                    href={language === 'es' ? "https://docs.trustlesswork.com/trustless-work/es" : "https://docs.trustlesswork.com/trustless-work"}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors gap-2"
                                 >
-                                    Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
+                                    {language === 'es' ? "Docs Oficiales TW" : "Official TW Docs"} <ArrowUpRight className="w-4 h-4" />
                                 </a>
                             </div>
                         </div>
@@ -684,8 +686,8 @@ export default function MarketplacePage() {
 }
 
 // Subcomponent para manejar la tarjeta y el countdown local
-function AuctionCard({ item, currentAddress, onSelect, onClaim, t }: any) {
-    const { str: timeLeftStr, isEnded } = useCountdown(item.end_time);
+function AuctionCard({ item, currentAddress, onSelect, onClaim, t, language }: any) {
+    const { str: timeLeftStr, isEnded } = useCountdown(item.end_time, t?.marketplace?.finished || (language === 'es' ? "Finalizado" : "Ended"));
 
     const isOwner = currentAddress === item.seller;
     const isFinished = item.status === 'finished' || isEnded;

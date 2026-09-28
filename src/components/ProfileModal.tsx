@@ -139,7 +139,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={isUploading}
                                 className="w-20 h-20 rounded-full bg-muted/10 flex items-center justify-center border-2 border-accent-teal shadow-[0_0_15px_rgba(0,242,255,0.3)] mb-2 relative group overflow-hidden focus:outline-none transition-all disabled:opacity-50"
-                                title="Cambiar foto de perfil"
+                                title={language === 'es' ? "Cambiar foto de perfil" : "Change profile picture"}
                             >
                                 {isUploading ? (
                                     <Loader2 className="w-8 h-8 text-accent-teal animate-spin" />
@@ -166,9 +166,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             </button>
                             <h2 className="text-lg font-bold text-foreground">{t.profile.editProfile}</h2>
                             {address && (
-                                <button onClick={handleCopyAddress} className="flex items-center gap-1.5 mt-1 text-xs font-mono text-muted hover:text-foreground transition-colors group" title="Copiar dirección completa">
+                                <button onClick={handleCopyAddress} className="flex items-center gap-1.5 mt-1 text-xs font-mono text-muted hover:text-foreground transition-colors group" title={language === 'es' ? "Copiar dirección completa" : "Copy full address"}>
                                     {addressCopied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 group-hover:text-accent-teal transition-colors" />}
-                                    <span className={addressCopied ? 'text-emerald-400' : ''}>{addressCopied ? 'Copiado!' : `${address.slice(0, 8)}...${address.slice(-6)}`}</span>
+                                    <span className={addressCopied ? 'text-emerald-400' : ''}>{addressCopied ? (language === 'es' ? 'Copiado!' : 'Copied!') : `${address.slice(0, 8)}...${address.slice(-6)}`}</span>
                                 </button>
                             )}
                             <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase border ${
@@ -215,23 +215,27 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 </h3>
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Nombre</label>
+                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">
+                                            {language === 'es' ? "Nombre" : "Name"}
+                                        </label>
                                         <input type="text" value={wsName} onChange={e => setWsName(e.target.value)}
                                             className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all"
-                                            placeholder="Nombre del workspace" />
+                                            placeholder={language === 'es' ? "Nombre del workspace" : "Workspace name"} />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">Descripción</label>
+                                        <label className="block text-xs font-semibold text-muted mb-1 uppercase tracking-wider">
+                                            {language === 'es' ? "Descripción" : "Description"}
+                                        </label>
                                         <textarea value={wsDesc} onChange={e => setWsDesc(e.target.value)} rows={3}
                                             className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:border-accent-teal transition-all resize-none"
-                                            placeholder="Descripción del workspace" />
+                                            placeholder={language === 'es' ? "Descripción del workspace" : "Workspace description"} />
                                     </div>
                                     <button onClick={handleSaveWorkspace} disabled={savingWs}
-                                        className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50">
-                                        {savingWs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                        {savingWs ? 'Guardando...' : 'Guardar Workspace'}
-                                    </button>
-                                </div>
+                                         className="flex items-center gap-2 px-4 py-2 bg-accent-teal text-black font-bold text-sm rounded-xl hover:bg-accent-teal/90 transition-colors disabled:opacity-50">
+                                         {savingWs ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                         {savingWs ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Workspace' : 'Save Workspace')}
+                                     </button>
+                                 </div>
                             </div>
                         )}
 

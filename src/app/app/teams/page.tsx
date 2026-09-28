@@ -13,7 +13,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
 
 export default function ColaboradoresPage() {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { squads, squadMembers, loading: squadsLoading, createSquad, joinSquad, fetchSquads, leaveSquad, disbandSquad, transferLeadership } = useSquads();
     const { createNotification } = useNotifications();
     const { profile } = useProfile();
@@ -370,13 +370,13 @@ export default function ColaboradoresPage() {
                 ) : filteredSquads.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-muted border border-border-subtle rounded-2xl bg-card/50 border-dashed">
                         <UsersRound className="w-12 h-12 mb-4 text-neutral-600" />
-                        <h3 className="text-xl font-bold text-foreground mb-2">Ningún Equipo encontrado</h3>
-                        <p className="max-w-md text-center">¿Nadie lidera este nicho? Sé el primero en crear un Equipo y empieza a cambiar el juego.</p>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{language === 'es' ? "Ningún Equipo encontrado" : "No Teams found"}</h3>
+                        <p className="max-w-md text-center">{language === 'es' ? "¿Nadie lidera este nicho? Sé el primero en crear un Equipo y empieza a cambiar el juego." : "Nobody leading this niche yet? Be the first to create a Team and lead the pack."}</p>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
                             className="mt-6 px-6 py-2 bg-accent-teal text-black font-semibold rounded-xl hover:bg-accent-teal/90 transition-colors"
                         >
-                            Comandar Nuevo Equipo
+                            {language === 'es' ? "Comandar Nuevo Equipo" : "Lead New Team"}
                         </button>
                     </div>
                 ) : (
@@ -629,7 +629,7 @@ export default function ColaboradoresPage() {
                                                                 }}
                                                                 className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-foreground/5 transition-colors"
                                                             >
-                                                                <UserPlus className="w-4 h-4 text-accent-teal" /> Invitar a Equipo
+                                                                <UserPlus className="w-4 h-4 text-accent-teal" /> {language === 'es' ? "Invitar a Equipo" : "Invite to Team"}
                                                             </button>
                                                             <button 
                                                                 onClick={(e) => {
@@ -638,7 +638,7 @@ export default function ColaboradoresPage() {
                                                                 }}
                                                                 className="w-full text-left px-4 py-3 flex items-center gap-3 text-sm hover:bg-accent-teal/10 text-accent-teal transition-colors border-t border-border-subtle"
                                                             >
-                                                                <Rocket className="w-4 h-4" /> Proponer Misión
+                                                                <Rocket className="w-4 h-4" /> {language === 'es' ? "Proponer Misión" : "Propose Mission"}
                                                             </button>
                                                         </div>
                                                     </>
@@ -669,8 +669,8 @@ export default function ColaboradoresPage() {
                             <X className="w-5 h-5" />
                         </button>
 
-                        <h3 className="text-xl font-bold mb-2">Invitar a {selectedUserToInvite?.first_name}</h3>
-                        <p className="text-muted text-sm mb-6">Selecciona el equipo al que deseas invitar a esta persona.</p>
+                        <h3 className="text-xl font-bold mb-2">{language === 'es' ? `Invitar a ${selectedUserToInvite?.first_name}` : `Invite ${selectedUserToInvite?.first_name}`}</h3>
+                        <p className="text-muted text-sm mb-6">{language === 'es' ? "Selecciona el equipo al que deseas invitar a esta persona." : "Select the team you wish to invite this person to."}</p>
 
                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                             {squads.filter(s => s.leader_id === profile?.id).map((squad) => (
@@ -704,12 +704,15 @@ export default function ColaboradoresPage() {
                         </button>
 
                         <div className="p-8">
-                            <h3 className="text-2xl font-bold mb-2">Proponer Misión</h3>
-                            <p className="text-muted text-sm mb-6">Propón una tarea específica para <span className="text-foreground font-semibold">{selectedUserForMission.first_name}</span>.</p>
+                            <h3 className="text-2xl font-bold mb-2">{language === 'es' ? "Proponer Misión" : "Propose Mission"}</h3>
+                            <p className="text-muted text-sm mb-6">
+                                {language === 'es' ? "Propón una tarea específica para " : "Propose a specific task for "}
+                                <span className="text-foreground font-semibold">{selectedUserForMission.first_name}</span>.
+                            </p>
 
                             <form onSubmit={submitMissionProposal} className="space-y-5">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Equipo Responsable</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">{language === 'es' ? "Equipo Responsable" : "Responsible Team"}</label>
                                     <select
                                         value={missionForm.squadId}
                                         onChange={(e) => setMissionForm({...missionForm, squadId: e.target.value})}
@@ -723,23 +726,23 @@ export default function ColaboradoresPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Título de la Misión</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">{language === 'es' ? "Título de la Misión" : "Mission Title"}</label>
                                     <input
                                         type="text"
                                         value={missionForm.title}
                                         onChange={(e) => setMissionForm({...missionForm, title: e.target.value})}
-                                        placeholder="Ej: Crear logo de comunidad"
+                                        placeholder={language === 'es' ? "Ej: Crear logo de comunidad" : "e.g., Build community logo"}
                                         className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Descripción</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">{language === 'es' ? "Descripción" : "Description"}</label>
                                     <textarea
                                         value={missionForm.description}
                                         onChange={(e) => setMissionForm({...missionForm, description: e.target.value})}
-                                        placeholder="Detalla qué esperas de esta misión..."
+                                        placeholder={language === 'es' ? "Detalla qué esperas de esta misión..." : "Detail what you expect from this mission..."}
                                         rows={3}
                                         className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors resize-none"
                                         required
@@ -747,12 +750,12 @@ export default function ColaboradoresPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">Recompensa Sugerida (Opcional)</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted">{language === 'es' ? "Recompensa Sugerida (Opcional)" : "Suggested Reward (Optional)"}</label>
                                     <input
                                         type="text"
                                         value={missionForm.reward}
                                         onChange={(e) => setMissionForm({...missionForm, reward: e.target.value})}
-                                        placeholder="Ej: 500 Aura o 10 XLM"
+                                        placeholder={language === 'es' ? "Ej: 500 Aura o 10 XLM" : "e.g., 500 Aura or 10 XLM"}
                                         className="w-full bg-foreground/5 border border-border-subtle rounded-xl px-4 py-3 focus:outline-none focus:border-accent-teal transition-colors"
                                     />
                                 </div>
@@ -763,7 +766,7 @@ export default function ColaboradoresPage() {
                                     className="w-full bg-accent-teal text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-accent-teal/90 transition-colors disabled:opacity-50"
                                 >
                                     {isSubmittingMission ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
-                                    Enviar Propuesta
+                                    {language === 'es' ? "Enviar Propuesta" : "Send Proposal"}
                                 </button>
                             </form>
                         </div>

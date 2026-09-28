@@ -89,7 +89,7 @@ export default function PresentationDeckPage() {
   }, [nextSlide, prevSlide, totalSlides]);
 
   return (
-    <div className="min-h-screen bg-[#050c14] text-slate-100 font-sans selection:bg-[#00f2ff]/30 selection:text-[#00f2ff] flex flex-col justify-between overflow-x-clip">
+    <div className="h-full max-h-screen bg-[#050c14] text-slate-100 font-sans selection:bg-[#00f2ff]/30 selection:text-[#00f2ff] flex flex-col justify-between overflow-hidden">
       {/* Print Specific CSS */}
       <style jsx global>{`
         @media print {
@@ -129,8 +129,8 @@ export default function PresentationDeckPage() {
       `}</style>
 
       {/* Top Header / Presentation Navigation (Screen Only) */}
-      <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 shadow-lg">
-        <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="no-print shrink-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 shadow-lg">
+        <div className="px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
               <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
@@ -235,8 +235,8 @@ export default function PresentationDeckPage() {
       </header>
 
       {/* SCREEN VIEW: Active Slide Presenter */}
-      <main className="no-print flex-1 flex items-center justify-center p-4 sm:p-8 max-w-7xl mx-auto w-full">
-        <div className="w-full bg-[#0d1624]/90 border border-white/10 rounded-3xl p-6 sm:p-12 backdrop-blur-xl shadow-2xl relative min-h-[580px] flex flex-col justify-between overflow-hidden">
+      <main className="no-print flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 md:p-6 max-w-7xl mx-auto w-full overflow-y-auto custom-scrollbar">
+        <div className="w-full bg-[#0d1624]/90 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 backdrop-blur-xl shadow-2xl relative min-h-[440px] flex flex-col justify-between overflow-hidden my-auto">
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#00f2ff]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -245,7 +245,7 @@ export default function PresentationDeckPage() {
           <SlideRenderer slideIndex={currentSlide} language={language} />
 
           {/* Slide Footer */}
-          <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-500">
+          <div className="mt-6 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-500">
             <span>{t.nav.footerLeft}</span>
             <span className="text-[#00f2ff]/80">{slidesData[currentSlide].title}</span>
             <span>
@@ -256,21 +256,28 @@ export default function PresentationDeckPage() {
       </main>
 
       {/* Thumbnails Navigation Strip (Screen Only) */}
-      <footer className="no-print sticky bottom-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-t border-white/10 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 overflow-x-auto justify-start md:justify-center custom-scrollbar shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-        {slidesData.map((slide, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrentSlide(idx)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left truncate max-w-[150px] shrink-0 ${
-              currentSlide === idx
-                ? "bg-[#00f2ff]/20 text-[#00f2ff] border border-[#00f2ff]/50 shadow-[0_0_8px_rgba(0,242,255,0.3)]"
-                : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20 hover:text-slate-200"
-            }`}
-          >
-            <span className="text-[10px] text-slate-500 mr-1.5">{String(idx + 1).padStart(2, "0")}</span>
-            {slide.title}
-          </button>
-        ))}
+      <footer className="no-print shrink-0 z-50 bg-[#050c14]/95 backdrop-blur-md border-t border-white/10 px-2 sm:px-6 py-2 sm:py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+        <div className="w-full max-w-7xl mx-auto flex items-center gap-1 sm:gap-1.5 md:gap-2 justify-between">
+          {slidesData.map((slide, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              title={`${String(idx + 1).padStart(2, "0")}. ${slide.title} — ${slide.subtitle}`}
+              className={`flex-1 min-w-0 px-1 sm:px-2 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center justify-center gap-1 ${
+                currentSlide === idx
+                  ? "bg-[#00f2ff]/20 text-[#00f2ff] border border-[#00f2ff]/50 shadow-[0_0_10px_rgba(0,242,255,0.3)] font-bold"
+                  : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20 hover:text-slate-200 hover:bg-white/10"
+              }`}
+            >
+              <span className={currentSlide === idx ? "text-[#00f2ff] font-bold text-[10px] sm:text-[11px]" : "text-slate-500 text-[10px]"}>
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <span className="truncate hidden sm:inline text-[10px] md:text-[11px]">
+                {slide.title}
+              </span>
+            </button>
+          ))}
+        </div>
       </footer>
 
       {/* PRINT-ONLY VIEW: All 12 Slides rendered continuously for PDF generator */}
@@ -304,45 +311,45 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
     case 0: {
       const s = t.slide0;
       return (
-        <div className="flex flex-col items-center justify-center text-center py-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2ff]/10 border border-[#00f2ff]/30 text-[#00f2ff] text-xs font-mono mb-6">
+        <div className="flex flex-col items-center justify-center text-center py-2 sm:py-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2ff]/10 border border-[#00f2ff]/30 text-[#00f2ff] text-xs font-mono mb-3 sm:mb-4">
             <Sparkles className="w-3.5 h-3.5 animate-pulse" />
             <span>{s.badge}</span>
           </div>
 
-          <div className="mb-6 flex justify-center">
-            <ReWorkLogo className="h-16 sm:h-20 w-auto" theme="cyan" glow />
+          <div className="mb-3 sm:mb-5 flex justify-center">
+            <ReWorkLogo className="h-12 sm:h-16 w-auto" theme="cyan" glow />
           </div>
 
-          <p className="text-xl sm:text-2xl font-light text-slate-300 italic mb-4 max-w-2xl">
+          <p className="text-lg sm:text-xl md:text-2xl font-light text-slate-300 italic mb-2 sm:mb-3 max-w-2xl">
             {s.quote}
           </p>
 
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mb-10 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mb-5 sm:mb-7 leading-relaxed font-sans">
             {s.description}
           </p>
 
           {/* 4 Stellar Building Blocks Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full">
-            <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <ShieldCheck className="w-5 h-5 text-[#00f2ff] mx-auto mb-1" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-3xl w-full">
+            <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#00f2ff] mx-auto mb-1" />
               <p className="font-mono text-xs font-bold">{s.badge1Title}</p>
-              <p className="text-[11px] text-slate-400">{s.badge1Sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge1Sub}</p>
             </div>
-            <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <QrCode className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+            <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+              <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
               <p className="font-mono text-xs font-bold">{s.badge2Title}</p>
-              <p className="text-[11px] text-slate-400">{s.badge2Sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge2Sub}</p>
             </div>
-            <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <TrendingUp className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+            <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 mx-auto mb-1" />
               <p className="font-mono text-xs font-bold">{s.badge3Title}</p>
-              <p className="text-[11px] text-slate-400">{s.badge3Sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge3Sub}</p>
             </div>
-            <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <Star className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+            <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1" />
               <p className="font-mono text-xs font-bold">{s.badge4Title}</p>
-              <p className="text-[11px] text-slate-400">{s.badge4Sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge4Sub}</p>
             </div>
           </div>
         </div>

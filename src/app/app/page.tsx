@@ -45,7 +45,7 @@ export default function Home() {
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
   const { notifyPointsEarned } = useGamification();
-  const { t } = useSettings();
+  const { t, language } = useSettings();
 
   // ReWork Ecosystem Items Counts & Metrics (Partner Feature)
   const [ecosystemCounts, setEcosystemCounts] = useState({
@@ -352,11 +352,11 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-accent-teal" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted">
-              Ecosistema ReWork en Cifras
+              {language === 'es' ? "Ecosistema ReWork en Cifras" : "ReWork Ecosystem in Numbers"}
             </h2>
           </div>
           <span className="text-xs font-mono text-accent-teal bg-accent-teal/10 px-3 py-1 rounded-full border border-accent-teal/20">
-            Métricas en Vivo • Red Stellar
+            {language === 'es' ? "Métricas en Vivo • Red Stellar" : "Live Metrics • Stellar Network"}
           </span>
         </div>
 
@@ -368,7 +368,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted group-hover:text-accent-teal transition-colors uppercase tracking-wider">
-                Red de Servicios
+                {t.nav.servicesNetwork || (language === 'es' ? "Red de Servicios" : "Services Network")}
               </span>
               <div className="p-1.5 rounded-lg bg-accent-teal/10 text-accent-teal group-hover:scale-110 transition-transform">
                 <Globe className="w-3.5 h-3.5" />
@@ -396,7 +396,7 @@ export default function Home() {
               </svg>
             </div>
             <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>Bounties globales</span>
+              <span>{language === 'es' ? "Bounties globales" : "Global Bounties"}</span>
               <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </Link>
@@ -408,7 +408,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted group-hover:text-purple-400 transition-colors uppercase tracking-wider">
-                Misiones
+                {t.nav.squadGoals || (language === 'es' ? "Misiones" : "Missions")}
               </span>
               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
                 <Target className="w-3.5 h-3.5" />
@@ -436,7 +436,7 @@ export default function Home() {
               </svg>
             </div>
             <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>Metas con Escrow</span>
+              <span>{language === 'es' ? "Metas con Escrow" : "Escrow-backed Goals"}</span>
               <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </Link>
@@ -448,7 +448,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted group-hover:text-pink-400 transition-colors uppercase tracking-wider">
-                Colectas
+                {t.nav.crowdfunding || (language === 'es' ? "Colectas" : "Pools")}
               </span>
               <div className="p-1.5 rounded-lg bg-pink-500/10 text-pink-400 group-hover:scale-110 transition-transform">
                 <HeartHandshake className="w-3.5 h-3.5" />
@@ -476,7 +476,7 @@ export default function Home() {
               </svg>
             </div>
             <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>Pools comunitarios</span>
+              <span>{language === 'es' ? "Pools comunitarios" : "Community Pools"}</span>
               <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </Link>
@@ -488,7 +488,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted group-hover:text-amber-400 transition-colors uppercase tracking-wider">
-                MarketPlace
+                {t.nav.marketplace || (language === 'es' ? "MarketPlace" : "Marketplace")}
               </span>
               <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -516,7 +516,7 @@ export default function Home() {
               </svg>
             </div>
             <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>Subastas & Tienda</span>
+              <span>{language === 'es' ? "Subastas & Tienda" : "Auctions & Store"}</span>
               <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </Link>
@@ -528,7 +528,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted group-hover:text-blue-400 transition-colors uppercase tracking-wider">
-                Equipos
+                {t.nav.people || (language === 'es' ? "Equipos" : "Teams")}
               </span>
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
                 <Users className="w-3.5 h-3.5" />
@@ -556,7 +556,7 @@ export default function Home() {
               </svg>
             </div>
             <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>Miembros activos</span>
+              <span>{language === 'es' ? "Miembros activos" : "Active Members"}</span>
               <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </Link>
@@ -584,8 +584,14 @@ export default function Home() {
             </div>
 
             <div className="mb-6 sm:mb-10">
-              <h3 className="text-2xl sm:text-4xl font-bold mb-2">Asado de equipo</h3>
-              <p className="text-sm sm:text-base text-muted max-w-lg">Ayudanos a financiar el evento de integración de fin de mes para celebrar los objetivos alcanzados de todo el equipo de ReWork.</p>
+              <h3 className="text-2xl sm:text-4xl font-bold mb-2">
+                {language === 'es' ? "Asado de equipo" : "Team Barbecue"}
+              </h3>
+              <p className="text-sm sm:text-base text-muted max-w-lg">
+                {language === 'es'
+                  ? "Ayudanos a financiar el evento de integración de fin de mes para celebrar los objetivos alcanzados de todo el equipo de ReWork."
+                  : "Help us fund the end-of-month team building event to celebrate achieved milestones across the ReWork team."}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 mb-8">
@@ -673,7 +679,7 @@ export default function Home() {
                       ? 'text-accent-teal bg-accent-teal/20'
                       : 'text-orange-400 bg-orange-400/20'
                       }`}>
-                      {item.condition || 'nuevo'}
+                      {item.condition === 'nuevo' ? (language === 'es' ? 'nuevo' : 'new') : (language === 'es' ? 'usado' : 'used')}
                     </span>
                     <h4 className="text-lg font-bold mb-4 line-clamp-2">{item.title}</h4>
                     <div className="flex items-center justify-between">
@@ -832,10 +838,10 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm font-bold group-hover:text-accent-teal transition-colors">
-                    Simulador de Objetivos
+                    {language === 'es' ? "Simulador de Objetivos" : "Financial Goals Simulator"}
                   </p>
                   <p className="text-[11px] text-muted">
-                    Planificá tu meta con interés compuesto y liquidez
+                    {language === 'es' ? "Planificá tu meta con interés compuesto y liquidez" : "Plan your goal with compound interest and liquidity"}
                   </p>
                 </div>
               </div>

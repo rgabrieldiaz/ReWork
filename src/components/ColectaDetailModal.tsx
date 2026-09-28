@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Search, Activity, Clock, HandCoins, ChevronRight, CheckCircle, ShieldCheck, Share2, Loader2, ArrowUpRight, Gift } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
 interface Colecta {
     id: number;
@@ -40,6 +41,7 @@ function truncateKey(key: string) {
 }
 
 export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onAction, isProcessing, hasDonated, isOrganizer, t }: ColectaDetailModalProps) {
+    const { language } = useSettings();
     const [donationAmount, setDonationAmount] = useState<string>("");
 
     // Reset amount when colecta changes
@@ -120,17 +122,17 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                             {isGoalMet ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent-teal/10 text-accent-teal border border-accent-teal/20">
                                     <CheckCircle className="w-3.5 h-3.5" />
-                                    {t.colectas?.goalMetSuccess || "Meta Alcanzada"}
+                                    {t.colectas?.goalMetSuccess || (language === 'es' ? "Meta Alcanzada" : "Goal Reached")}
                                 </span>
                             ) : isExpired ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20">
                                     <X className="w-3.5 h-3.5" />
-                                    Finalizada
+                                    {language === 'es' ? "Finalizada" : "Ended"}
                                 </span>
                             ) : (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                     <Activity className="w-3.5 h-3.5" />
-                                    Activa
+                                    {language === 'es' ? "Activa" : "Active"}
                                 </span>
                             )}
                         </div>
@@ -157,19 +159,19 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                             </span>
                             <span className="flex items-center gap-1.5 font-medium">
                                 <Clock className="w-4 h-4 text-accent-teal" />
-                                Termina el {new Date(colecta.deadline).toLocaleDateString()}
+                                {language === 'es' ? "Termina el" : "Ends on"} {new Date(colecta.deadline).toLocaleDateString()}
                             </span>
                         </div>
 
                         <p className="text-muted text-sm mb-8 leading-relaxed">
-                            {colecta.description || `Apoya esta iniciativa aportando ${currency} a través de un contrato escrow seguro en la red Stellar.`}
+                            {colecta.description || (language === 'es' ? `Apoya esta iniciativa aportando ${currency} a través de un contrato escrow seguro en la red Stellar.` : `Support this initiative by contributing ${currency} through a secure escrow contract on Stellar.`)}
                         </p>
 
                         {/* Progress Section */}
                         <div className="space-y-3 mb-8 bg-background p-6 rounded-2xl border border-border-subtle">
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <p className="text-xs text-muted mb-1 uppercase tracking-wider font-semibold">Recaudado</p>
+                                    <p className="text-xs text-muted mb-1 uppercase tracking-wider font-semibold">{language === 'es' ? "Recaudado" : "Raised"}</p>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-bold text-foreground tracking-tight">{colecta.current_amount.toLocaleString()}</span>
                                         <span className="text-muted font-medium">/ {colecta.goal_amount.toLocaleString()} {currency}</span>
@@ -192,8 +194,8 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                             </div>
 
                             <div className="flex justify-between text-sm text-muted mt-2 pt-2 border-t border-border-subtle/50">
-                                <span>{colecta.donor_count} aportes realizados</span>
-                                {isGoalMet && <span>Monto asegurado</span>}
+                                <span>{colecta.donor_count} {language === 'es' ? "aportes realizados" : "contributions made"}</span>
+                                {isGoalMet && <span>{language === 'es' ? "Monto asegurado" : "Goal secured"}</span>}
                             </div>
                         </div>
 
@@ -209,7 +211,7 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                                                 min="1"
                                                 value={donationAmount}
                                                 onChange={(e) => setDonationAmount(e.target.value)}
-                                                placeholder="Ej. 50"
+                                                placeholder={language === 'es' ? "Ej. 50" : "e.g. 50"}
                                                 className="w-full bg-background border border-border-subtle rounded-xl pl-6 pr-16 py-4 text-lg text-foreground font-medium focus:outline-none focus:border-accent-teal transition-all placeholder:text-muted/50 shadow-inner"
                                                 disabled={isProcessing}
                                             />
@@ -224,7 +226,7 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                                         >
                                             {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                                 <>
-                                                    {isOrganizer ? "Aportar a mi colecta" : (t.colectas?.donateWithEscrow || "Aportar")}
+                                                    {isOrganizer ? (language === 'es' ? "Aportar a mi colecta" : "Contribute to my crowdfund") : (t.colectas?.donateWithEscrow || (language === 'es' ? "Aportar" : "Donate"))}
                                                     <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                                 </>
                                             )}
@@ -242,7 +244,7 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                                         className="w-full bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)] flex justify-center items-center gap-2 group text-lg"
                                     >
                                         {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Gift className="w-5 h-5 transition-transform group-hover:scale-110" />}
-                                        {t.colectas?.releaseFunds || "Liberar Fondos"}
+                                        {t.colectas?.releaseFunds || (language === 'es' ? "Liberar Fondos" : "Release Funds")}
                                     </button>
                                 </div>
                             )}
@@ -250,13 +252,13 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                             {/* Refund for Donors if expired and failed */}
                             {isExpired && !isGoalMet && hasDonated && (
                                 <div className="mt-4 text-center">
-                                    <p className="text-muted text-sm mb-3">La meta no fue alcanzada. Puedes reclamar tu aporte.</p>
+                                    <p className="text-muted text-sm mb-3">{language === 'es' ? "La meta no fue alcanzada. Puedes reclamar tu aporte." : "The goal was not reached. You can claim your contribution."}</p>
                                     <button
                                         onClick={() => onAction(colecta, 'refund')}
                                         className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-4 rounded-xl transition-colors border border-red-500/20 flex justify-center items-center gap-2 group text-lg"
                                     >
                                         {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                                        {t.colectas?.claimRefund || "Reclamar Reembolso"}
+                                        {t.colectas?.claimRefund || (language === 'es' ? "Reclamar Reembolso" : "Claim Refund")}
                                     </button>
                                 </div>
                             )}
@@ -270,14 +272,26 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                             </div>
                             <div className="flex-1">
                                 <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1 flex items-center gap-2">
-                                    Contrato Escrow Inteligente
+                                    {language === 'es' ? "Contrato Escrow Inteligente" : "Smart Escrow Contract"}
                                 </h4>
                                 <p className="text-xs text-blue-800/80 dark:text-blue-200/70 leading-relaxed">
-                                    Protegido por <strong>Trustless Work</strong> en Stellar.
-                                    {isGoalMet
-                                        ? " La meta fue alcanzada. Los fondos pueden ser liberados al organizador, o reembolsados si algo falla."
-                                        : " Tu aporte quedará bloqueado en un contrato inteligente. Si no se alcanza la meta, podrás reclamar el reembolso total automáticamete."}
-                                    <br /><span className="mt-1 inline-block opacity-70">Fee estimado red Stellar: ~0.00001 XLM</span>
+                                    {language === 'es' ? (
+                                        <>
+                                            Protegido por <strong>Trustless Work</strong> en Stellar.
+                                            {isGoalMet
+                                                ? " La meta fue alcanzada. Los fondos pueden ser liberados al organizador, o reembolsados si algo falla."
+                                                : " Tu aporte quedará bloqueado en un contrato inteligente. Si no se alcanza la meta, podrás reclamar el reembolso total automáticamete."}
+                                            <br /><span className="mt-1 inline-block opacity-70">Fee estimado red Stellar: ~0.00001 XLM</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            Protected by <strong>Trustless Work</strong> on Stellar.
+                                            {isGoalMet
+                                                ? " The goal was reached. Funds can be released to the organizer, or refunded if needed."
+                                                : " Your contribution is locked in a smart contract. If the goal is not met, you can claim a full refund automatically."}
+                                            <br /><span className="mt-1 inline-block opacity-70">Estimated Stellar network fee: ~0.00001 XLM</span>
+                                        </>
+                                    )}
                                 </p>
                             </div>
                         </div>

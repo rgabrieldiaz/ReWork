@@ -16,7 +16,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const pathname = usePathname();
     const { connected, address, connect } = useWallet();
     const { profile, loading } = useProfile();
-    const { t, isSidebarCollapsed, toggleSidebar } = useSettings();
+    const { t, language, isSidebarCollapsed, toggleSidebar } = useSettings();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     const firstName = profile?.first_name || t.profile.title;
@@ -35,7 +35,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         { name: t.nav.people, href: "/app/teams", icon: Users },
         { name: t.nav.learning, href: "/app/learn", icon: Lightbulb },
         { name: t.nav.helpDesk, href: "/app/help-desk", icon: LifeBuoy },
-        { name: "Identidad", href: "/app/web3-identity", icon: ShieldCheck },
+        { name: t.nav.web3Identity || (language === 'es' ? 'Identidad' : 'Identity'), href: "/app/web3-identity", icon: ShieldCheck },
     ];
 
     const { workspaces, activeWorkspace, setActiveWorkspaceId } = useWorkspace();
@@ -101,10 +101,10 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                                 <>
                                     <div className="flex-1 text-left min-w-0">
                                         <p className="text-sm font-bold truncate text-foreground">
-                                            {activeWorkspace?.name || "Seleccionar..."}
+                                            {activeWorkspace?.name || (language === 'es' ? "Seleccionar..." : "Select...")}
                                         </p>
                                         <p className="text-[10px] text-muted uppercase tracking-widest font-semibold truncate leading-none mt-0.5">
-                                            Workspace Activo
+                                            {language === 'es' ? "Workspace Activo" : "Active Workspace"}
                                         </p>
                                     </div>
                                     <ChevronDown className={`w-4 h-4 text-muted transition-transform ${isWorkspaceOpen ? 'rotate-180' : ''}`} />
@@ -116,7 +116,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                         {isWorkspaceOpen && !isSidebarCollapsed && (
                             <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border-subtle rounded-xl shadow-2xl z-50 py-2 animate-in fade-in slide-in-from-top-2">
                                 <p className="px-4 py-2 text-[10px] font-bold text-muted uppercase tracking-widest border-b border-border-subtle mb-1">
-                                    Tus Entornos
+                                    {language === 'es' ? "Tus Entornos" : "Your Workspaces"}
                                 </p>
                                 {workspaces.map((ws) => (
                                     <button
@@ -146,7 +146,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                                         <div className="w-8 h-8 rounded-lg bg-muted/5 border border-dashed border-border-subtle flex items-center justify-center flex-shrink-0">
                                             <Plus className="w-4 h-4" />
                                         </div>
-                                        <span className="text-sm font-medium">Gestionar</span>
+                                        <span className="text-sm font-medium">{language === 'es' ? "Gestionar" : "Manage"}</span>
                                     </Link>
                                 </div>
                             </div>
@@ -166,7 +166,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                             } ${isSidebarCollapsed ? 'px-4 lg:px-0 lg:justify-center' : 'px-4 gap-4'}`}
                         >
                             <Shield className={`w-5 h-5 flex-shrink-0 ${pathname.includes('/admin') ? "text-accent-teal" : "text-muted group-hover:text-accent-teal"}`} />
-                            <span className={`font-bold whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>Panel Admin</span>
+                            <span className={`font-bold whitespace-nowrap transition-all duration-300 ${isSidebarCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>{language === 'es' ? "Panel Admin" : "Admin Panel"}</span>
                         </Link>
                     )}
                     {navItems.map((item) => {

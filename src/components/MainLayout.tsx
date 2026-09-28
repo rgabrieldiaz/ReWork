@@ -18,6 +18,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const { ready, authenticated } = usePrivy();
 
     const isAppRoute = pathname.startsWith("/app");
+    const isDeckRoute = pathname.startsWith("/deck");
 
     // Combined auth state: either Privy is authenticated OR profile exists (wallet-only login)
     const isAuthenticated = authenticated || !!profile;
@@ -50,13 +51,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             {isAppRoute && (
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             )}
-            <main id="main-scroll-container" className={`flex-1 transition-all duration-300 ease-in-out overflow-y-auto bg-background custom-scrollbar w-full relative ${
+            <main id="main-scroll-container" className={`flex-1 transition-all duration-300 ease-in-out ${isDeckRoute ? 'overflow-hidden h-full' : 'overflow-y-auto'} bg-background custom-scrollbar w-full relative ${
                 !isAppRoute ? '' : (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
             }`}>
                 {isAppRoute && (
                     <Header onMenuClick={() => setIsSidebarOpen(true)} />
                 )}
-                <div className={!isAppRoute ? "" : "p-4 sm:p-8"}>
+                <div className={!isAppRoute ? (isDeckRoute ? "h-full" : "") : "p-4 sm:p-8"}>
                     {children}
                 </div>
             </main>

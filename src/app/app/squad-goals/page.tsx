@@ -12,7 +12,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 export default function SquadGoalsPage() {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { connected, address: publicKey, sign } = useWallet();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
@@ -294,7 +294,7 @@ export default function SquadGoalsPage() {
                         : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'
                         }`}
                 >
-                    Propuestas en Votación
+                    {t.squadGoals.tabProposed}
                 </button>
                 <button
                     onClick={() => setActiveTab("activas")}
@@ -303,7 +303,7 @@ export default function SquadGoalsPage() {
                         : 'bg-card border border-border-subtle text-muted hover:text-foreground hover:border-border'
                         }`}
                 >
-                    Misiones Activas
+                    {t.squadGoals.tabActive}
                 </button>
             </div>
 
@@ -493,7 +493,7 @@ export default function SquadGoalsPage() {
                         <div className="flex justify-between items-center p-6 border-b border-border-subtle relative z-10">
                             <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                                 <Target className="w-5 h-5 text-accent-teal" />
-                                {(t.squadGoals as any)?.aboutTitle || "Sobre Squad Goals"}
+                                {t.squadGoals.aboutTitle || (language === 'es' ? "Sobre Squad Goals" : "About Squad Goals")}
                             </h2>
                             <button onClick={() => setIsInfoModalOpen(false)} className="text-muted hover:text-foreground transition-colors">
                                 <X className="w-5 h-5" />
@@ -502,24 +502,24 @@ export default function SquadGoalsPage() {
 
                         <div className="p-6 relative z-10">
                             <p className="text-muted leading-relaxed mb-6">
-                                {(t.squadGoals as any)?.aboutDescription || "Los Squad Goals permiten a los equipos organizarse, proponer objetivos y financiarlos de forma descentralizada. Una vez que la misión es aprobada y verificada, los fondos se liberan."}
+                                {t.squadGoals.aboutDescription}
                             </p>
 
                             <div className="bg-foreground/5 border border-accent-teal/20 rounded-xl p-4 mb-6">
                                 <h3 className="text-foreground font-semibold mb-2 flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-accent-teal" /> {(t.squadGoals as any)?.trustlessTitle || "Contrato Escrow Inteligente:"}
+                                    <ShieldCheck className="w-4 h-4 text-accent-teal" /> {t.squadGoals.trustlessTitle}
                                 </h3>
                                 <p className="text-sm text-muted">
-                                    {(t.squadGoals as any)?.trustlessDesc || "Todos los fondos se gestionan mediante Trustless Work, asegurando que el dinero solo se libera si la misión se cumple exitosamente."}
+                                    {t.squadGoals.trustlessDesc}
                                 </p>
                             </div>
                             <a
-                                href="https://docs.trustlesswork.com/trustless-work/es"
+                                href={language === 'es' ? "https://docs.trustlesswork.com/trustless-work/es" : "https://docs.trustlesswork.com/trustless-work"}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="w-full flex justify-center items-center px-4 py-3 bg-accent-teal/10 hover:bg-accent-teal/20 border border-accent-teal/30 rounded-xl text-accent-teal font-bold transition-colors gap-2"
                             >
-                                Docs Oficiales TW <ArrowUpRight className="w-4 h-4" />
+                                {t.squadGoals.officialDocs || (language === 'es' ? "Docs Oficiales TW" : "Official TW Docs")} <ArrowUpRight className="w-4 h-4" />
                             </a>
                         </div>
                     </div>

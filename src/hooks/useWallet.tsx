@@ -65,9 +65,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                     setAddress(result.address);
                     setConnected(true);
                     setNetwork("TESTNET");
+                } else if (typeof window !== "undefined") {
+                    const demoAddr = localStorage.getItem("rework_demo_wallet");
+                    if (demoAddr) {
+                        setAddress(demoAddr);
+                        setConnected(true);
+                        setNetwork("TESTNET");
+                    }
                 }
             } catch (e) {
-                // Not previously authorized or locked, ignore silently
+                // Not previously authorized or locked, check demo mode fallback
+                if (typeof window !== "undefined") {
+                    const demoAddr = localStorage.getItem("rework_demo_wallet");
+                    if (demoAddr) {
+                        setAddress(demoAddr);
+                        setConnected(true);
+                        setNetwork("TESTNET");
+                    }
+                }
             }
         } catch (err) {
             console.error("Error initializing StellarWalletsKit:", err);

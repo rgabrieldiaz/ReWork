@@ -14,7 +14,7 @@ interface CreateSquadGoalModalProps {
 }
 
 export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: CreateSquadGoalModalProps) {
-    const { t } = useSettings();
+    const { t, language } = useSettings();
     const { address: publicKey } = useWallet();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -51,12 +51,12 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
         setError(null);
 
         if (!publicKey) {
-            setError(t.createSquadGoal?.connectWallet || "Conecta tu billetera.");
+            setError(t.createSquadGoal?.connectWallet || (language === 'es' ? "Conecta tu billetera." : "Connect your wallet."));
             return;
         }
 
         if (!title.trim() || !description.trim() || !amount || Number(amount) <= 0) {
-            setError(t.createSquadGoal?.fillFields || "Completa los campos requeridos.");
+            setError(t.createSquadGoal?.fillFields || (language === 'es' ? "Completa los campos requeridos." : "Fill in all required fields."));
             return;
         }
 
@@ -103,10 +103,10 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                     onClose();
                     return;
                 } catch (retryErr: any) {
-                    setError(retryErr.message || "Error al crear propuesta.");
+                    setError(retryErr.message || (language === 'es' ? "Error al crear propuesta." : "Error creating proposal."));
                 }
             } else {
-                setError(err.message || "Error al crear propuesta.");
+                setError(err.message || (language === 'es' ? "Error al crear propuesta." : "Error creating proposal."));
             }
         } finally {
             setIsSubmitting(false);
@@ -120,8 +120,12 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                 {/* Left Column: Preview & Image Selection */}
                 <div className="w-full md:w-[45%] md:border-r border-border-subtle bg-card/30 p-6 flex flex-col gap-5 relative">
                     <div>
-                        <h3 className="text-xl font-bold tracking-tight mb-1 text-white">Previsualización</h3>
-                        <p className="text-sm text-muted">Así se verá tu propuesta de misión.</p>
+                        <h3 className="text-xl font-bold tracking-tight mb-1 text-white">
+                            {language === 'es' ? "Previsualización" : "Preview"}
+                        </h3>
+                        <p className="text-sm text-muted">
+                            {language === 'es' ? "Así se verá tu propuesta de misión." : "How your mission proposal will look."}
+                        </p>
                     </div>
 
                     <div className="aspect-square w-full bg-neutral-900/50 border border-border-subtle rounded-3xl flex flex-col overflow-hidden shadow-inner relative group isolate">
@@ -139,12 +143,18 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                             <span className="absolute top-4 right-4 text-xs font-bold px-3 py-1 bg-foreground/5 rounded-full text-white/90">
                                 {amount || "0"} {currency}
                             </span>
-                            <h4 className="font-bold text-lg text-white leading-tight line-clamp-1 mb-1">{title || "Nombre de la Misión"}</h4>
-                            <p className="text-xs text-muted/80 line-clamp-1 mb-4">{description || "Descripción del objetivo del squad..."}</p>
+                            <h4 className="font-bold text-lg text-white leading-tight line-clamp-1 mb-1">
+                                {title || (language === 'es' ? "Nombre de la Misión" : "Mission Name")}
+                            </h4>
+                            <p className="text-xs text-muted/80 line-clamp-1 mb-4">
+                                {description || (language === 'es' ? "Descripción del objetivo del squad..." : "Description of squad objective...")}
+                            </p>
 
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-[11px] font-medium text-muted">
-                                    <span className="flex items-center gap-1"><Target className="w-3 h-3" /> 0 / N Firmas</span>
+                                    <span className="flex items-center gap-1">
+                                        <Target className="w-3 h-3" /> {language === 'es' ? "0 / N Firmas" : "0 / N Signatures"}
+                                    </span>
                                     <span className="text-accent-teal font-mono">0%</span>
                                 </div>
                                 <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
@@ -162,7 +172,7 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                                 value={image}
                                 onChange={e => setImage(e.target.value)}
                                 className="w-full bg-card/50 border border-border-subtle rounded-2xl pl-12 pr-12 py-3.5 text-sm focus:outline-none focus:border-accent-teal transition-colors"
-                                placeholder="Elige un emoji representativo..."
+                                placeholder={language === 'es' ? "Elige un emoji representativo..." : "Choose a representative emoji..."}
                             />
                             <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                             <button
@@ -195,13 +205,17 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent -z-10" />
                         <ShieldCheck className="w-6 h-6 text-blue-400 shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="text-sm font-bold text-blue-100">Contrato Escrow Inteligente</h4>
+                            <h4 className="text-sm font-bold text-blue-100">
+                                {language === 'es' ? "Contrato Escrow Inteligente" : "Smart Escrow Contract"}
+                            </h4>
                             <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
-                                Al aprobarse, <strong>Trustless Work</strong> distribuirá el pago automáticamente entre los miembros del equipo usando la lógica Multi-Release.
+                                {language === 'es'
+                                    ? <>Al aprobarse, <strong>Trustless Work</strong> distribuirá el pago automáticamente entre los miembros del equipo usando la lógica Multi-Release.</>
+                                    : <>Upon approval, <strong>Trustless Work</strong> will automatically distribute payout among team members using Multi-Release logic.</>}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                Fee estimado de red: ~0.00001 XLM
+                                {language === 'es' ? "Fee estimado de red: ~0.00001 XLM" : "Estimated network fee: ~0.00001 XLM"}
                             </div>
                         </div>
                     </div>
@@ -212,9 +226,11 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h2 className="text-2xl font-black bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-                                Proponer Misión
+                                {language === 'es' ? "Proponer Misión" : "Propose Mission"}
                             </h2>
-                            <p className="text-sm text-muted mt-1">Liderá una nueva iniciativa para el Squad.</p>
+                            <p className="text-sm text-muted mt-1">
+                                {language === 'es' ? "Liderá una nueva iniciativa para el Squad." : "Lead a new initiative for the Squad."}
+                            </p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-card/50 hover:bg-white/10 border border-border-subtle text-muted hover:text-white transition-all hover:rotate-90">
                             <X className="w-5 h-5" />
@@ -230,7 +246,9 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
 
                         {/* Title */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Título de la Misión <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Título de la Misión" : "Mission Title"} <span className="text-accent-teal">*</span>
+                            </label>
                             <input
                                 required
                                 type="text"
@@ -238,26 +256,28 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-medium placeholder:text-muted/60"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                placeholder="Ej. Lanzar nueva landing page..."
+                                placeholder={language === 'es' ? "Ej. Lanzar nueva landing page..." : "e.g. Launch new landing page..."}
                             />
                         </div>
 
                         {/* Description */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Descripción y Entregables <span className="text-accent-teal">*</span></label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Descripción y Entregables" : "Description & Deliverables"} <span className="text-accent-teal">*</span>
+                            </label>
                             <textarea
                                 required
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all placeholder:text-muted/60 min-h-[100px] resize-none"
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                placeholder="Explica detalladamente qué debe lograr el equipo..."
+                                placeholder={language === 'es' ? "Explica detalladamente qué debe lograr el equipo..." : "Explain in detail what the team needs to achieve..."}
                             />
                         </div>
 
                         {/* Reward & Currency */}
                         <div className="space-y-3">
                             <label className="block text-sm font-bold text-foreground">
-                                Recompensa Total <span className="text-accent-teal">*</span>
+                                {language === 'es' ? "Recompensa Total" : "Total Reward"} <span className="text-accent-teal">*</span>
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
                                 <div className="relative group">
@@ -297,10 +317,12 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                         {/* Duration Group for Voting */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-end">
-                                <label className="block text-sm font-bold text-foreground">Tiempo de Votación <span className="text-accent-teal">*</span></label>
+                                <label className="block text-sm font-bold text-foreground">
+                                    {language === 'es' ? "Tiempo de Votación" : "Voting Duration"} <span className="text-accent-teal">*</span>
+                                </label>
                                 <span className="text-[11px] text-muted/80 font-medium bg-neutral-900/50 px-2 py-1 rounded-md border border-border-subtle flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-                                    Vence: {endTime}
+                                    {language === 'es' ? "Vence: " : "Expires: "}{endTime}
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -319,13 +341,15 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
 
                         {/* Tags */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-bold text-foreground">Etiquetas (Opcional)</label>
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Etiquetas (Opcional)" : "Tags (Optional)"}
+                            </label>
                             <input
                                 type="text"
                                 className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all placeholder:text-muted/60"
                                 value={tagsInput}
                                 onChange={e => setTagsInput(e.target.value)}
-                                placeholder="Ej. Frontend, Urgente, B2B..."
+                                placeholder={language === 'es' ? "Ej. Frontend, Urgente, B2B..." : "e.g. Frontend, Urgent, B2B..."}
                             />
                         </div>
 
@@ -337,7 +361,7 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                                 className="flex-1 py-4 text-sm font-bold text-muted hover:text-white bg-neutral-900/50 hover:bg-neutral-800 border border-border-subtle rounded-2xl transition-all"
                                 disabled={isSubmitting}
                             >
-                                Cancelar
+                                {language === 'es' ? "Cancelar" : "Cancel"}
                             </button>
                             <button
                                 type="submit"
@@ -345,7 +369,7 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                                 className="flex-[2] bg-accent-teal hover:bg-accent-teal/80 text-black font-black text-sm py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)]"
                             >
                                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Publicar Propuesta
+                                {language === 'es' ? "Publicar Propuesta" : "Publish Proposal"}
                             </button>
                         </div>
                     </form>
