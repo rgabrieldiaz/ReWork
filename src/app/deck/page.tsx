@@ -89,7 +89,7 @@ export default function PresentationDeckPage() {
   }, [nextSlide, prevSlide, totalSlides]);
 
   return (
-    <div className="min-h-screen bg-[#050c14] text-slate-100 font-sans selection:bg-[#00f2ff]/30 selection:text-[#00f2ff] flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-screen bg-[#050c14] text-slate-100 font-sans selection:bg-[#00f2ff]/30 selection:text-[#00f2ff] flex flex-col justify-between overflow-x-clip">
       {/* Print Specific CSS */}
       <style jsx global>{`
         @media print {
@@ -129,108 +129,110 @@ export default function PresentationDeckPage() {
       `}</style>
 
       {/* Top Header / Presentation Navigation (Screen Only) */}
-      <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
-            <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
-          </div>
-          <div>
-            <span className="font-extrabold tracking-tight text-white flex items-center gap-2 font-mono">
-              re<span className="text-[#00f2ff]">work</span>{" "}
-              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">
-                {t.nav.scaleTrack}
+      <header className="no-print sticky top-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-b border-white/10 shadow-lg">
+        <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#00f2ff]/10 border border-[#00f2ff]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+              <ReWorkIcon className="w-5 h-5" theme="cyan" glow />
+            </div>
+            <div>
+              <span className="font-extrabold tracking-tight text-white flex items-center gap-2 font-mono">
+                re<span className="text-[#00f2ff]">work</span>{" "}
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#00f2ff]/10 text-[#00f2ff] border border-[#00f2ff]/30">
+                  {t.nav.scaleTrack}
+                </span>
               </span>
-            </span>
-            <p className="text-[11px] text-slate-400 font-mono hidden sm:block">{t.nav.sub}</p>
+              <p className="text-[11px] text-slate-400 font-mono hidden sm:block">{t.nav.sub}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Slide Selector & Counter */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={prevSlide}
-            disabled={currentSlide === 0}
-            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
-            title={t.nav.prev}
-          >
-            <ChevronLeft className="w-4 h-4 text-[#00f2ff]" />
-          </button>
-          <div className="font-mono text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-slate-300">
-            <span className="text-[#00f2ff] font-bold">{String(currentSlide + 1).padStart(2, "0")}</span> /{" "}
-            {String(totalSlides).padStart(2, "0")}
-          </div>
-          <button
-            onClick={nextSlide}
-            disabled={currentSlide === totalSlides - 1}
-            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
-            title={t.nav.next}
-          >
-            <ChevronRight className="w-4 h-4 text-[#00f2ff]" />
-          </button>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language Switcher */}
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
+          {/* Slide Selector & Counter */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setLanguage("en")}
-              className={`px-2 py-1 rounded transition-all flex items-center gap-1 ${
-                language === "en"
-                  ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-              title="English (Default)"
+              onClick={prevSlide}
+              disabled={currentSlide === 0}
+              className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
+              title={t.nav.prev}
             >
-              <Globe className="w-3 h-3" />
-              <span>EN</span>
+              <ChevronLeft className="w-4 h-4 text-[#00f2ff]" />
             </button>
+            <div className="font-mono text-xs px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-slate-300">
+              <span className="text-[#00f2ff] font-bold">{String(currentSlide + 1).padStart(2, "0")}</span> /{" "}
+              {String(totalSlides).padStart(2, "0")}
+            </div>
             <button
-              onClick={() => setLanguage("es")}
-              className={`px-2 py-1 rounded transition-all ${
-                language === "es"
-                  ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-              title="Español"
+              onClick={nextSlide}
+              disabled={currentSlide === totalSlides - 1}
+              className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 disabled:opacity-30 disabled:pointer-events-none transition-all"
+              title={t.nav.next}
             >
-              ES
+              <ChevronRight className="w-4 h-4 text-[#00f2ff]" />
             </button>
           </div>
 
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00f2ff]/10 border border-[#00f2ff]/40 text-[#00f2ff] hover:bg-[#00f2ff] hover:text-[#050c14] font-mono text-xs font-semibold transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)]"
-            title={t.nav.downloadPdfTitle}
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.nav.downloadPdf}</span>
-            <span className="sm:hidden">{t.nav.downloadPdfShort}</span>
-          </button>
-          <button
-            onClick={toggleFullscreen}
-            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 text-slate-300 hover:text-white transition-all hidden sm:block"
-            title={t.nav.fullscreen}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-          <Link
-            href="/app"
-            className="text-xs font-mono text-slate-400 hover:text-[#00f2ff] transition-all flex items-center gap-1"
-          >
-            <span>{t.nav.viewApp}</span>
-            <ExternalLink className="w-3 h-3" />
-          </Link>
+          {/* Action Controls */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Language Switcher */}
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
+              <button
+                onClick={() => setLanguage("en")}
+                className={`px-2 py-1 rounded transition-all flex items-center gap-1 ${
+                  language === "en"
+                    ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="English (Default)"
+              >
+                <Globe className="w-3 h-3" />
+                <span>EN</span>
+              </button>
+              <button
+                onClick={() => setLanguage("es")}
+                className={`px-2 py-1 rounded transition-all ${
+                  language === "es"
+                    ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Español"
+              >
+                ES
+              </button>
+            </div>
+
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00f2ff]/10 border border-[#00f2ff]/40 text-[#00f2ff] hover:bg-[#00f2ff] hover:text-[#050c14] font-mono text-xs font-semibold transition-all shadow-[0_0_15px_rgba(0,242,255,0.2)]"
+              title={t.nav.downloadPdfTitle}
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.nav.downloadPdf}</span>
+              <span className="sm:hidden">{t.nav.downloadPdfShort}</span>
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#00f2ff]/50 text-slate-300 hover:text-white transition-all hidden sm:block"
+              title={t.nav.fullscreen}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <Link
+              href="/app"
+              className="text-xs font-mono text-slate-400 hover:text-[#00f2ff] transition-all flex items-center gap-1"
+            >
+              <span>{t.nav.viewApp}</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Progress Bar (Screen Only) */}
+        <div className="w-full h-1 bg-white/5 relative">
+          <div
+            className="h-full bg-gradient-to-r from-[#00f2ff] via-cyan-400 to-blue-500 transition-all duration-300 shadow-[0_0_10px_#00f2ff]"
+            style={{ width: `${((currentSlide + 1) / totalSlides) * 100}%` }}
+          />
         </div>
       </header>
-
-      {/* Progress Bar (Screen Only) */}
-      <div className="no-print w-full h-1 bg-white/5 relative">
-        <div
-          className="h-full bg-gradient-to-r from-[#00f2ff] via-cyan-400 to-blue-500 transition-all duration-300 shadow-[0_0_10px_#00f2ff]"
-          style={{ width: `${((currentSlide + 1) / totalSlides) * 100}%` }}
-        />
-      </div>
 
       {/* SCREEN VIEW: Active Slide Presenter */}
       <main className="no-print flex-1 flex items-center justify-center p-4 sm:p-8 max-w-7xl mx-auto w-full">
@@ -254,12 +256,12 @@ export default function PresentationDeckPage() {
       </main>
 
       {/* Thumbnails Navigation Strip (Screen Only) */}
-      <footer className="no-print bg-[#050c14]/95 border-t border-white/10 px-6 py-3 hidden md:flex items-center gap-2 overflow-x-auto justify-center">
+      <footer className="no-print sticky bottom-0 z-50 bg-[#050c14]/90 backdrop-blur-md border-t border-white/10 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 overflow-x-auto justify-start md:justify-center custom-scrollbar shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
         {slidesData.map((slide, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left truncate max-w-[150px] ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all text-left truncate max-w-[150px] shrink-0 ${
               currentSlide === idx
                 ? "bg-[#00f2ff]/20 text-[#00f2ff] border border-[#00f2ff]/50 shadow-[0_0_8px_rgba(0,242,255,0.3)]"
                 : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20 hover:text-slate-200"
