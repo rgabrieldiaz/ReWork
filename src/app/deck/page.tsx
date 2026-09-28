@@ -28,7 +28,8 @@ import {
   Building2,
   Briefcase,
   Star,
-  Landmark
+  Landmark,
+  Youtube
 } from "lucide-react";
 import { ReWorkIcon, ReWorkLogo } from "@/components/ReWorkLogo";
 import { deckTranslations, DeckLanguage } from "./deckTranslations";
@@ -37,7 +38,7 @@ export default function PresentationDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [language, setLanguage] = useState<DeckLanguage>("en");
-  const totalSlides = 12;
+  const totalSlides = 13;
 
   const t = deckTranslations[language];
   const slidesData = t.slidesData;
@@ -280,7 +281,7 @@ export default function PresentationDeckPage() {
         </div>
       </footer>
 
-      {/* PRINT-ONLY VIEW: All 12 Slides rendered continuously for PDF generator */}
+      {/* PRINT-ONLY VIEW: All 13 Slides rendered continuously for PDF generator */}
       <div className="print-deck-container">
         {Array.from({ length: totalSlides }).map((_, idx) => (
           <div key={idx} className="slide-page bg-[#050c14] text-white p-12">
@@ -1128,6 +1129,135 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
             <p className="text-sm font-semibold text-[#00f2ff] font-mono">
               {s.closingQuote}
             </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ---------------------------------------------------------
+    // SLIDE 13: VIDEO DEMO Y AGRADECIMIENTO / DEMO VIDEO & THANK YOU
+    // ---------------------------------------------------------
+    case 12: {
+      const s = t.slide12;
+      return (
+        <div className="space-y-4">
+          <div className="border-l-4 border-red-500 pl-4 flex items-center justify-between">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-widest text-red-400">
+                {s.tag}
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                {s.heading}
+                <Sparkles className="w-6 h-6 text-[#00f2ff] animate-pulse" />
+              </h2>
+            </div>
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono">
+              <Youtube className="w-4 h-4 text-red-400" />
+              <span>YouTube Demo Walkthrough</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-slate-300 max-w-3xl">
+            {s.lead}
+          </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center pt-1">
+            {/* Left: YouTube Video Player Embed */}
+            <div className="lg:col-span-7 space-y-2">
+              <div className="relative rounded-2xl overflow-hidden border border-white/20 shadow-[0_0_35px_rgba(239,68,68,0.25)] bg-slate-950 aspect-video flex items-center justify-center">
+                <iframe
+                  src="https://www.youtube.com/embed/fycBPw7Y6zg?rel=0"
+                  title={s.videoTitle}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <Youtube className="w-3.5 h-3.5 text-red-400" />
+                  {s.videoTitle}
+                </span>
+                <a
+                  href={s.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 font-semibold"
+                >
+                  <span>youtu.be/fycBPw7Y6zg</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Right: Key Video Highlights & Links */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+              {/* Highlight cards */}
+              <div className="space-y-2">
+                <div className="p-3 bg-white/5 border border-purple-500/30 rounded-xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-xs">{s.bullet1Title}</h4>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{s.bullet1Desc}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 border border-[#00f2ff]/30 rounded-xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-xs">{s.bullet2Title}</h4>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{s.bullet2Desc}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 border border-emerald-500/30 rounded-xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
+                    <Star className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-xs">{s.bullet3Title}</h4>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{s.bullet3Desc}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-1 flex flex-col sm:flex-row gap-2">
+                <a
+                  href={s.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.4)]"
+                >
+                  <Youtube className="w-4 h-4" />
+                  <span>{s.watchYoutube}</span>
+                </a>
+                <Link
+                  href="/app"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-[#00f2ff] hover:bg-cyan-300 text-[#050c14] font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,242,255,0.3)]"
+                >
+                  <span>{s.ctaLive}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              {/* Thank you note */}
+              <div className="p-3 bg-gradient-to-r from-red-500/10 via-purple-500/10 to-[#00f2ff]/10 border border-white/10 rounded-xl">
+                <p className="text-[11px] text-slate-300 font-sans leading-relaxed text-center">
+                  {s.closingMessage}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between text-xs font-mono text-slate-400">
+            <span>{s.footerLeft}</span>
+            <span className="text-red-400 font-bold">{s.footerRight}</span>
           </div>
         </div>
       );

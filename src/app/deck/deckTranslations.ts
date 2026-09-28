@@ -33,7 +33,8 @@ export const deckTranslations = {
       { title: "Traction & Quality", subtitle: "0 Mocks, Tests & Active Deploy" },
       { title: "Comparison", subtitle: "Advantages over Alternatives" },
       { title: "90-Day Roadmap", subtitle: "Instawards & SCF 7.0 Pipeline" },
-      { title: "Team & Closing", subtitle: "Builders & Contact" }
+      { title: "Team & Closing", subtitle: "Builders & Contact" },
+      { title: "Demo & Thanks", subtitle: "YouTube Walkthrough & Thank You" }
     ],
     slide0: {
       badge: "Argentina Builder Challenge · Stellar × BAF · Scale Track",
@@ -275,6 +276,26 @@ export const deckTranslations = {
       ctaCode: "View Code on GitHub",
       closingQuote:
         "“In a world of opaque intermediaries, ReWork restores sovereignty to work: the value of trust guaranteed by code.”"
+    },
+    slide12: {
+      tag: "12 / Official Demo & Thank You",
+      heading: "Thank You!",
+      subheading: "Watch ReWork in Action on Stellar & Soroban",
+      lead: "We demonstrated how smart contracts, SEP-0007 mobile QR payments, and non-custodial escrow eliminate payment uncertainty for LATAM digital workers.",
+      videoTitle: "ReWork Official Walkthrough",
+      videoUrl: "https://youtu.be/fycBPw7Y6zg",
+      watchYoutube: "Watch on YouTube",
+      ctaLive: "Explore Live Platform",
+      ctaCode: "GitHub Repository",
+      bullet1Title: "SEP-0007 Instant QR Pay",
+      bullet1Desc: "Mobile payment flow via Lobstr, Freighter and xBull in seconds.",
+      bullet2Title: "Soroban Escrow by Trustless Work",
+      bullet2Desc: "Non-custodial milestone-based fund locking and automatic release.",
+      bullet3Title: "Sovereign AURA Reputation",
+      bullet3Desc: "On-chain credentials and proof of completed missions.",
+      closingMessage: "Thank you to the BAF and Stellar teams for empowering builders across Argentina and Latin America!",
+      footerLeft: "ReWork Protocol · Stellar × BAF Argentina Builder Challenge 2026",
+      footerRight: "Watch Demo on YouTube: youtu.be/fycBPw7Y6zg"
     }
   },
   es: {
@@ -304,7 +325,8 @@ export const deckTranslations = {
       { title: "Tracción & Calidad", subtitle: "0 Mocks, Tests & Deploy Activo" },
       { title: "Comparativa", subtitle: "Ventajas frente a Alternativas" },
       { title: "Roadmap 90 Días", subtitle: "Instawards & Pipeline SCF 7.0" },
-      { title: "Equipo & Cierre", subtitle: "Builders y Contacto" }
+      { title: "Equipo & Cierre", subtitle: "Builders y Contacto" },
+      { title: "Demo & Gracias", subtitle: "Video en YouTube y Agradecimientos" }
     ],
     slide0: {
       badge: "Argentina Builder Challenge · Stellar × BAF · Track Scale",
@@ -546,6 +568,26 @@ export const deckTranslations = {
       ctaCode: "Ver Código en GitHub",
       closingQuote:
         "«En un mundo de intermediarios opacos, ReWork devuelve la soberanía al trabajo: el valor de la confianza garantizado por el código.»"
+    },
+    slide12: {
+      tag: "12 / Video Demo Oficial y Cierre",
+      heading: "¡Muchas Gracias!",
+      subheading: "Mira ReWork en Acción sobre Stellar & Soroban",
+      lead: "Demostramos cómo los contratos inteligentes, los pagos móviles QR SEP-0007 y la custodia no-custodial eliminan la incertidumbre de cobro para trabajadores digitales en LATAM.",
+      videoTitle: "Recorrido Oficial de ReWork",
+      videoUrl: "https://youtu.be/fycBPw7Y6zg",
+      watchYoutube: "Ver en YouTube",
+      ctaLive: "Explorar Plataforma en Vivo",
+      ctaCode: "Repositorio en GitHub",
+      bullet1Title: "Cobro QR Instantáneo SEP-0007",
+      bullet1Desc: "Flujo de pago móvil con Lobstr, Freighter y xBull en segundos.",
+      bullet2Title: "Custodia Soroban con Trustless Work",
+      bullet2Desc: "Bloqueo no-custodial por hitos y liberación automática de fondos.",
+      bullet3Title: "Reputación Soberana AURA",
+      bullet3Desc: "Credenciales on-chain y registro inmutable de misiones.",
+      closingMessage: "¡Muchas gracias al equipo de BAF y Stellar por impulsar a los builders en Argentina y toda América Latina!",
+      footerLeft: "ReWork Protocol · Stellar × BAF Argentina Builder Challenge 2026",
+      footerRight: "Ver Demo en YouTube: youtu.be/fycBPw7Y6zg"
     }
   }
 };
