@@ -37,6 +37,12 @@
       "skillPath": "skills/smart-contracts/SKILL.md",
       "computedHash": "9e9c55951a4f2253ccf94442df24c5d43f6027d19cdf65241df1ae93af954b3b"
     },
+    "solana-dev": {
+      "source": "solana-foundation/solana-dev-skill",
+      "sourceType": "github",
+      "skillPath": "skills/solana-dev/SKILL.md",
+      "computedHash": "3220d3d97070e2d178e6b48335ac37c1570008606104123fe71bdce769ccedec"
+    },
     "standards": {
       "source": "stellar/stellar-dev-skill",
       "sourceType": "github",
