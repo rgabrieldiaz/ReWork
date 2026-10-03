@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   Copy, Wallet, ChevronRight, TrendingUp, Sparkles, LogOut, ArrowRightLeft,
   X, Clock, ShieldCheck, Globe, Target, HeartHandshake, ShoppingBag, Users,
-  ArrowUpRight, Landmark, Zap
+  ArrowUpRight, Landmark, Zap, Lock, ArrowRight
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
@@ -19,6 +19,7 @@ import * as StellarSdk from "@stellar/stellar-sdk";
 import { useState, useEffect } from "react";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
+import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
 import { DEFAULT_RATES } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -62,6 +63,7 @@ export default function Home() {
   const [swapAmount, setSwapAmount] = useState<string>("100");
   const [isSwapping, setIsSwapping] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
 
   // Home Marketplace State
   const [auctions, setAuctions] = useState<Auction[]>([]);
@@ -346,6 +348,39 @@ export default function Home() {
 
   return (
     <div className="animate-in fade-in duration-500">
+      {/* Solana Superteam Colosseum Spotlight Banner */}
+      <section className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-emerald-950/30 border border-purple-500/30 shadow-[0_0_30px_rgba(153,69,255,0.15)] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#9945FF] to-[#14F195] p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(20,241,149,0.3)] shrink-0">
+            <div className="w-full h-full bg-[#0d1624] rounded-[10px] flex items-center justify-center">
+              <Zap className="w-6 h-6 text-[#14F195]" />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-white text-sm sm:text-base">
+                Riel de Alta Velocidad Solana Devnet Activo
+              </h3>
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-emerald-500/20 text-[#14F195] border border-[#14F195]/40">
+                Superteam Track
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5 max-w-xl leading-relaxed">
+              Custodia programable de hitos y pagos P2P en USDC con finalidad de ~400ms y gas patrocinado (0 SOL requerido para freelancers).
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsSolanaEscrowOpen(true)}
+          className="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:opacity-95 text-black font-black text-xs font-mono transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(20,241,149,0.25)] cursor-pointer"
+        >
+          <Lock className="w-4 h-4 text-black" />
+          <span>Abrir Solana Escrow Vault</span>
+          <ArrowRight className="w-4 h-4 text-black" />
+        </button>
+      </section>
+
       {/* BEGIN: ReWork Ecosystem Highlights Cards with Sparklines (Partner Feature) */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -1001,6 +1036,12 @@ export default function Home() {
       <BankTransferModal
         isOpen={isBankModalOpen}
         onClose={() => setIsBankModalOpen(false)}
+      />
+
+      {/* Solana USDC Escrow Modal */}
+      <SolanaEscrowModal
+        isOpen={isSolanaEscrowOpen}
+        onClose={() => setIsSolanaEscrowOpen(false)}
       />
 
     </div>

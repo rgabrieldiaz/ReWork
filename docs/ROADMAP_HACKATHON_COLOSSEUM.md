@@ -41,12 +41,12 @@ El formulario oficial se completa en:
   - [ ] Crear el proyecto ReWork en Colosseum con ubicación **Argentina**.
   - [ ] Completar el formulario inicial de seguimiento de Superteam: [forms.gle/Ej7sGChMBdW1p2WJ9](https://forms.gle/Ej7sGChMBdW1p2WJ9).
 
-- [ ] **2. Tareas Técnicas y de Producto en Solana (Viernes 02/10 — Sábado 03/10)**
-  - [ ] Configurar `@solana/kit` en el frontend de ReWork.
-  - [ ] Configurar endpoint de Devnet RPC (Triton) en `.env.local`.
-  - [ ] Habilitar autenticación y conexión con wallets de Solana (Privy embedded wallet + Phantom/Solflare con Wallet Standard).
-  - [ ] Crear flujo visual e interactivo de pago/escrow de prueba en USDC sobre Solana Devnet.
-  - [ ] Realizar deploy en Vercel y verificar que no haya errores de compilación (`npx tsc --noEmit`).
+- [x] **2. Tareas Técnicas y de Producto en Solana (Viernes 02/10 — Sábado 03/10)**
+  - [x] Configurar `@solana/kit` en el frontend de ReWork.
+  - [x] Configurar endpoint de Devnet RPC (Triton) en `.env.local` / fallback.
+  - [x] Habilitar autenticación y conexión con wallets de Solana (Privy embedded wallet + Phantom/Solflare con Wallet Standard).
+  - [x] Crear flujo visual e interactivo de pago/escrow de prueba en USDC sobre Solana Devnet.
+  - [x] Realizar deploy en Vercel y verificar que no haya errores de compilación (`npx tsc --noEmit`).
 
 - [ ] **3. Producción de Videos (Sábado 03/10 — Domingo 04/10 mediodía)**
   - [ ] **Video de Pitch (Máximo 2:00 min):** Founders, el problema en LatAm (fricción de cobro y comisiones abusivas), la solución de ReWork y el rol de Solana. Formato YouTube / Loom público.

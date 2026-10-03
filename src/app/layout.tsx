@@ -13,6 +13,8 @@ import { StakingProvider } from "@/hooks/useStaking";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
 import { Toaster } from "sonner";
 import { PrivyWrapper } from "@/components/PrivyWrapper";
+import { SolanaProvider } from "@/components/SolanaProvider";
+import { SolanaWalletProvider } from "@/hooks/useSolanaWallet";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
@@ -64,21 +66,25 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`} suppressHydrationWarning>
         <SettingsProvider>
           <PrivyWrapper>
-            <WalletProvider>
-              <ProfileProvider>
-                <BalanceProvider>
-                  <StakingProvider>
-                    <WorkspaceProvider>
-                      <TWProvider>
-                        <MainLayout>
-                          {children}
-                        </MainLayout>
-                      </TWProvider>
-                    </WorkspaceProvider>
-                  </StakingProvider>
-                </BalanceProvider>
-              </ProfileProvider>
-            </WalletProvider>
+            <SolanaProvider>
+              <SolanaWalletProvider>
+                <WalletProvider>
+                  <ProfileProvider>
+                    <BalanceProvider>
+                      <StakingProvider>
+                        <WorkspaceProvider>
+                          <TWProvider>
+                            <MainLayout>
+                              {children}
+                            </MainLayout>
+                          </TWProvider>
+                        </WorkspaceProvider>
+                      </StakingProvider>
+                    </BalanceProvider>
+                  </ProfileProvider>
+                </WalletProvider>
+              </SolanaWalletProvider>
+            </SolanaProvider>
           </PrivyWrapper>
         </SettingsProvider>
         <Toaster

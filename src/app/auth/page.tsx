@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Wallet, Fingerprint, Key, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useSettings } from "@/hooks/useSettings";
 import { useProfile } from "@/hooks/useProfile";
 import { usePrivy } from "@privy-io/react-auth";
@@ -13,6 +14,12 @@ export default function AuthGateway() {
   const router = useRouter();
   const { t, language, setLanguage } = useSettings();
   const { connected, connect, address, isMobile } = useWallet();
+  const {
+    connected: solConnected,
+    address: solAddress,
+    connectSolana,
+    walletName: solWalletName,
+  } = useSolanaWallet();
   const { profile, loading: profileLoading } = useProfile();
   const { login, authenticated, ready } = usePrivy();
   const [step, setStep] = useState<"SELECT" | "CREATING_AURA">("SELECT");
@@ -64,6 +71,28 @@ export default function AuthGateway() {
     } catch (err: any) {
       console.error("Error with Privy Login:", err);
       setError(err?.message || "Error al iniciar sesión.");
+      setLoading(false);
+    }
+  };
+
+  const handleConnectSolana = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const addr = await connectSolana("auto");
+      if (!addr) {
+        throw new Error("No se pudo obtener la dirección de Solana.");
+      }
+      setStep("CREATING_AURA");
+      setLoading(false);
+
+      setTimeout(() => {
+        router.push("/workspaces");
+      }, 2500);
+    } catch (err: any) {
+      console.error("Error conectando Solana:", err);
+      setError(err?.message || "Error al conectar la wallet de Solana.");
       setLoading(false);
     }
   };
@@ -176,6 +205,35 @@ export default function AuthGateway() {
                                 </div>
                             </div>
                             <ChevronRight className={`w-5 h-5 text-muted transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
+                        </button>
+
+                        {/* Solana Wallet Button (Phantom / Solflare) */}
+                        <button 
+                            onClick={handleConnectSolana}
+                            disabled={loading}
+                            className="w-full flex items-center justify-between p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group disabled:opacity-50"
+                        >
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#9945FF] to-[#14F195] rounded-full p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]">
+                                    <div className="w-full h-full bg-[#0d1624] rounded-full flex items-center justify-center">
+                                        <Wallet className="w-4 h-4 text-[#14F195]" />
+                                    </div>
+                                </div>
+                                <div className="text-left">
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-sm text-white">
+                                            {solConnected ? "Solana Conectada" : "Conectar Wallet Solana"}
+                                        </p>
+                                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/40">
+                                            Devnet
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-purple-300/80">
+                                        {solConnected ? `${solWalletName}: ${solAddress?.slice(0, 6)}...${solAddress?.slice(-4)}` : "Phantom, Solflare, Backpack (Wallet Standard)"}
+                                    </p>
+                                </div>
+                            </div>
+                            <ChevronRight className={`w-5 h-5 text-purple-300 transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
                         </button>
                     </>
                 </div>

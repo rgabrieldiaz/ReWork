@@ -11,8 +11,10 @@ import { Bell, Wallet, ExternalLink, ChevronDown, QrCode, Landmark, TrendingUp, 
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
+import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
 import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { getTripleValues, SupportedCurrency, formatCurrency, DEFAULT_RATES } from "@/lib/currency";
 import { ReWorkIcon } from "@/components/ReWorkLogo";
 
@@ -27,6 +29,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+    const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
+
+    const {
+        connected: solConnected,
+        address: solAddress,
+        formattedAddress: solFormattedAddress,
+        walletName: solWalletName,
+        usdcBalance: solUsdcBalance,
+        solBalance,
+    } = useSolanaWallet();
 
     const isLoggedIn = authenticated || connected;
     const firstName = profile?.first_name || t.profile.role;
@@ -188,6 +200,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             <span className="hidden lg:inline">{language === 'es' ? "Banco ARS" : "ARS Bank"}</span>
                         </button>
 
+                        {/* Botón Solana Escrow */}
+                        <button
+                            onClick={() => setIsSolanaEscrowOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/10 to-emerald-500/10 hover:from-purple-500/20 hover:to-emerald-500/20 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition-all shadow-sm"
+                            title={language === 'es' ? "Custodia Escrow en Solana Devnet" : "Solana Devnet Escrow Vault"}
+                        >
+                            <Lock className="w-3.5 h-3.5 text-[#14F195]" />
+                            <span className="hidden lg:inline">Solana Escrow</span>
+                        </button>
+
                         {/* Mi AURA */}
                         <div className="hidden xl:flex items-center gap-3 px-4 py-1.5 bg-foreground/5 rounded-xl border border-border-subtle shadow-sm drop-shadow-sm border-t-accent-teal/10">
                             <span className="text-xs text-muted font-bold tracking-wider uppercase">{language === 'es' ? "Mi AURA" : "My AURA"}</span>
@@ -245,6 +267,33 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                                 <span className="font-mono text-xs font-bold text-muted">
                                                     {tripleLiquid.formatted.ars}
                                                 </span>
+                                            </div>
+
+                                            {/* Solana Devnet Balances */}
+                                            <div className="pt-2 border-t border-border-subtle">
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-purple-400">
+                                                        Solana Devnet
+                                                    </span>
+                                                    <span className="text-[9px] font-mono text-slate-400">
+                                                        {solConnected ? solWalletName || "Conectado" : "No conectada"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-[#14F195]"></div>
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">USDC (SPL)</span>
+                                                    </div>
+                                                    <span className="font-mono text-sm font-bold text-[#14F195]">
+                                                        {solUsdcBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                                {solBalance > 0 && (
+                                                    <div className="flex items-center justify-between mt-1 text-[11px] text-slate-400 font-mono">
+                                                        <span>SOL:</span>
+                                                        <span>{solBalance.toFixed(3)} SOL</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -313,6 +362,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <BankTransferModal
                 isOpen={isBankModalOpen}
                 onClose={() => setIsBankModalOpen(false)}
+            />
+
+            <SolanaEscrowModal
+                isOpen={isSolanaEscrowOpen}
+                onClose={() => setIsSolanaEscrowOpen(false)}
             />
         </header>
     );
