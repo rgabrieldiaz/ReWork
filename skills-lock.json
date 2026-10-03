@@ -43,6 +43,12 @@
       "skillPath": "skills/solana-dev/SKILL.md",
       "computedHash": "3220d3d97070e2d178e6b48335ac37c1570008606104123fe71bdce769ccedec"
     },
+    "solana-vulnerability-scanner": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/building-secure-contracts/skills/solana-vulnerability-scanner/SKILL.md",
+      "computedHash": "be8d3d568bacb17b30df6e9e2fc66f352b05915efa7d2f9f8c018f3909d05471"
+    },
     "standards": {
       "source": "stellar/stellar-dev-skill",
       "sourceType": "github",
