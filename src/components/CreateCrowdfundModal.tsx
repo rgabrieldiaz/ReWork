@@ -316,7 +316,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                 </p>
                                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                    {language === 'es' ? "Fee estimado de red: ~0.00001 XLM" : "Estimated network fee: ~0.00001 XLM"}
+                                    {language === 'es' ? "Fee de red estimado: < $0.001 USD" : "Estimated network fee: < $0.001 USD"}
                                 </div>
                             </div>
                         )}
@@ -486,7 +486,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                         {/* Destination Account */}
                         <div className="space-y-2">
                             <label className="block text-sm font-bold text-foreground">
-                                {language === 'es' ? "Cuenta Destino (Billetera Stellar)" : "Destination Account (Stellar Wallet)"} <span className="text-accent-teal">*</span>
+                                {language === 'es' ? "Cuenta o Billetera de Destino" : "Destination Account or Wallet"} <span className="text-accent-teal">*</span>
                             </label>
                             <div className="relative">
                                 <input
