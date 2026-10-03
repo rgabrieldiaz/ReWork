@@ -200,14 +200,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             <span className="hidden lg:inline">{language === 'es' ? "Banco ARS" : "ARS Bank"}</span>
                         </button>
 
-                        {/* Botón Solana Escrow */}
+                        {/* Botón Custodia Escrow Multichain */}
                         <button
                             onClick={() => setIsSolanaEscrowOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/10 to-emerald-500/10 hover:from-purple-500/20 hover:to-emerald-500/20 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition-all shadow-sm"
-                            title={language === 'es' ? "Custodia Escrow en Solana Devnet" : "Solana Devnet Escrow Vault"}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/10 via-accent-teal/10 to-emerald-500/10 hover:from-purple-500/20 hover:to-accent-teal/20 border border-accent-teal/30 text-accent-teal hover:text-white text-xs font-bold transition-all shadow-sm"
+                            title={language === 'es' ? "Custodia Escrow Multichain (Solana o Stellar)" : "Multichain Escrow Vault (Solana or Stellar)"}
                         >
-                            <Lock className="w-3.5 h-3.5 text-[#14F195]" />
-                            <span className="hidden lg:inline">Solana Escrow</span>
+                            <Lock className="w-3.5 h-3.5 text-accent-teal" />
+                            <span className="hidden lg:inline">{language === 'es' ? "Custodia Escrow" : "Escrow Vault"}</span>
                         </button>
 
                         {/* Mi AURA */}
@@ -297,16 +297,29 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                             </div>
                                         </div>
 
-                                        <div className="mt-4 pt-3 border-t border-border-subtle">
-                                            <a 
-                                                href={`https://stellar.expert/explorer/testnet/account/${address}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
-                                            >
-                                                {language === 'es' ? "Ver en Explorer" : "View on Explorer"}
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
+                                        <div className="mt-4 pt-3 border-t border-border-subtle flex flex-col gap-1.5">
+                                            {address && (
+                                                <a 
+                                                    href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-between text-[10px] text-muted hover:text-accent-teal transition-colors font-bold uppercase tracking-tighter"
+                                                >
+                                                    <span>Stellar Explorer</span>
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                            {solConnected && solAddress && (
+                                                <a 
+                                                    href={`https://explorer.solana.com/address/${solAddress}?cluster=devnet`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-between text-[10px] text-purple-300 hover:text-purple-200 transition-colors font-bold uppercase tracking-tighter"
+                                                >
+                                                    <span>Solana Explorer</span>
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

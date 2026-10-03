@@ -20,7 +20,7 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "Stellar Network V2.0 Active",
+                badge: "ReWork Protocol V2.0 Active",
                 title1: "El valor de la confianza, ",
                 title2: "garantizado por código.",
                 desc: "La infraestructura donde la reputación es tu activo más valioso y los pagos en USDC se liberan automáticamente al cumplir objetivos.",
@@ -34,8 +34,8 @@ export const translations = {
                 f1Desc: "Contratos Escrow inteligentes (Trustless Work) que aseguran los fondos y los liberan instantáneamente solo cuando el trabajo es validado por la comunidad o líderes.",
                 f2Title: "Identidad Soberana (AURA)",
                 f2Desc: "Tu reputación profesional es inmutable y te pertenece. Acumulá AURA a través de colaboraciones exitosas y llévatela a cualquier ecosistema B2B.",
-                f3Title: "Eficiencia Stellar",
-                f3Desc: "Liquidaciones globales en segundos con fracciones de centavo en comisiones usando USDC nativo sobre la red Stellar. Pagos fronterizos sin fricción."
+                f3Title: "Liquidación Multichain USDC",
+                f3Desc: "Liquidaciones globales en segundos con tarifas casi nulas usando USDC nativo sobre Solana y Stellar, con rampas bancarias directas en moneda local."
             },
             solutions: {
                 title: "¿Para Quién es ReWork?",
@@ -55,7 +55,7 @@ export const translations = {
                     title: "Personal Identidad",
                     price: "Gratis",
                     desc: "Para freelancers y profesionales independientes.",
-                    bullets: ["Perfil AURA Universal", "Acceso a Workspaces Públicos", "Wallet Stellar integrada"],
+                    bullets: ["Perfil AURA Universal", "Acceso a Workspaces Públicos", "Wallets Multichain & Social Login"],
                     cta: "Crear Identidad"
                 },
                 p2: {
@@ -70,7 +70,7 @@ export const translations = {
                     title: "Enterprise",
                     price: "A Medida",
                     desc: "Corporaciones multinacionales y grandes alianzas.",
-                    bullets: ["Usuarios ilimitados", "API de Interoperabilidad", "Soporte Dedicado 24/7", "Nodos Privados Stellar (Opcional)"],
+                    bullets: ["Usuarios ilimitados", "API de Interoperabilidad", "Soporte Dedicado 24/7", "Bóvedas Escrow Personalizadas"],
                     cta: "Contactar Ventas"
                 }
             }
@@ -82,7 +82,7 @@ export const translations = {
             plans: "Planes",
             developers: "Desarrolladores",
             apiDocs: "Documentación API",
-            stellarDocs: "Stellar/Soroban Docs",
+            stellarDocs: "Docs de Infraestructura",
             trustlessRepo: "Trustless Work Repo",
             company: "Compañía",
             about: "Sobre Nosotros",
@@ -93,7 +93,7 @@ export const translations = {
             privacy: "Privacidad",
             status: "Status",
             rights: "© 2026 ReWork Decentralized Infrastructure. Todos los derechos reservados.",
-            operational: "Stellar Network: Operacional"
+            operational: "Protocolo & Rieles USDC: Operacionales"
         },
         header: {
             welcome: "Buenas",
@@ -493,7 +493,7 @@ export const translations = {
         },
         authPage: {
             back: "Volver a ReWork",
-            network: "Red Stellar V2",
+            network: "Protocolo Multichain USDC",
             title: "The Bridge",
             titleCreating: "Creando tu AURA",
             subtitle: "Elegí tu método para acceder a ReWork",
@@ -507,7 +507,7 @@ export const translations = {
             walletDesc: "Identidad inmutable y pagos",
             noFreighter: "¿No tenés Freighter?",
             installFree: "Instalala gratis",
-            stepKey: "Generando Llave Stellar",
+            stepKey: "Verificando Llaves Criptográficas",
             stepAura: "Vinculando Reputación (AURA)",
             redirecting: "Redirigiendo a tu selector de entorno..."
         },
@@ -757,7 +757,7 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "Stellar Network V2.0 Active",
+                badge: "ReWork Protocol V2.0 Active",
                 title1: "The value of trust, ",
                 title2: "guaranteed by code.",
                 desc: "The infrastructure where reputation is your most valuable asset and USDC payments are automatically released upon achieving goals.",
@@ -771,8 +771,8 @@ export const translations = {
                 f1Desc: "Smart Escrow contracts (Trustless Work) that secure funds and release them instantly only when the work is validated by the community or leaders.",
                 f2Title: "Sovereign Identity (AURA)",
                 f2Desc: "Your professional reputation is immutable and belongs to you. Hoard AURA through successful collaborations and take it to any B2B ecosystem.",
-                f3Title: "Stellar Efficiency",
-                f3Desc: "Global settlements in seconds with fraction-of-a-cent fees using native USDC on the Stellar network. Frictionless cross-border payments."
+                f3Title: "Multichain USDC Settlement",
+                f3Desc: "Global settlements in seconds with near-zero fees using native USDC on Solana and Stellar, with direct local bank ramps."
             },
             solutions: {
                 title: "Who is ReWork For?",
@@ -792,7 +792,7 @@ export const translations = {
                     title: "Personal Identity",
                     price: "Free",
                     desc: "For freelancers and independent professionals.",
-                    bullets: ["Universal AURA Profile", "Public Workspaces Access", "Integrated Stellar Wallet"],
+                    bullets: ["Universal AURA Profile", "Public Workspaces Access", "Multichain Wallets & Social Login"],
                     cta: "Create Identity"
                 },
                 p2: {
@@ -807,7 +807,7 @@ export const translations = {
                     title: "Enterprise",
                     price: "Custom",
                     desc: "Multinational corporations and massive alliances.",
-                    bullets: ["Unlimited users", "Interoperability API", "24/7 Dedicated Support", "Private Stellar Nodes (Optional)"],
+                    bullets: ["Unlimited users", "Interoperability API", "24/7 Dedicated Support", "Custom Escrow Vaults"],
                     cta: "Contact Sales"
                 }
             }
@@ -819,7 +819,7 @@ export const translations = {
             plans: "Plans",
             developers: "Developers",
             apiDocs: "API Documentation",
-            stellarDocs: "Stellar/Soroban Docs",
+            stellarDocs: "Infrastructure Docs",
             trustlessRepo: "Trustless Work Repo",
             company: "Company",
             about: "About Us",
@@ -830,7 +830,7 @@ export const translations = {
             privacy: "Privacy",
             status: "Status",
             rights: "© 2026 ReWork Decentralized Infrastructure. All rights reserved.",
-            operational: "Stellar Network: Operational"
+            operational: "Protocol & USDC Rails: Operational"
         },
         header: {
             welcome: "Gm",
@@ -1230,7 +1230,7 @@ export const translations = {
         },
         authPage: {
             back: "Back to ReWork",
-            network: "Stellar Network V2",
+            network: "Multichain Protocol V2",
             title: "The Bridge",
             titleCreating: "Creating your AURA",
             subtitle: "Choose your method to access ReWork",
@@ -1244,7 +1244,7 @@ export const translations = {
             walletDesc: "Immutable identity and payments",
             noFreighter: "Don't have Freighter?",
             installFree: "Install for free",
-            stepKey: "Generating Stellar Key",
+            stepKey: "Verifying Cryptographic Key",
             stepAura: "Linking Reputation (AURA)",
             redirecting: "Redirecting to your environment selector..."
         },

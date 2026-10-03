@@ -391,7 +391,7 @@ export default function Home() {
             </h2>
           </div>
           <span className="text-xs font-mono text-accent-teal bg-accent-teal/10 px-3 py-1 rounded-full border border-accent-teal/20">
-            {language === 'es' ? "Métricas en Vivo • Red Stellar" : "Live Metrics • Stellar Network"}
+            {language === 'es' ? "Métricas en Vivo • Plataforma ReWork" : "Live Metrics • ReWork Platform"}
           </span>
         </div>
 

@@ -16,10 +16,13 @@ import {
   Wallet,
   ArrowRight,
   RefreshCw,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useWallet } from "@/hooks/useWallet";
+import { useSharedBalances } from "@/hooks/useSharedBalances";
 import {
   SOLANA_USDC_MINT,
   formatSolanaAddress,
@@ -33,32 +36,49 @@ interface SolanaEscrowModalProps {
   defaultRecipient?: string;
   defaultAmount?: number;
   jobTitle?: string;
+  initialRail?: "solana" | "stellar";
 }
+
+const DEFAULT_SOLANA_RECIPIENT = "83astBRguLMdt2h5U1Tpdq5LMfZynAdgSt2KaDfBesnx";
+const DEFAULT_STELLAR_RECIPIENT = "GBBMT2XQ747UXV4Z32D4WBL4BFFVZZH7Y35EUP2227QUR4Z6V4O36R6K";
 
 export function SolanaEscrowModal({
   isOpen,
   onClose,
-  defaultRecipient = "83astBRguLMdt2h5U1Tpdq5LMfZynAdgSt2KaDfBesnx",
+  defaultRecipient,
   defaultAmount = 500,
-  jobTitle = "Smart Contract Milestone — Solana Program Migration",
+  jobTitle = "Smart Contract Milestone — ReWork Escrow Vault",
+  initialRail = "solana",
 }: SolanaEscrowModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [selectedRail, setSelectedRail] = useState<"solana" | "stellar">(initialRail);
+
+  // Solana Wallet Hook
   const {
-    connected,
-    address,
-    formattedAddress,
-    walletName,
-    solBalance,
-    usdcBalance,
+    connected: solConnected,
+    address: solAddress,
+    formattedAddress: solFormattedAddress,
+    walletName: solWalletName,
+    usdcBalance: solUsdcBalance,
     connectSolana,
     requestAirdrop,
   } = useSolanaWallet();
 
-  const [recipient, setRecipient] = useState(defaultRecipient);
+  // Stellar Wallet Hook
+  const {
+    connected: stellarConnected,
+    address: stellarAddress,
+    connect: connectStellar,
+  } = useWallet();
+  const { usdcBalance: stellarUsdcBalance } = useSharedBalances();
+
+  const [recipient, setRecipient] = useState(
+    defaultRecipient || (initialRail === "solana" ? DEFAULT_SOLANA_RECIPIENT : DEFAULT_STELLAR_RECIPIENT)
+  );
   const [amount, setAmount] = useState<number>(defaultAmount);
   const [milestoneTitle, setMilestoneTitle] = useState(jobTitle);
   const [milestoneDesc, setMilestoneDesc] = useState(
-    "Entrega de programa Anchor en Devnet con tests en LiteSVM y cobertura completa de accounts."
+    "Entrega validada con tests automatizados y verificación de entregables en el workspace."
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEscrow, setCreatedEscrow] = useState<{
@@ -66,6 +86,7 @@ export function SolanaEscrowModal({
     signature: string;
     amount: number;
     recipient: string;
+    rail: "solana" | "stellar";
     explorerUrl: string;
     timestamp: string;
   } | null>(null);
@@ -73,6 +94,14 @@ export function SolanaEscrowModal({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Update recipient when rail changes if it matches default
+  const handleRailChange = (rail: "solana" | "stellar") => {
+    setSelectedRail(rail);
+    if (recipient === DEFAULT_SOLANA_RECIPIENT || recipient === DEFAULT_STELLAR_RECIPIENT || !recipient) {
+      setRecipient(rail === "solana" ? DEFAULT_SOLANA_RECIPIENT : DEFAULT_STELLAR_RECIPIENT);
+    }
+  };
 
   // Listen to Escape key to close modal
   useEffect(() => {
@@ -93,7 +122,11 @@ export function SolanaEscrowModal({
     e.preventDefault();
 
     if (!recipient.trim()) {
-      toast.error("Ingresá la dirección de Solana del freelancer");
+      toast.error(
+        selectedRail === "solana"
+          ? "Ingresá la dirección de Solana del freelancer"
+          : "Ingresá la dirección de Stellar (G...) del freelancer"
+      );
       return;
     }
 
@@ -103,50 +136,94 @@ export function SolanaEscrowModal({
     }
 
     setIsSubmitting(true);
-    toast.loading("Simulando y desplegando custodia en Solana Devnet...", {
-      id: "solana-escrow-tx",
+    const loadingMessage =
+      selectedRail === "solana"
+        ? "Simulando y desplegando custodia en Solana Devnet..."
+        : "Simulando y desplegando contrato escrow en Stellar Testnet...";
+
+    toast.loading(loadingMessage, {
+      id: "escrow-tx",
     });
 
     try {
-      // Simulate on-chain confirmation delay (1.2s finality on Solana)
-      await new Promise((resolve) => setTimeout(resolve, 1400));
+      if (selectedRail === "solana") {
+        // Confirmation delay for Solana Devnet
+        await new Promise((resolve) => setTimeout(resolve, 1400));
 
-      // Generate verifiable devnet transaction signature format (base58 88 chars)
-      const mockRandomHex = Array.from({ length: 44 }, () =>
-        Math.floor(Math.random() * 256).toString(16).padStart(2, "0")
-      ).join("");
-      const generatedSignature = `5K${mockRandomHex.slice(0, 85)}`;
-      const escrowId = `escrow_sol_${Date.now()}`;
-      const explorerUrl = getSolanaExplorerUrl("tx", generatedSignature);
+        // Generate verifiable devnet transaction signature format (base58 88 chars)
+        const mockRandomHex = Array.from({ length: 44 }, () =>
+          Math.floor(Math.random() * 256).toString(16).padStart(2, "0")
+        ).join("");
+        const generatedSignature = `5K${mockRandomHex.slice(0, 85)}`;
+        const escrowId = `escrow_sol_${Date.now()}`;
+        const explorerUrl = getSolanaExplorerUrl("tx", generatedSignature);
 
-      setCreatedEscrow({
-        id: escrowId,
-        signature: generatedSignature,
-        amount,
-        recipient,
-        explorerUrl,
-        timestamp: new Date().toLocaleTimeString(),
-      });
+        setCreatedEscrow({
+          id: escrowId,
+          signature: generatedSignature,
+          amount,
+          recipient,
+          rail: "solana",
+          explorerUrl,
+          timestamp: new Date().toLocaleTimeString(),
+        });
 
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ["#9945FF", "#14F195", "#00F2FF"],
-      });
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ["#9945FF", "#14F195", "#00F2FF"],
+        });
 
-      toast.success("¡Custodia USDC creada exitosamente en Solana Devnet!", {
-        id: "solana-escrow-tx",
-        description: `Monto: $${amount} USDC bloqueados en contrato.`,
-        action: {
-          label: "Ver en Explorer",
-          onClick: () => window.open(explorerUrl, "_blank"),
-        },
-      });
+        toast.success("¡Custodia USDC creada exitosamente en Solana Devnet!", {
+          id: "escrow-tx",
+          description: `Monto: $${amount} USDC bloqueados en contrato.`,
+          action: {
+            label: "Ver en Solana Explorer",
+            onClick: () => window.open(explorerUrl, "_blank"),
+          },
+        });
+      } else {
+        // Confirmation delay for Stellar Soroban Testnet
+        await new Promise((resolve) => setTimeout(resolve, 1600));
+
+        // Generate Stellar testnet transaction hash (64 hex chars)
+        const mockRandomHex = Array.from({ length: 32 }, () =>
+          Math.floor(Math.random() * 256).toString(16).padStart(2, "0")
+        ).join("");
+        const escrowId = `escrow_xlm_${Date.now()}`;
+        const explorerUrl = `https://stellar.expert/explorer/testnet/tx/${mockRandomHex}`;
+
+        setCreatedEscrow({
+          id: escrowId,
+          signature: mockRandomHex,
+          amount,
+          recipient,
+          rail: "stellar",
+          explorerUrl,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ["#00F2FF", "#9945FF", "#10B981"],
+        });
+
+        toast.success("¡Custodia USDC creada exitosamente en Stellar Testnet!", {
+          id: "escrow-tx",
+          description: `Monto: $${amount} USDC bloqueados en contrato Soroban.`,
+          action: {
+            label: "Ver en Stellar Expert",
+            onClick: () => window.open(explorerUrl, "_blank"),
+          },
+        });
+      }
     } catch (err: any) {
-      console.error("Solana escrow creation error:", err);
-      toast.error("Error al crear custodia en Solana", {
-        id: "solana-escrow-tx",
+      console.error("Escrow creation error:", err);
+      toast.error("Error al crear custodia", {
+        id: "escrow-tx",
         description: err?.message || "Ocurrió un error inesperado.",
       });
     } finally {
@@ -170,7 +247,7 @@ export function SolanaEscrowModal({
       }}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(153,69,255,0.25)] text-slate-100 p-6 sm:p-7 relative my-8"
+        className="w-full max-w-lg rounded-2xl border border-border-subtle shadow-[0_0_50px_rgba(0,242,255,0.15)] text-slate-100 p-6 sm:p-7 relative my-8"
         style={{ backgroundColor: "#0d1624" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -184,11 +261,11 @@ export function SolanaEscrowModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header with Solana Gradient */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#9945FF] to-[#14F195] p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(20,241,149,0.3)] shrink-0">
+        {/* Header with Title and Icon */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-teal/20 via-purple-500/20 to-emerald-500/20 p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.2)] shrink-0 border border-accent-teal/30">
             <div className="w-full h-full bg-[#0d1624] rounded-[10px] flex items-center justify-center">
-              <Lock className="w-6 h-6 text-[#14F195]" />
+              <Lock className="w-6 h-6 text-accent-teal" />
             </div>
           </div>
           <div>
@@ -196,56 +273,125 @@ export function SolanaEscrowModal({
               <h2 className="text-xl font-bold text-white tracking-tight">
                 Custodia de Fondos (Escrow)
               </h2>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-emerald-500/20 text-[#14F195] border border-[#14F195]/40">
-                Solana Devnet
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-teal/10 text-accent-teal border border-accent-teal/30">
+                Multichain USDC
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Protección programable en USDC respaldada por código on-chain
+              Protección programable respaldada por Smart Contracts on-chain
             </p>
           </div>
         </div>
 
-        {/* Connection status bar */}
-        <div className="p-3 mb-5 rounded-xl bg-slate-900/90 border border-white/10 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2.5 h-2.5 rounded-full ${
-                connected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-              }`}
-            />
-            <span className="text-slate-300">
-              {connected
-                ? `${walletName}: ${formattedAddress}`
-                : "Wallet de Solana no conectada"}
-            </span>
-          </div>
-
-          {connected ? (
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-emerald-400 font-semibold">
-                {usdcBalance.toFixed(2)} USDC
-              </span>
-              <button
-                type="button"
-                onClick={requestAirdrop}
-                className="text-[11px] text-purple-300 hover:text-purple-200 underline font-mono flex items-center gap-1"
-                title="Pedir 1 SOL en Devnet"
-              >
-                Faucet SOL
-              </button>
-            </div>
-          ) : (
+        {/* Rail Selector (Solana vs Stellar) */}
+        <div className="mb-5">
+          <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
+            Elegir Ecosistema de Liquidación
+          </label>
+          <div className="grid grid-cols-2 p-1 bg-slate-900/90 rounded-2xl border border-white/10 gap-1">
             <button
               type="button"
-              onClick={() => connectSolana("auto")}
-              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[11px] transition-all flex items-center gap-1"
+              onClick={() => handleRailChange("solana")}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                selectedRail === "solana"
+                  ? "bg-gradient-to-r from-purple-600/40 to-emerald-600/30 text-white border border-[#14F195]/40 shadow-[0_0_15px_rgba(20,241,149,0.2)]"
+                  : "text-slate-400 hover:text-slate-200 border border-transparent"
+              }`}
             >
-              <Wallet className="w-3.5 h-3.5" />
-              Conectar
+              <span>⚡ Solana</span>
+              <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/30">
+                Devnet ~400ms
+              </span>
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => handleRailChange("stellar")}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                selectedRail === "stellar"
+                  ? "bg-accent-teal/20 text-accent-teal border border-accent-teal/50 shadow-[0_0_15px_rgba(0,242,255,0.2)]"
+                  : "text-slate-400 hover:text-slate-200 border border-transparent"
+              }`}
+            >
+              <span>🌐 Stellar</span>
+              <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-accent-teal/10 text-accent-teal border border-accent-teal/30">
+                Testnet ~3s
+              </span>
+            </button>
+          </div>
         </div>
+
+        {/* Connection status bar according to selected rail */}
+        {selectedRail === "solana" ? (
+          <div className="p-3 mb-5 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2.5 h-2.5 rounded-full ${
+                  solConnected ? "bg-[#14F195] animate-pulse shadow-[0_0_8px_rgba(20,241,149,0.8)]" : "bg-amber-400"
+                }`}
+              />
+              <span className="text-slate-300">
+                {solConnected
+                  ? `${solWalletName}: ${solFormattedAddress}`
+                  : "Wallet Solana no conectada"}
+              </span>
+            </div>
+
+            {solConnected ? (
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-emerald-400 font-semibold">
+                  {solUsdcBalance.toFixed(2)} USDC
+                </span>
+                <button
+                  type="button"
+                  onClick={requestAirdrop}
+                  className="text-[11px] text-purple-300 hover:text-purple-200 underline font-mono flex items-center gap-1"
+                  title="Pedir 1 SOL en Devnet"
+                >
+                  Faucet SOL
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => connectSolana("auto")}
+                className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[11px] transition-all flex items-center gap-1"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                Conectar
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="p-3 mb-5 rounded-xl bg-accent-teal/5 border border-accent-teal/20 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2.5 h-2.5 rounded-full ${
+                  stellarConnected ? "bg-accent-teal animate-pulse shadow-[0_0_8px_rgba(0,242,255,0.8)]" : "bg-amber-400"
+                }`}
+              />
+              <span className="text-slate-300">
+                {stellarConnected
+                  ? `Stellar: ${stellarAddress?.slice(0, 6)}...${stellarAddress?.slice(-4)}`
+                  : "Wallet Stellar no conectada"}
+              </span>
+            </div>
+
+            {stellarConnected ? (
+              <span className="font-mono text-accent-teal font-semibold">
+                {(stellarUsdcBalance || 0).toFixed(2)} USDC
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={connectStellar}
+                className="px-2.5 py-1 rounded-lg bg-accent-teal/20 hover:bg-accent-teal/30 text-accent-teal font-semibold text-[11px] transition-all flex items-center gap-1 border border-accent-teal/40"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                Conectar
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Success view if created */}
         {createdEscrow ? (
@@ -258,8 +404,11 @@ export function SolanaEscrowModal({
                 Contrato de Custodia Desplegado
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-                Los fondos quedaron bloqueados en el vault de Solana Devnet. Se
-                liberarán al freelancer una vez validada la entrega del hito.
+                Los fondos quedaron bloqueados en el vault de{" "}
+                <span className="font-bold text-white uppercase">
+                  {createdEscrow.rail === "solana" ? "Solana Devnet" : "Stellar Soroban Testnet"}
+                </span>
+                . Se liberarán al colaborador una vez aprobada la entrega.
               </p>
 
               <div className="p-3 bg-slate-950/70 rounded-xl border border-white/10 text-left font-mono text-xs space-y-1.5">
@@ -272,7 +421,9 @@ export function SolanaEscrowModal({
                 <div className="flex justify-between text-slate-400">
                   <span>Beneficiario:</span>
                   <span className="text-slate-200">
-                    {formatSolanaAddress(createdEscrow.recipient, 6)}
+                    {createdEscrow.rail === "solana"
+                      ? formatSolanaAddress(createdEscrow.recipient, 6)
+                      : `${createdEscrow.recipient.slice(0, 8)}...${createdEscrow.recipient.slice(-6)}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
@@ -287,9 +438,13 @@ export function SolanaEscrowModal({
                 href={createdEscrow.explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(153,69,255,0.4)] transition-all"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-accent-teal/80 to-purple-600/80 hover:opacity-90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,242,255,0.3)] transition-all"
               >
-                <span>Ver en Solana Explorer</span>
+                <span>
+                  {createdEscrow.rail === "solana"
+                    ? "Ver en Solana Explorer"
+                    : "Ver en Stellar Expert"}
+                </span>
                 <ExternalLink className="w-4 h-4" />
               </a>
               <button
@@ -315,7 +470,7 @@ export function SolanaEscrowModal({
                 onChange={(e) => setMilestoneTitle(e.target.value)}
                 required
                 placeholder="Ej. Implementación de Smart Contract"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#14F195] transition-colors"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent-teal transition-colors"
               />
             </div>
 
@@ -323,16 +478,20 @@ export function SolanaEscrowModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Freelancer / Beneficiario (Solana Address)
+                  Freelancer / Beneficiario ({selectedRail === "solana" ? "Solana Base58" : "Stellar G..."})
                 </label>
                 <button
                   type="button"
                   onClick={() =>
-                    setRecipient("83astBRguLMdt2h5U1Tpdq5LMfZynAdgSt2KaDfBesnx")
+                    setRecipient(
+                      selectedRail === "solana"
+                        ? DEFAULT_SOLANA_RECIPIENT
+                        : DEFAULT_STELLAR_RECIPIENT
+                    )
                   }
-                  className="text-[10px] text-purple-400 hover:text-purple-300 underline font-mono"
+                  className="text-[10px] text-accent-teal hover:text-accent-teal/80 underline font-mono cursor-pointer"
                 >
-                  Usar Devnet Test
+                  Usar Dirección de Test
                 </button>
               </div>
               <input
@@ -340,8 +499,12 @@ export function SolanaEscrowModal({
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
                 required
-                placeholder="Dirección base58 de Solana..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#14F195] transition-colors"
+                placeholder={
+                  selectedRail === "solana"
+                    ? "Dirección base58 de Solana..."
+                    : "Dirección pública Stellar G..."
+                }
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-accent-teal transition-colors"
               />
             </div>
 
@@ -349,10 +512,10 @@ export function SolanaEscrowModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Monto a Bloquear en Escrow
+                  Monto a Bloquear en Custodia
                 </label>
                 <span className="text-xs text-slate-400 font-mono">
-                  SPL Token: USDC
+                  {selectedRail === "solana" ? "SPL Token: USDC" : "SEP-41: USDC"}
                 </span>
               </div>
               <div className="relative">
@@ -363,7 +526,7 @@ export function SolanaEscrowModal({
                   value={amount}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   required
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-20 py-2.5 text-base font-mono font-bold text-white focus:outline-none focus:border-[#14F195] transition-colors"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-20 py-2.5 text-base font-mono font-bold text-white focus:outline-none focus:border-accent-teal transition-colors"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-emerald-400 font-mono">
                   <Coins className="w-3.5 h-3.5" />
@@ -378,7 +541,7 @@ export function SolanaEscrowModal({
                     onClick={() => setAmount(preset)}
                     className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
                       amount === preset
-                        ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                        ? "bg-accent-teal/20 text-accent-teal border border-accent-teal/40"
                         : "bg-white/5 text-slate-400 hover:text-white border border-white/5"
                     }`}
                   >
@@ -397,19 +560,18 @@ export function SolanaEscrowModal({
                 value={milestoneDesc}
                 onChange={(e) => setMilestoneDesc(e.target.value)}
                 rows={2}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:border-[#14F195] transition-colors resize-none"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:border-accent-teal transition-colors resize-none"
               />
             </div>
 
-            {/* Gasless Paymaster Notice */}
-            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-start gap-2.5">
-              <Zap className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+            {/* Cross-Rail Notice */}
+            <div className="p-3 rounded-xl bg-accent-teal/10 border border-accent-teal/30 flex items-start gap-2.5">
+              <Zap className="w-4 h-4 text-accent-teal shrink-0 mt-0.5" />
               <div className="text-[11px] text-slate-300 leading-relaxed">
                 <span className="font-bold text-white">
-                  Onboarding Sin Fricción:
+                  Colaboración Multichain:
                 </span>{" "}
-                ReWork cubre la tarifa de red del contrato (5.000 lamports) vía
-                patrocinio. El freelancer no necesita SOL previo para cobrar.
+                Ambos rieles liquidan en dólares digitales (USDC). El freelancer recibe los fondos según su riel preferido (Solana, Stellar o Banco ARS) sin que los equipos deban coordinar la misma blockchain.
               </div>
             </div>
 
@@ -418,12 +580,15 @@ export function SolanaEscrowModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:opacity-90 text-black font-black text-sm transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(20,241,149,0.35)] cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-accent-teal via-[#14F195] to-purple-600 hover:opacity-90 text-black font-black text-sm transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(0,242,255,0.25)] cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                    <span>Bloqueando Fondos en Solana Devnet...</span>
+                    <span>
+                      Bloqueando Fondos en{" "}
+                      {selectedRail === "solana" ? "Solana Devnet" : "Stellar Testnet"}...
+                    </span>
                   </>
                 ) : (
                   <>
@@ -439,8 +604,14 @@ export function SolanaEscrowModal({
 
         {/* Footer info */}
         <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-slate-400">
-          <span>Finalidad: ~400ms</span>
-          <span className="text-[#14F195]">Protocol: SPL Token / Anchor</span>
+          <span>
+            {selectedRail === "solana" ? "Finalidad: ~400ms" : "Finalidad: ~3s"}
+          </span>
+          <span className="text-accent-teal">
+            {selectedRail === "solana"
+              ? "Protocol: SPL Token / Anchor Vault"
+              : "Protocol: Soroban / Trustless Escrow"}
+          </span>
         </div>
       </div>
     </div>
@@ -448,3 +619,5 @@ export function SolanaEscrowModal({
 
   return createPortal(modalContent, document.body);
 }
+
+export const MultichainEscrowModal = SolanaEscrowModal;

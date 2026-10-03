@@ -164,7 +164,7 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                         </div>
 
                         <p className="text-muted text-sm mb-8 leading-relaxed">
-                            {colecta.description || (language === 'es' ? `Apoya esta iniciativa aportando ${currency} a través de un contrato escrow seguro en la red Stellar.` : `Support this initiative by contributing ${currency} through a secure escrow contract on Stellar.`)}
+                            {colecta.description || (language === 'es' ? `Apoya esta iniciativa aportando ${currency} a través de una bóveda escrow segura.` : `Support this initiative by contributing ${currency} through a secure escrow vault.`)}
                         </p>
 
                         {/* Progress Section */}
@@ -277,19 +277,19 @@ export function ColectaDetailModal({ isOpen, onClose, colecta, onDonate, onActio
                                 <p className="text-xs text-blue-800/80 dark:text-blue-200/70 leading-relaxed">
                                     {language === 'es' ? (
                                         <>
-                                            Protegido por <strong>Trustless Work</strong> en Stellar.
+                                            Protegido por <strong>Trustless Work</strong> (Smart Contract Escrow).
                                             {isGoalMet
                                                 ? " La meta fue alcanzada. Los fondos pueden ser liberados al organizador, o reembolsados si algo falla."
                                                 : " Tu aporte quedará bloqueado en un contrato inteligente. Si no se alcanza la meta, podrás reclamar el reembolso total automáticamete."}
-                                            <br /><span className="mt-1 inline-block opacity-70">Fee estimado red Stellar: ~0.00001 XLM</span>
+                                            <br /><span className="mt-1 inline-block opacity-70">Fee de red estimado: &lt; $0.001 USD</span>
                                         </>
                                     ) : (
                                         <>
-                                            Protected by <strong>Trustless Work</strong> on Stellar.
+                                            Protected by <strong>Trustless Work</strong> (Smart Contract Escrow).
                                             {isGoalMet
                                                 ? " The goal was reached. Funds can be released to the organizer, or refunded if needed."
                                                 : " Your contribution is locked in a smart contract. If the goal is not met, you can claim a full refund automatically."}
-                                            <br /><span className="mt-1 inline-block opacity-70">Estimated Stellar network fee: ~0.00001 XLM</span>
+                                            <br /><span className="mt-1 inline-block opacity-70">Estimated network fee: &lt; $0.001 USD</span>
                                         </>
                                     )}
                                 </p>

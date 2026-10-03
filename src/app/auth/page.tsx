@@ -23,6 +23,7 @@ export default function AuthGateway() {
   const { profile, loading: profileLoading } = useProfile();
   const { login, authenticated, ready } = usePrivy();
   const [step, setStep] = useState<"SELECT" | "CREATING_AURA">("SELECT");
+  const [walletTab, setWalletTab] = useState<"solana" | "stellar">("solana");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -175,67 +176,103 @@ export default function AuthGateway() {
                         <ChevronRight className="w-5 h-5 text-accent-teal group-hover:translate-x-1 transition-transform" />
                     </button>
 
-                    {/* Wallet Button */}
-                    <>
-                        <div className="relative flex items-center py-2">
+                    {/* Wallet Section */}
+                    <div>
+                        <div className="relative flex items-center py-2 mb-3">
                             <div className="flex-grow border-t border-border-subtle"></div>
-                            <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">o conectá tu wallet</span>
+                            <span className="flex-shrink-0 mx-4 text-muted text-xs font-medium">o conectá tu wallet Web3</span>
                             <div className="flex-grow border-t border-border-subtle"></div>
                         </div>
 
-                        <button 
-                            onClick={handleConnectWallet}
-                            disabled={loading}
-                            className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group disabled:opacity-50"
-                        >
-                            {loading && (
-                                <div className="absolute inset-0 w-full h-full bg-accent-teal/10 animate-pulse"></div>
-                            )}
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className="w-10 h-10 bg-foreground/10 rounded-full flex items-center justify-center border border-border-subtle">
-                                    <Wallet className="w-5 h-5 text-foreground" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-sm">
-                                        {loading ? "Abriendo wallet..." : connected ? "Wallet Conectada" : "Conectar Wallet Stellar"}
-                                    </p>
-                                    <p className="text-xs text-muted">
-                                        {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Freighter, xBull, Lobstr, Albedo..."}
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className={`w-5 h-5 text-muted transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
-                        </button>
+                        {/* Segmented Rail Selector */}
+                        <div className="grid grid-cols-2 p-1 bg-foreground/5 rounded-2xl border border-border-subtle mb-3">
+                            <button
+                                type="button"
+                                onClick={() => setWalletTab("solana")}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                    walletTab === "solana"
+                                        ? "bg-purple-600/30 text-white border border-purple-500/50 shadow-sm"
+                                        : "text-muted hover:text-foreground border border-transparent"
+                                }`}
+                            >
+                                <span className="text-sm">⚡</span>
+                                <span>Solana</span>
+                                <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/30">Devnet</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setWalletTab("stellar")}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                    walletTab === "stellar"
+                                        ? "bg-accent-teal/20 text-accent-teal border border-accent-teal/40 shadow-sm"
+                                        : "text-muted hover:text-foreground border border-transparent"
+                                }`}
+                            >
+                                <span className="text-sm">🌐</span>
+                                <span>Stellar</span>
+                                <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-accent-teal/10 text-accent-teal border border-accent-teal/30">Testnet</span>
+                            </button>
+                        </div>
 
-                        {/* Solana Wallet Button (Phantom / Solflare) */}
-                        <button 
-                            onClick={handleConnectSolana}
-                            disabled={loading}
-                            className="w-full flex items-center justify-between p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group disabled:opacity-50"
-                        >
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className="w-10 h-10 bg-gradient-to-br from-[#9945FF] to-[#14F195] rounded-full p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)]">
-                                    <div className="w-full h-full bg-[#0d1624] rounded-full flex items-center justify-center">
-                                        <Wallet className="w-4 h-4 text-[#14F195]" />
+                        {/* Solana Tab Content */}
+                        {walletTab === "solana" && (
+                            <button 
+                                onClick={handleConnectSolana}
+                                disabled={loading}
+                                className="w-full flex items-center justify-between p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group disabled:opacity-50 animate-in fade-in duration-200"
+                            >
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-[#9945FF] to-[#14F195] rounded-full p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(153,69,255,0.3)] shrink-0">
+                                        <div className="w-full h-full bg-[#0d1624] rounded-full flex items-center justify-center">
+                                            <Wallet className="w-4 h-4 text-[#14F195]" />
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-left">
-                                    <div className="flex items-center gap-2">
-                                        <p className="font-bold text-sm text-white">
-                                            {solConnected ? "Solana Conectada" : "Conectar Wallet Solana"}
+                                    <div className="text-left">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-sm text-white">
+                                                {solConnected ? "Solana Conectada" : "Conectar Wallet Solana"}
+                                            </p>
+                                        </div>
+                                        <p className="text-xs text-purple-300/80">
+                                            {solConnected ? `${solWalletName}: ${solAddress?.slice(0, 6)}...${solAddress?.slice(-4)}` : "Phantom, Solflare, Backpack (Wallet Standard)"}
                                         </p>
-                                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/40">
-                                            Devnet
-                                        </span>
                                     </div>
-                                    <p className="text-xs text-purple-300/80">
-                                        {solConnected ? `${solWalletName}: ${solAddress?.slice(0, 6)}...${solAddress?.slice(-4)}` : "Phantom, Solflare, Backpack (Wallet Standard)"}
-                                    </p>
                                 </div>
-                            </div>
-                            <ChevronRight className={`w-5 h-5 text-purple-300 transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
-                        </button>
-                    </>
+                                <ChevronRight className={`w-5 h-5 text-purple-300 transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
+                            </button>
+                        )}
+
+                        {/* Stellar Tab Content */}
+                        {walletTab === "stellar" && (
+                            <button 
+                                onClick={handleConnectWallet}
+                                disabled={loading}
+                                className="w-full flex items-center justify-between p-4 rounded-xl border border-border-subtle bg-foreground/5 hover:bg-foreground/10 transition-colors group disabled:opacity-50 animate-in fade-in duration-200"
+                            >
+                                {loading && (
+                                    <div className="absolute inset-0 w-full h-full bg-accent-teal/10 animate-pulse"></div>
+                                )}
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className="w-10 h-10 bg-foreground/10 rounded-full flex items-center justify-center border border-border-subtle shrink-0">
+                                        <Wallet className="w-5 h-5 text-foreground" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-bold text-sm">
+                                            {loading ? "Abriendo wallet..." : connected ? "Wallet Conectada" : "Conectar Wallet Stellar"}
+                                        </p>
+                                        <p className="text-xs text-muted">
+                                            {connected ? `${address?.slice(0, 8)}...${address?.slice(-6)}` : "Freighter, xBull, Lobstr, Albedo..."}
+                                        </p>
+                                    </div>
+                                </div>
+                                <ChevronRight className={`w-5 h-5 text-muted transition-transform relative z-10 ${loading ? '' : 'group-hover:translate-x-1'}`} />
+                            </button>
+                        )}
+
+                        <p className="text-[11px] text-muted text-center mt-3 leading-relaxed">
+                            💡 <strong>Plataforma Multichain:</strong> Los equipos colaboran sin barreras. Ambas redes liquidan en USDC digital.
+                        </p>
+                    </div>
                 </div>
             )}
 

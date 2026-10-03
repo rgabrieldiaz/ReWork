@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useSettings } from "@/hooks/useSettings";
-import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2 } from "lucide-react";
+import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2, Zap, Globe, Landmark } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -14,7 +15,8 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-    const { address } = useWallet();
+    const { address: stellarAddress } = useWallet();
+    const { address: solanaWalletAddress } = useSolanaWallet();
     const { profile, updateProfile, loading } = useProfile();
     const { language, setLanguage, theme, setTheme, t } = useSettings();
 
@@ -22,6 +24,10 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [lastName, setLastName] = useState("");
     const [birthDate, setBirthDate] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [preferredRail, setPreferredRail] = useState<'solana' | 'stellar' | 'bank'>('solana');
+    const [solanaAddress, setSolanaAddress] = useState("");
+    const [stellarAddrInput, setStellarAddrInput] = useState("");
+    const [bankAlias, setBankAlias] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const [addressCopied, setAddressCopied] = useState(false);
     const [wsName, setWsName] = useState("");
@@ -47,6 +53,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setSavingWs(false);
     };
 
+    const address = stellarAddress;
+
     // Sync state when profile loads
     useEffect(() => {
         if (profile) {
@@ -54,8 +62,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             setLastName(profile.last_name || "");
             setBirthDate(profile.birth_date || "");
             setAvatarUrl(profile.avatar_url || null);
+            setPreferredRail(profile.preferred_rail || 'solana');
+            setSolanaAddress(profile.solana_address || solanaWalletAddress || '');
+            setStellarAddrInput(profile.stellar_address || profile.wallet_address || stellarAddress || '');
+            setBankAlias(profile.bank_alias || '');
         }
-    }, [profile]);
+    }, [profile, solanaWalletAddress, stellarAddress]);
 
     // Load workspace for admin users
     useEffect(() => {
@@ -72,7 +84,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             first_name: field === 'first_name' ? value : firstName,
             last_name: field === 'last_name' ? value : lastName,
             birth_date: field === 'birth_date' ? value : birthDate,
-            avatar_url: field === 'avatar_url' ? value : avatarUrl
+            avatar_url: field === 'avatar_url' ? value : avatarUrl,
+            preferred_rail: field === 'preferred_rail' ? (value as any) : preferredRail,
+            solana_address: field === 'solana_address' ? value : solanaAddress,
+            stellar_address: field === 'stellar_address' ? value : stellarAddrInput,
+            bank_alias: field === 'bank_alias' ? value : bankAlias,
         });
     };
 
@@ -239,8 +255,163 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             </div>
                         )}
 
-                        {/* Divider only if admin has workspace section */}
-                        {isAdmin && wsId && <div className="border-t border-border-subtle" />}
+                        {/* 💳 Método de Cobro y Liquidación Preferido */}
+                        <div className="p-4 rounded-2xl bg-foreground/[0.03] border border-border-subtle space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <Zap className="w-4 h-4 text-accent-teal" />
+                                    {language === 'es' ? "Riel de Cobro Preferido" : "Preferred Settlement Rail"}
+                                </h3>
+                                <span className="text-[10px] font-mono font-bold text-accent-teal bg-accent-teal/10 px-2 py-0.5 rounded border border-accent-teal/20">
+                                    Chain-Agnostic
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted leading-relaxed">
+                                {language === 'es'
+                                    ? "Tus clientes o empleadores te transferirán o bloquearán fondos automáticamente en este riel al contratarte."
+                                    : "Clients or employers will automatically settle milestones through this rail upon hiring you."}
+                            </p>
+
+                            {/* Selector de Riel */}
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPreferredRail('solana');
+                                        handleAutoSave('preferred_rail', 'solana');
+                                        toast.success(language === 'es' ? 'Riel preferido: Solana USDC' : 'Preferred rail: Solana USDC');
+                                    }}
+                                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                        preferredRail === 'solana'
+                                            ? 'bg-purple-500/15 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(153,69,255,0.2)]'
+                                            : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="text-base block mb-0.5">⚡</span>
+                                    <span className="text-xs font-bold block">Solana</span>
+                                    <span className="text-[9px] font-mono text-muted block">USDC ~400ms</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPreferredRail('stellar');
+                                        handleAutoSave('preferred_rail', 'stellar');
+                                        toast.success(language === 'es' ? 'Riel preferido: Stellar USDC' : 'Preferred rail: Stellar USDC');
+                                    }}
+                                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                        preferredRail === 'stellar'
+                                            ? 'bg-accent-teal/15 border-accent-teal/50 text-accent-teal shadow-[0_0_12px_rgba(0,242,255,0.2)]'
+                                            : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="text-base block mb-0.5">🌐</span>
+                                    <span className="text-xs font-bold block">Stellar</span>
+                                    <span className="text-[9px] font-mono text-muted block">USDC QR ~3s</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPreferredRail('bank');
+                                        handleAutoSave('preferred_rail', 'bank');
+                                        toast.success(language === 'es' ? 'Riel preferido: Banco Local ARS' : 'Preferred rail: Local Bank ARS');
+                                    }}
+                                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                        preferredRail === 'bank'
+                                            ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                                            : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="text-base block mb-0.5">🏦</span>
+                                    <span className="text-xs font-bold block">Banco ARS</span>
+                                    <span className="text-[9px] font-mono text-muted block">CBU / CVU</span>
+                                </button>
+                            </div>
+
+                            {/* Inputs dinámicos */}
+                            <div className="pt-1">
+                                {preferredRail === 'solana' && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-[11px] font-semibold text-muted uppercase tracking-wider">
+                                                Dirección Solana (USDC)
+                                            </label>
+                                            {solanaWalletAddress && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSolanaAddress(solanaWalletAddress);
+                                                        handleAutoSave('solana_address', solanaWalletAddress);
+                                                        toast.success("Dirección de Solana vinculada");
+                                                    }}
+                                                    className="text-[10px] text-purple-400 hover:text-purple-300 underline font-mono cursor-pointer"
+                                                >
+                                                    Usar Billetera Conectada
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={solanaAddress}
+                                            onChange={(e) => setSolanaAddress(e.target.value)}
+                                            onBlur={(e) => handleAutoSave('solana_address', e.target.value)}
+                                            placeholder="Dirección base58 de Solana..."
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-purple-400 transition-all"
+                                        />
+                                    </div>
+                                )}
+
+                                {preferredRail === 'stellar' && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-[11px] font-semibold text-muted uppercase tracking-wider">
+                                                Dirección Stellar (G...)
+                                            </label>
+                                            {address && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setStellarAddrInput(address);
+                                                        handleAutoSave('stellar_address', address);
+                                                        toast.success("Dirección de Stellar vinculada");
+                                                    }}
+                                                    className="text-[10px] text-accent-teal hover:text-accent-teal/80 underline font-mono cursor-pointer"
+                                                >
+                                                    Usar Billetera Conectada
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={stellarAddrInput}
+                                            onChange={(e) => setStellarAddrInput(e.target.value)}
+                                            onBlur={(e) => handleAutoSave('stellar_address', e.target.value)}
+                                            placeholder="Dirección pública Stellar G..."
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-accent-teal transition-all"
+                                        />
+                                    </div>
+                                )}
+
+                                {preferredRail === 'bank' && (
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-muted mb-1 uppercase tracking-wider">
+                                            Alias o CBU/CVU Bancario (ARS)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bankAlias}
+                                            onChange={(e) => setBankAlias(e.target.value)}
+                                            onBlur={(e) => handleAutoSave('bank_alias', e.target.value)}
+                                            placeholder="ej: nombre.trabajo.mp o 00000031000..."
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-emerald-400 transition-all"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="border-t border-border-subtle" />
 
                         {/* Ajustes de interfaz */}
                         <div>

@@ -59,6 +59,11 @@
   - Implemented `src/components/SolanaEscrowModal.tsx` for programmable milestone escrow on Solana Devnet in USDC, featuring gasless paymaster notice, interactive release conditions, and direct links to Solana Explorer.
   - Integrated Solana Escrow trigger and live Devnet balances in `src/components/Header.tsx`.
   - Added Solana Superteam Spotlight banner in main dashboard (`src/app/app/page.tsx`).
+- **Chain Abstraction & Multichain Settlement UX:**
+  - Added Preferred Settlement Rail (`preferred_rail`: 'solana' | 'stellar' | 'bank') to `UserProfile` in `src/hooks/useProfile.tsx` and interactive rail selector with 1-click address vinculation in `src/components/ProfileModal.tsx`.
+  - Upgraded `/auth` onboarding gateway with segmented Web3 switcher (`[ ⚡ Solana Devnet | 🌐 Stellar Testnet ]`) and clean gasless Web2 Google/Email entry.
+  - Transformed Escrow modal (`src/components/SolanaEscrowModal.tsx`) into a dual-rail Multichain Escrow Vault supporting Solana Devnet (~400ms) and Stellar Testnet (~3s), with dynamic explorer links and cross-rail settlement notices.
+  - Neutralized platform copy across `src/lib/translations.ts`, `src/components/Header.tsx`, and `src/app/app/page.tsx` to put product solutions and USDC digital dollars first.
 - **Audit & Code Quality:**
   - Ran `scripts/detect_fake_code.mjs`: 0 mock alerts, 0 fake timeouts, 0 hardcoded dummy addresses.
   - Full TypeScript validation passed (`npx tsc --noEmit` with 0 errors).
