@@ -11,6 +11,12 @@
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.1.0",
     "@privy-io/react-auth": "^3.19.0",
+    "@solana-program/system": "^0.15.0",
+    "@solana-program/token": "^0.17.0",
+    "@solana/kit": "^8.4.0",
+    "@solana/kit-plugin-rpc": "^0.19.0",
+    "@solana/kit-plugin-wallet": "^0.20.0",
+    "@solana/react": "^8.4.0",
     "@stellar/stellar-sdk": "^14.5.0",
     "@supabase/supabase-js": "^2.98.0",
     "@trustless-work/escrow": "^3.0.5",
