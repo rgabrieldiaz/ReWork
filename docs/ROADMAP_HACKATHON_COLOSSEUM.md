@@ -116,19 +116,23 @@ El formulario oficial se completa en:
 
 ---
 
-## 🎬 Guiones Recomendados para los Videos
+## 🎬 Guiones Técnicos Oficiales para los Videos
 
-### Guion Video de Pitch (2:00 min)
-- **0:00 - 0:30 (El Problema):** Mostrar el dolor real de los freelancers en Argentina y LatAm: bancos, plataformas centralizadas que cobran comisiones del 20% y retienen fondos durante semanas.
-- **0:30 - 1:00 (La Solución - ReWork):** Cómo ReWork resuelve esto usando Solana como infraestructura de liquidación inmediata y custodia en USDC.
-- **1:00 - 1:30 (Por qué Solana & UX):** Sub-second finality, costos casi nulos, y onboarding híbrido con Privy (el usuario Web2 no necesita saber qué es una clave privada ni tener SOL para pagar gas).
-- **1:30 - 2:00 (Equipo & Visión):** Quiénes somos, tracción inicial en el ecosistema y meta de convertir a ReWork en la infraestructura de trabajo freelance para mercados emergentes.
+> 📄 **Documento Maestro Completo:** Ver [`docs/GUIONES_VIDEOS_COLOSSEUM_SOLANA.md`](./GUIONES_VIDEOS_COLOSSEUM_SOLANA.md) para el detalle segundo a segundo, cues de pantalla interactivos, clics en vivo y textos bilingües palabra por palabra (Español & English).
 
-### Guion Video de Demo (3:00 min)
-- **0:00 - 0:45 (Onboarding & Conexión):** Ingreso a ReWork, login con Privy (creación instantánea de embedded wallet de Solana) o conexión con Phantom/Solflare.
-- **0:45 - 1:45 (Flujo de Contrato / Escrow en Solana):** Creación de un proyecto o milestone con monto en USDC. El cliente deposita los fondos en custodia en Solana Devnet.
-- **1:45 - 2:30 (Entrega & Liberación de Fondos):** El freelancer entrega el trabajo, el cliente aprueba y los fondos se transfieren en tiempo real en la blockchain.
-- **2:30 - 3:00 (Explorador / Transacción & Cierre):** Muestra de la transacción confirmada en Solana Explorer / Solscan Devnet con confirmación en milisegundos.
+### 1. Video de Pitch (Máximo 2:00 min / 120 s)
+- **0:00 - 0:28 (Hook & El Problema):** Dolor real en LatAm: 20% en comisiones, 14 días de espera, impagos. Slide 1 y 2 de `/deck`.
+- **0:28 - 0:55 (La Solución - ReWork):** Marketplace descentralizado + Escrow programable en stablecoins sin intermediarios. Slide 3 y 4 de `/deck`.
+- **0:55 - 1:25 (Por qué Solana & UX):** Sub-second finality (~400ms), comisiones de $0.0008, onboarding Web2 sin gas con Privy + Phantom/Solflare con Wallet Standard. Slide 6 y 7 de `/deck`.
+- **1:25 - 1:45 (Modelo de Negocio & Mercado):** 1% fee vs 20% de Web2, SaaS de tesorería, mercado global de $1.5T. Slide 8 y 9 de `/deck`.
+- **1:45 - 2:00 (Equipo & Visión):** Founders argentinos, listos para la mentoría Top Talent y ganar en Colosseum. Slide 12 de `/deck`.
+
+### 2. Video de Demo del Producto (Máximo 3:00 min / 180 s)
+- **0:00 - 0:35 (Onboarding & Acceso):** Login con Google (Privy) o Phantom; ingreso automático al Workspace `rework` con 500 AURA y banner de bienvenida.
+- **0:35 - 1:20 (Bóveda de Escrow Solana):** Apertura de "⚡ Solana Escrow Vault", contrato de $150 USDC con milestones, firma en 400ms y verificación en Solana Explorer.
+- **1:20 - 1:55 (Moneda SOL & Swap Devnet):** Toggle de 4 monedas `[ USDC | ARS | XLM | SOL ]` recalculando patrimonio; Swap `SOL ⇄ USDC` en Solana Devnet con fee de ~$0.0008.
+- **1:55 - 2:30 (Bóvedas DeFi de Tesorería):** Agente de Pools con pestaña Solana: Marinade (7.4%), Kamino (18.2%), Meteora (15.6%), Raydium (16.9%).
+- **2:30 - 2:55 (Simulador Financiero & Cierre Técnico):** `/app/goals` con proyección en 4 monedas, AURA CV on-chain y verificación de 0 mocks con `scripts/detect_fake_code.mjs`.
 
 ---
 
