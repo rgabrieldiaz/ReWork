@@ -1,12 +1,14 @@
 /**
  * ReWork Currency & Exchange Rate Utility
- * Handles conversions and formatting between USDC, XLM, and Argentine Pesos (ARS).
+ * Handles conversions and formatting between USDC, XLM, SOL, and Argentine Pesos (ARS).
  */
 
 export interface CurrencyRates {
   USDC_TO_ARS: number;
   XLM_TO_USDC: number;
   XLM_TO_ARS: number;
+  SOL_TO_USDC: number;
+  SOL_TO_ARS: number;
 }
 
 // Current realistic market reference rates (Crypto USD / Dólar Cripto in Argentina)
@@ -14,9 +16,11 @@ export const DEFAULT_RATES: CurrencyRates = {
   USDC_TO_ARS: 1280, // 1 USDC = 1,280 ARS
   XLM_TO_USDC: 0.28, // 1 XLM = 0.28 USDC
   XLM_TO_ARS: 0.28 * 1280, // 1 XLM ≈ 358.40 ARS
+  SOL_TO_USDC: 152.5, // 1 SOL ≈ 152.50 USDC
+  SOL_TO_ARS: 152.5 * 1280, // 1 SOL ≈ 195,200 ARS
 };
 
-export type SupportedCurrency = 'USDC' | 'ARS' | 'XLM';
+export type SupportedCurrency = 'USDC' | 'ARS' | 'XLM' | 'SOL';
 
 /**
  * Formats a numeric value into a localized currency string
@@ -43,6 +47,10 @@ export function formatCurrency(
       return includeSymbol
         ? `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} XLM`
         : amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    case 'SOL':
+      return includeSymbol
+        ? `${amount.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 4 })} SOL`
+        : amount.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 4 });
     default:
       return `${amount} ${currency}`;
   }
@@ -64,17 +72,19 @@ export function convertCurrency(
   if (from === 'USDC') usdc = amount;
   else if (from === 'ARS') usdc = amount / rates.USDC_TO_ARS;
   else if (from === 'XLM') usdc = amount * rates.XLM_TO_USDC;
+  else if (from === 'SOL') usdc = amount * rates.SOL_TO_USDC;
 
   // Convert base USDC to `to`
   if (to === 'USDC') return usdc;
   if (to === 'ARS') return usdc * rates.USDC_TO_ARS;
   if (to === 'XLM') return rates.XLM_TO_USDC > 0 ? usdc / rates.XLM_TO_USDC : 0;
+  if (to === 'SOL') return rates.SOL_TO_USDC > 0 ? usdc / rates.SOL_TO_USDC : 0;
 
   return amount;
 }
 
 /**
- * Generates the triple price object (ARS, USDC, XLM) from a base USDC or given amount
+ * Generates the multi-currency price object (ARS, USDC, XLM, SOL) from a base USDC or given amount
  */
 export function getTripleValues(
   amount: number,
@@ -84,15 +94,18 @@ export function getTripleValues(
   const usdc = convertCurrency(amount, sourceCurrency, 'USDC', rates);
   const ars = convertCurrency(amount, sourceCurrency, 'ARS', rates);
   const xlm = convertCurrency(amount, sourceCurrency, 'XLM', rates);
+  const sol = convertCurrency(amount, sourceCurrency, 'SOL', rates);
 
   return {
     usdc,
     ars,
     xlm,
+    sol,
     formatted: {
       usdc: formatCurrency(usdc, 'USDC'),
       ars: formatCurrency(ars, 'ARS'),
       xlm: formatCurrency(xlm, 'XLM'),
+      sol: formatCurrency(sol, 'SOL'),
     },
   };
 }

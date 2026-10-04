@@ -11,6 +11,7 @@ export interface StakePosition {
   startDate: string;
   durationMonths: number;
   poolName: string;
+  chain?: 'solana' | 'stellar';
 }
 
 interface StakingContextType {
@@ -19,7 +20,7 @@ interface StakingContextType {
   accruedYield: number; // total USDC earned yield
   activeCurrency: SupportedCurrency;
   setActiveCurrency: (curr: SupportedCurrency) => void;
-  stake: (amount: number, durationMonths?: number, poolName?: string, apy?: number) => Promise<boolean>;
+  stake: (amount: number, durationMonths?: number, poolName?: string, apy?: number, chain?: 'solana' | 'stellar') => Promise<boolean>;
   unstake: (amount: number) => Promise<boolean>;
   unstakePosition: (positionId: string) => Promise<boolean>;
   positions: StakePosition[];
@@ -29,10 +30,21 @@ const StakingContext = createContext<StakingContextType | undefined>(undefined);
 
 const DEFAULT_POSITIONS: StakePosition[] = [
   {
+    id: "stake-pos-sol-1",
+    amount: 150,
+    currency: "USDC",
+    apy: 18.2,
+    chain: "solana",
+    startDate: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+    durationMonths: 6,
+    poolName: "Kamino USDG / USDC Capital Vault",
+  },
+  {
     id: "stake-pos-1",
     amount: 50,
     currency: "USDC",
     apy: 12.8,
+    chain: "stellar",
     startDate: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
     durationMonths: 6,
     poolName: "Stellar AMM Nativo (USDC / XLM)",
@@ -42,6 +54,7 @@ const DEFAULT_POSITIONS: StakePosition[] = [
     amount: 25,
     currency: "USDC",
     apy: 8.5,
+    chain: "stellar",
     startDate: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
     durationMonths: 12,
     poolName: "RWA Real-World Yield Vault",
@@ -115,8 +128,9 @@ export function StakingProvider({ children }: { children: ReactNode }) {
   const stake = async (
     amount: number,
     durationMonths: number = 3,
-    poolName: string = "Stellar Yield Vault",
-    poolApy: number = 12.8
+    poolName: string = "Solana Yield Vault",
+    poolApy: number = 18.2,
+    chain: 'solana' | 'stellar' = 'solana'
   ) => {
     if (amount <= 0) return false;
     const newTotal = stakedAmount + amount;
@@ -131,6 +145,7 @@ export function StakingProvider({ children }: { children: ReactNode }) {
       startDate: new Date().toISOString(),
       durationMonths,
       poolName,
+      chain,
     };
     const updatedPositions = [newPos, ...positions];
     setPositions(updatedPositions);

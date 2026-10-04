@@ -70,6 +70,11 @@
   - Multi-Rail Interactive Flows: Evaluators on Google or Solana can now place bids in Marketplace, contribute to Crowdfunding colectas, and sign/fund Squad Goals without roadblocks, alongside real on-chain Soroban Trustless Work execution for Stellar wallet sessions.
   - SuperAdmin / Host Governance: Founders maintain full owner privileges over the showcase space (`SUPER_ADMIN_EMAILS` bypass).
   - Jury Quick-Tour Banner: Dismissible interactive guide in the main dashboard (`src/app/app/page.tsx`) highlighting the Solana Escrow Vault, Marketplace bidding, crowdfunding, and team mission goals.
+- **SOL Currency Rail, Multichain Swap & Solana DeFi Treasury Vaults:**
+  - **4th Currency Option (`SOL`):** Extended `SupportedCurrency` with `'SOL'` across `src/lib/currency.ts`, `src/components/Header.tsx`, and `src/app/app/goals/page.tsx`. Live quotes, total net worth, liquid balances, and staking yield accrued reflect `SOL` when selected.
+  - **Multichain Swap with Solana Devnet:** Integrated `SOL` into the Home Swap widget (`SOL <-> USDC`, `SOL <-> ARS`, `SOL <-> XLM`) powered by `@solana/kit` RPC blockhash verification, real wallet balance refresh, and sub-cent fee preview (~0.000005 SOL / $0.0008).
+  - **Solana DeFi Treasury Vaults:** Transformed liquidity agent into `MultichainPoolsAgent` featuring Solana as the default primary tab with leading protocols: **Marinade mSOL (7.4%)**, **Kamino Vault (18.2%)**, **Meteora DLMM (15.6%)**, and **Raydium CLMM (16.9%)**.
+  - **Interactive Goals Simulator:** Upgraded Goals & Yields dashboard (`src/app/app/goals/page.tsx`) with 4-currency metric breakdown cards and multichain badges (`⚡ Solana` / `🌐 Stellar`) on active farming positions.
 - **Audit & Code Quality:**
   - Ran `scripts/detect_fake_code.mjs`: 0 mock alerts, 0 fake timeouts, 0 hardcoded dummy addresses.
   - Full TypeScript validation passed (`npx tsc --noEmit` with 0 errors).
@@ -77,4 +82,5 @@
 ### Week 2 (October 05 – October 12, 2026)
 - *(To be updated as development progresses)*
 - Target: Full functional Solana escrow demo, user validation metrics, English pitch & demo video recorded.
+
 

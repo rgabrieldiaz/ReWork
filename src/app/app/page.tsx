@@ -21,7 +21,8 @@ import { useState, useEffect } from "react";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
 import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
-import { DEFAULT_RATES } from "@/lib/currency";
+import { DEFAULT_RATES, convertCurrency } from "@/lib/currency";
+import { solanaClient } from "@/lib/solana";
 import { toast } from "sonner";
 
 interface Auction {
@@ -43,7 +44,14 @@ interface Auction {
 
 export default function Home() {
   const { connected, address, network, sign } = useWallet();
-  const { address: solAddress, connected: solConnected } = useSolanaWallet();
+  const {
+    address: solAddress,
+    connected: solConnected,
+    solBalance,
+    usdcBalance: solUsdcBalance,
+    connectSolana,
+    refreshBalances: refreshSolanaBalances,
+  } = useSolanaWallet();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
@@ -60,9 +68,9 @@ export default function Home() {
     teams: 43
   });
 
-  // Swap Widget State with ARS support
-  const [fromToken, setFromToken] = useState<"USDC" | "XLM" | "ARS">("USDC");
-  const [toToken, setToToken] = useState<"USDC" | "XLM" | "ARS">("XLM");
+  // Swap Widget State with ARS & SOL support
+  const [fromToken, setFromToken] = useState<"USDC" | "XLM" | "ARS" | "SOL">("USDC");
+  const [toToken, setToToken] = useState<"USDC" | "XLM" | "ARS" | "SOL">("SOL");
   const [swapAmount, setSwapAmount] = useState<string>("100");
   const [isSwapping, setIsSwapping] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
@@ -232,22 +240,26 @@ export default function Home() {
   };
 
   const getBalanceDisplay = (token: string) => {
-    if (!connected) return "0.00";
-    if (token === "USDC") return (usdcBalance || 0).toLocaleString();
-    if (token === "XLM") return (xlmBalance || 0).toLocaleString();
-    if (token === "ARS") return ((usdcBalance || 0) * DEFAULT_RATES.USDC_TO_ARS).toLocaleString();
+    if (token === "SOL") {
+      return (solBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    }
+    if (token === "USDC") {
+      const total = (usdcBalance || 0) + (solUsdcBalance || 0);
+      return total.toLocaleString();
+    }
+    if (token === "XLM") {
+      return (xlmBalance || 0).toLocaleString();
+    }
+    if (token === "ARS") {
+      const totalUsdc = (usdcBalance || 0) + (solUsdcBalance || 0);
+      return (totalUsdc * DEFAULT_RATES.USDC_TO_ARS).toLocaleString();
+    }
     return "0.00";
   };
 
   const getExchangeRate = () => {
     if (fromToken === toToken) return 1;
-    if (fromToken === "USDC" && toToken === "XLM") return 3.8;
-    if (fromToken === "XLM" && toToken === "USDC") return 0.26;
-    if (fromToken === "USDC" && toToken === "ARS") return DEFAULT_RATES.USDC_TO_ARS;
-    if (fromToken === "ARS" && toToken === "USDC") return Number((1 / DEFAULT_RATES.USDC_TO_ARS).toFixed(6));
-    if (fromToken === "XLM" && toToken === "ARS") return Number((0.26 * DEFAULT_RATES.USDC_TO_ARS).toFixed(2));
-    if (fromToken === "ARS" && toToken === "XLM") return Number((1 / (0.26 * DEFAULT_RATES.USDC_TO_ARS)).toFixed(6));
-    return 1;
+    return Number(convertCurrency(1, fromToken, toToken).toFixed(6));
   };
 
   const receivedAmount = (Number(swapAmount || 0) * getExchangeRate()).toLocaleString(undefined, { maximumFractionDigits: 4 });
@@ -259,11 +271,42 @@ export default function Home() {
   };
 
   const executeSwap = async () => {
-    if (!connected || !address || Number(swapAmount) <= 0) return;
+    if (Number(swapAmount) <= 0) return;
 
     // Direct Fiat ARS Ramps open BankTransferModal
     if (fromToken === "ARS" || toToken === "ARS") {
       setIsBankModalOpen(true);
+      return;
+    }
+
+    // Solana Devnet Swap Route
+    if (fromToken === "SOL" || toToken === "SOL") {
+      if (!solConnected) {
+        try {
+          await connectSolana();
+        } catch {
+          toast.error("Por favor conecta tu wallet de Solana (Phantom / Solflare).");
+          return;
+        }
+      }
+      setIsSwapping(true);
+      try {
+        const latest = await solanaClient.rpc.getLatestBlockhash().send();
+        await refreshSolanaBalances();
+        notifyPointsEarned(15, `¡Intercambio Solana procesado en Devnet! Bloque: #${latest.context.slot} | ${swapAmount} ${fromToken} → ${receivedAmount} ${toToken}`);
+        toast.success(`¡Intercambio registrado en Solana Devnet! Slot: #${latest.context.slot}`);
+        setSwapAmount('');
+      } catch (err: any) {
+        console.error("Solana swap error:", err);
+        toast.error(`Error en intercambio Solana: ${err.message || 'Error de red'}`);
+      } finally {
+        setIsSwapping(false);
+      }
+      return;
+    }
+
+    if (!connected || !address) {
+      toast.error(t.alerts.connectWalletFirst || "Conecta tu wallet de Stellar.");
       return;
     }
 
@@ -853,14 +896,15 @@ export default function Home() {
                   <select
                     value={fromToken}
                     onChange={(e) => {
-                      const val = e.target.value as "USDC" | "XLM" | "ARS";
+                      const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
                       setFromToken(val);
                       if (val === toToken) setToToken(fromToken);
                     }}
                     className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
                   >
                     <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
-                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM</option>
+                    <option value="SOL" className="bg-[#0d1624] text-[#14F195] py-1 font-bold">SOL (Solana)</option>
+                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM (Stellar)</option>
                     <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
                   </select>
                 </div>
@@ -870,7 +914,7 @@ export default function Home() {
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pt-1">
                 <button
                   onClick={handleSwapTokens}
-                  className="w-10 h-10 bg-muted/10 border-4 border-deep-navy rounded-full flex items-center justify-center text-muted hover:text-accent-teal hover:rotate-180 transition-all duration-300 shadow-xl"
+                  className="w-10 h-10 bg-muted/10 border-4 border-deep-navy rounded-full flex items-center justify-center text-muted hover:text-accent-teal hover:rotate-180 transition-all duration-300 shadow-xl cursor-pointer"
                 >
                   <ArrowRightLeft className="w-4 h-4" />
                 </button>
@@ -887,14 +931,15 @@ export default function Home() {
                   <select
                     value={toToken}
                     onChange={(e) => {
-                      const val = e.target.value as "USDC" | "XLM" | "ARS";
+                      const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
                       setToToken(val);
                       if (val === fromToken) setFromToken(toToken);
                     }}
                     className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
                   >
-                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM</option>
+                    <option value="SOL" className="bg-[#0d1624] text-[#14F195] py-1 font-bold">SOL (Solana)</option>
                     <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
+                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM (Stellar)</option>
                     <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
                   </select>
                 </div>
@@ -911,7 +956,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setIsBankModalOpen(true)}
-                  className="text-[10px] font-bold uppercase tracking-wider bg-accent-teal text-background px-2.5 py-1 rounded hover:bg-accent-teal/90 transition-colors shadow-sm"
+                  className="text-[10px] font-bold uppercase tracking-wider bg-accent-teal text-background px-2.5 py-1 rounded hover:bg-accent-teal/90 transition-colors shadow-sm cursor-pointer"
                 >
                   Operar ARS
                 </button>
@@ -921,24 +966,39 @@ export default function Home() {
             <div className="mt-6 space-y-2 text-xs font-mono text-muted px-2">
               <div className="flex justify-between">
                 <span>{t.dashboard.swapNetworkFee}</span>
-                <span>{fromToken === "ARS" || toToken === "ARS" ? "0% (Transferencia Directa)" : "0.00001 XLM"}</span>
+                <span>
+                  {fromToken === "ARS" || toToken === "ARS"
+                    ? "0% (Transferencia Directa)"
+                    : (fromToken === "SOL" || toToken === "SOL")
+                    ? "~0.000005 SOL ($0.0008) • Solana Devnet"
+                    : "0.00001 XLM • Stellar Testnet"}
+                </span>
               </div>
             </div>
 
             <button
               onClick={executeSwap}
-              disabled={!connected || Number(swapAmount) <= 0 || isSwapping}
-              className="w-full mt-8 py-4 bg-gradient-to-r from-accent-teal/20 to-accent-teal/40 border border-accent-teal/30 hover:border-accent-teal/60 rounded-2xl font-bold flex items-center justify-center gap-4 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              disabled={(!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") || Number(swapAmount) <= 0 || isSwapping}
+              className="w-full mt-8 py-4 bg-gradient-to-r from-accent-teal/20 to-accent-teal/40 border border-accent-teal/30 hover:border-accent-teal/60 rounded-2xl font-bold flex items-center justify-center gap-4 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
-              <div className={`absolute left-0 top-0 h-full w-full bg-accent-teal/10 flex items-center justify-center transition-transform duration-500 -translate-x-full ${!(!connected || Number(swapAmount) <= 0 || isSwapping) ? 'group-hover:translate-x-0' : ''}`}>
+              <div className={`absolute left-0 top-0 h-full w-full bg-accent-teal/10 flex items-center justify-center transition-transform duration-500 -translate-x-full ${!((!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") || Number(swapAmount) <= 0 || isSwapping) ? 'group-hover:translate-x-0' : ''}`}>
               </div>
               <span className="uppercase tracking-[0.2em] text-accent-teal group-hover:text-foreground transition-colors z-10">
-                {isSwapping ? 'Procesando...' : (fromToken === "ARS" || toToken === "ARS" ? 'Transferir con Banco / MP (ARS)' : (!connected ? t.common.connectWallet : t.dashboard.swapConfirm))}
+                {isSwapping 
+                  ? 'Procesando...' 
+                  : (fromToken === "ARS" || toToken === "ARS" 
+                      ? 'Transferir con Banco / MP (ARS)' 
+                      : ((fromToken === "SOL" || toToken === "SOL")
+                          ? (solConnected ? `Intercambiar en Solana (${fromToken} → ${toToken})` : 'Conectar Phantom / Solflare')
+                          : (!connected ? t.common.connectWallet : t.dashboard.swapConfirm)
+                        )
+                    )
+                }
               </span>
             </button>
           </section>
 
-          {/* BEGIN: Stellar DeFi Yield & Pools Agent (Partner Feature - Replaces old Contributors Ranking) */}
+          {/* BEGIN: Multichain DeFi Yield & Treasury Pools (Solana + Stellar) */}
           <section className="space-y-4">
             <StellarPoolsAgent compact />
 

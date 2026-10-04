@@ -157,7 +157,7 @@ export default function GoalsPage() {
         {/* Currency Selector */}
         <div className="flex items-center gap-2 p-1.5 bg-foreground/5 rounded-2xl border border-border-subtle shrink-0">
           <span className="text-xs text-muted font-bold px-2">{t.goalsPage.currencyLabel}</span>
-          {(["USDC", "ARS", "XLM"] as SupportedCurrency[]).map((c) => (
+          {(["USDC", "ARS", "XLM", "SOL"] as SupportedCurrency[]).map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
@@ -196,6 +196,8 @@ export default function GoalsPage() {
                     ? formatCurrency(initialCapital * DEFAULT_RATES.USDC_TO_ARS, "ARS")
                     : currency === "XLM"
                     ? formatCurrency(initialCapital / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                    : currency === "SOL"
+                    ? formatCurrency(initialCapital / DEFAULT_RATES.SOL_TO_USDC, "SOL")
                     : `${initialCapital} USDC`}
                 </span>
               </div>
@@ -222,6 +224,8 @@ export default function GoalsPage() {
                     ? formatCurrency(targetProfit * DEFAULT_RATES.USDC_TO_ARS, "ARS")
                     : currency === "XLM"
                     ? formatCurrency(targetProfit / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                    : currency === "SOL"
+                    ? formatCurrency(targetProfit / DEFAULT_RATES.SOL_TO_USDC, "SOL")
                     : `+${targetProfit} USDC`}
                 </span>
               </div>
@@ -325,6 +329,8 @@ export default function GoalsPage() {
                     ? formatCurrency(accruedYield * DEFAULT_RATES.USDC_TO_ARS, "ARS")
                     : currency === "XLM"
                     ? formatCurrency(accruedYield / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                    : currency === "SOL"
+                    ? formatCurrency(accruedYield / DEFAULT_RATES.SOL_TO_USDC, "SOL")
                     : `+${accruedYield.toFixed(4)} USDC`}
                 </div>
               </div>
@@ -335,6 +341,8 @@ export default function GoalsPage() {
                     ? formatCurrency(stakedAmount * DEFAULT_RATES.USDC_TO_ARS, "ARS")
                     : currency === "XLM"
                     ? formatCurrency(stakedAmount / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                    : currency === "SOL"
+                    ? formatCurrency(stakedAmount / DEFAULT_RATES.SOL_TO_USDC, "SOL")
                     : `${stakedAmount.toFixed(2)} USDC`}
                 </span>
               </div>
@@ -379,6 +387,13 @@ export default function GoalsPage() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-bold text-foreground">{pos.poolName}</span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                              pos.chain === 'solana'
+                                ? 'bg-purple-500/10 text-purple-300 border-purple-500/20'
+                                : 'bg-blue-500/10 text-blue-300 border-blue-500/20'
+                            }`}>
+                              {pos.chain === 'solana' ? '⚡ Solana' : '🌐 Stellar'}
+                            </span>
                             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">
                               +{pos.apy}% APY
                             </span>
@@ -532,8 +547,8 @@ export default function GoalsPage() {
               </div>
             </div>
 
-            {/* Metrics Breakdown in 3 Currencies */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Metrics Breakdown in 4 Currencies */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
                 <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardArs}</span>
                 <span className="text-base font-bold font-mono text-foreground block">
@@ -554,6 +569,14 @@ export default function GoalsPage() {
                 <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardXlm}</span>
                 <span className="text-base font-bold font-mono text-indigo-400 block">
                   {tripleProfit.formatted.xlm}
+                </span>
+                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-foreground/5 border border-purple-500/20 bg-purple-500/[0.03]">
+                <span className="text-[10px] text-purple-400 uppercase font-bold block mb-1">⚡ SOL (Solana)</span>
+                <span className="text-base font-bold font-mono text-purple-300 block">
+                  {tripleProfit.formatted.sol}
                 </span>
                 <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
               </div>

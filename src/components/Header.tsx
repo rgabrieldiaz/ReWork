@@ -40,14 +40,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         solBalance,
     } = useSolanaWallet();
 
-    const isLoggedIn = authenticated || connected;
+    const isLoggedIn = authenticated || connected || solConnected;
     const firstName = profile?.first_name || t.profile.role;
 
-    // Simulate Net Worth & Liquidity
-    const xlmValue = (xlmBalance || 0) * 0.28;
+    // Simulate Net Worth & Liquidity across rails (Stellar + Solana + Fiat)
+    const xlmValue = (xlmBalance || 0) * (DEFAULT_RATES.XLM_TO_USDC || 0.28);
+    const solValue = (solBalance || 0) * (DEFAULT_RATES.SOL_TO_USDC || 152.5);
+    const solUsdcVal = solUsdcBalance || 0;
     const auraValue = (profile?.points || 0) * 0.05;
-    const usdcValue = usdcBalance || 0;
-    const totalLiquidUsdc = xlmValue + usdcValue;
+    const usdcValue = (usdcBalance || 0) + solUsdcVal;
+    const totalLiquidUsdc = xlmValue + solValue + usdcValue;
     const totalNetWorthUsdc = totalLiquidUsdc + stakedAmount + auraValue;
 
     const tripleLiquid = getTripleValues(totalLiquidUsdc, "USDC");
@@ -89,7 +91,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     {balanceLoading || profileLoading ? (
                                         <span className="animate-pulse bg-muted/10 rounded w-16 h-5 block mt-1"></span>
                                     ) : (
-                                        tripleNetWorth.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']
+                                        tripleNetWorth.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm' | 'sol']
                                     )}
                                 </p>
                             </div>
@@ -103,7 +105,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     {language === 'es' ? "Líquido" : "Liquid"}
                                 </span>
                                 <span className="font-mono text-sm font-bold text-foreground">
-                                    {balanceLoading ? "..." : tripleLiquid.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                    {balanceLoading ? "..." : tripleLiquid.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm' | 'sol']}
                                 </span>
                             </div>
 
@@ -116,7 +118,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                     {language === 'es' ? "En Stake" : "Staked"}
                                 </span>
                                 <span className="font-mono text-sm font-bold text-foreground">
-                                    {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm']}
+                                    {tripleStake.formatted[activeCurrency.toLowerCase() as 'usdc' | 'ars' | 'xlm' | 'sol']}
                                 </span>
                             </div>
 
@@ -138,6 +140,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                             ? formatCurrency(accruedYield * DEFAULT_RATES.USDC_TO_ARS, "ARS")
                                             : activeCurrency === "XLM"
                                             ? formatCurrency(accruedYield / DEFAULT_RATES.XLM_TO_USDC, "XLM")
+                                            : activeCurrency === "SOL"
+                                            ? formatCurrency(accruedYield / DEFAULT_RATES.SOL_TO_USDC, "SOL")
                                             : `+${accruedYield.toFixed(4)} USDC`}
                                     </span>
                                 </div>
@@ -165,7 +169,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     <div className="flex items-center gap-3">
                         {/* Currency Quick Toggle */}
                         <div className="hidden sm:flex items-center gap-1 p-1 bg-foreground/5 rounded-xl border border-border-subtle">
-                            {(["USDC", "ARS", "XLM"] as SupportedCurrency[]).map((c) => (
+                            {(["USDC", "ARS", "XLM", "SOL"] as SupportedCurrency[]).map((c) => (
                                 <button
                                     key={c}
                                     onClick={() => setActiveCurrency(c)}
