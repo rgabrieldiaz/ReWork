@@ -284,8 +284,10 @@ export const deckTranslations = {
         heading: "Thank You, Superteam & Colosseum!",
         subheading: "Watch ReWork in Action on Solana Devnet",
         lead: "We demonstrated how high-speed smart escrow, sub-cent network fees, and hybrid onboarding eradicate payment uncertainty for remote builders across the globe.",
-        videoTitle: "Official ReWork Solana Demo Walkthrough",
-        videoUrl: "https://github.com/rgabrieldiaz/ReWork",
+        videoTitle: "ReWork — Technical Product Demo (Solana Devnet)",
+        videoUrl: "https://youtu.be/8ErHzzEgisQ",
+        videoShort: "youtu.be/8ErHzzEgisQ",
+        videoId: "8ErHzzEgisQ",
         watchYoutube: "Watch Demo Video",
         ctaLive: "Launch App",
         ctaCode: "GitHub Repository",
@@ -297,7 +299,7 @@ export const deckTranslations = {
         bullet3Desc: "Idle treasury capital generating 7-18% APY with Marinade & Kamino.",
         closingMessage: "Ready to scale through Superteam Argentina's Top Talent Mentorship and compete to win globally at Colosseum!",
         footerLeft: "ReWork Protocol · Superteam Argentina Track @ Crypto World's Fair 2026",
-        footerRight: "Explore live at: github.com/rgabrieldiaz/ReWork"
+        footerRight: "Explore live at: youtu.be/8ErHzzEgisQ"
       }
     },
     es: {
@@ -576,8 +578,10 @@ export const deckTranslations = {
         heading: "¡Muchas Gracias, Superteam & Colosseum!",
         subheading: "Mira ReWork en Acción sobre Solana Devnet",
         lead: "Demostramos cómo la custodia programable de sub-segundo, las comisiones de menos de un centavo y el onboarding híbrido eliminan la incertidumbre de cobro para freelancers y creadores en todo el mundo.",
-        videoTitle: "Recorrido Oficial de ReWork en Solana",
-        videoUrl: "https://github.com/rgabrieldiaz/ReWork",
+        videoTitle: "ReWork — Demo Técnica del Producto (Solana Devnet)",
+        videoUrl: "https://youtu.be/8ErHzzEgisQ",
+        videoShort: "youtu.be/8ErHzzEgisQ",
+        videoId: "8ErHzzEgisQ",
         watchYoutube: "Ver Video de Demo",
         ctaLive: "Abrir Plataforma",
         ctaCode: "Repositorio en GitHub",
@@ -589,7 +593,7 @@ export const deckTranslations = {
         bullet3Desc: "Tesorerías generando 7-18% APY en streaming con Marinade y Kamino.",
         closingMessage: "¡Listos para escalar en la mentoría Top Talent de Superteam Argentina y competir para ganar a nivel global en Colosseum!",
         footerLeft: "ReWork Protocol · Track Superteam Argentina @ Crypto World's Fair 2026",
-        footerRight: "Explora la demo en: github.com/rgabrieldiaz/ReWork"
+        footerRight: "Explora la demo en: youtu.be/8ErHzzEgisQ"
       }
     }
   },
@@ -872,6 +876,8 @@ export const deckTranslations = {
         lead: "We demonstrated how smart contracts, SEP-0007 mobile QR payments, and non-custodial escrow eradicate payment uncertainty for digital workers in LATAM.",
         videoTitle: "Official ReWork Walkthrough",
         videoUrl: "https://youtu.be/fycBPw7Y6zg",
+        videoShort: "youtu.be/fycBPw7Y6zg",
+        videoId: "fycBPw7Y6zg",
         watchYoutube: "Watch on YouTube",
         ctaLive: "Explore Live Platform",
         ctaCode: "GitHub Repository",
@@ -1164,6 +1170,8 @@ export const deckTranslations = {
         lead: "Demostramos cómo los contratos inteligentes, los pagos móviles QR SEP-0007 y la custodia no-custodial eliminan la incertidumbre de cobro para trabajadores digitales en LATAM.",
         videoTitle: "Recorrido Oficial de ReWork",
         videoUrl: "https://youtu.be/fycBPw7Y6zg",
+        videoShort: "youtu.be/fycBPw7Y6zg",
+        videoId: "fycBPw7Y6zg",
         watchYoutube: "Ver en YouTube",
         ctaLive: "Explorar Plataforma en Vivo",
         ctaCode: "Repositorio en GitHub",

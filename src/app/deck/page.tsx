@@ -1215,7 +1215,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
             <div className="lg:col-span-7 space-y-2">
               <div className="relative rounded-2xl overflow-hidden border border-white/20 shadow-[0_0_35px_rgba(239,68,68,0.25)] bg-slate-950 aspect-video flex items-center justify-center">
                 <iframe
-                  src="https://www.youtube.com/embed/fycBPw7Y6zg?rel=0"
+                  src={`https://www.youtube.com/embed/${s.videoId || (ecosystem === "solana" ? "8ErHzzEgisQ" : "fycBPw7Y6zg")}?rel=0`}
                   title={s.videoTitle}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
@@ -1233,7 +1233,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
                   rel="noopener noreferrer"
                   className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 font-semibold"
                 >
-                  <span>youtu.be/fycBPw7Y6zg</span>
+                  <span>{s.videoShort || (ecosystem === "solana" ? "youtu.be/8ErHzzEgisQ" : "youtu.be/fycBPw7Y6zg")}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
