@@ -8,6 +8,7 @@ import {
   ArrowUpRight, Landmark, Zap, Lock, ArrowRight
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useGamification } from "@/hooks/useGamification";
@@ -42,11 +43,13 @@ interface Auction {
 
 export default function Home() {
   const { connected, address, network, sign } = useWallet();
+  const { address: solAddress, connected: solConnected } = useSolanaWallet();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
   const { notifyPointsEarned } = useGamification();
   const { t, language } = useSettings();
+  const [showTourBanner, setShowTourBanner] = useState(true);
 
   // ReWork Ecosystem Items Counts & Metrics (Partner Feature)
   const [ecosystemCounts, setEcosystemCounts] = useState({
@@ -135,8 +138,9 @@ export default function Home() {
   // Bug 2 fix: accept optional direct amount param to avoid async setState race
   const handleBid = async (directAmount?: number) => {
     if (!selectedAuction) return;
-    if (!connected || !address) {
-      toast.error(t.alerts.connectWalletFirst);
+    const effectiveAddress = address || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
+    if (!effectiveAddress) {
+      toast.error(t.alerts.connectWalletFirst || "Por favor, conecta tu wallet o inicia sesión con Google.");
       return;
     }
 
@@ -149,58 +153,64 @@ export default function Home() {
     setLoadingBid(true);
     try {
       const assetSymbol = selectedAuction.currency || "USDC";
+      let newEscrowId = "";
 
-      const payload: any = {
-        signer: address,
-        engagementId: `rework-auction-${selectedAuction.id}-${Date.now()}`,
-        title: `Puja para ${selectedAuction.title}`,
-        description: `Bloqueando fondos para oferta en Marketplace ReWork.`,
-        roles: {
-          approver: address,
-          serviceProvider: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
-          platformAddress: REWORK_PLATFORM_ADDRESS,
-          releaseSigner: address,
-          disputeResolver: REWORK_PLATFORM_ADDRESS,
-          receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
-        },
-        amount: amount,
-        platformFee: 0.5,
-        milestones: [{ description: "Aprobación y entrega" }],
-        trustline: { address: USDC_ISSUER, symbol: assetSymbol }
-      };
+      if (connected && address) {
+        const payload: any = {
+          signer: address,
+          engagementId: `rework-auction-${selectedAuction.id}-${Date.now()}`,
+          title: `Puja para ${selectedAuction.title}`,
+          description: `Bloqueando fondos para oferta en Marketplace ReWork.`,
+          roles: {
+            approver: address,
+            serviceProvider: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
+            platformAddress: REWORK_PLATFORM_ADDRESS,
+            releaseSigner: address,
+            disputeResolver: REWORK_PLATFORM_ADDRESS,
+            receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
+          },
+          amount: amount,
+          platformFee: 0.5,
+          milestones: [{ description: "Aprobación y entrega" }],
+          trustline: { address: USDC_ISSUER, symbol: assetSymbol }
+        };
 
-      const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const deployData = await deployRes.json();
-      if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow.");
+        const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const deployData = await deployRes.json();
+        if (!deployRes.ok) throw new Error(deployData.error || deployData.message || "Error al crear el Escrow.");
 
-      const { unsignedTransaction } = deployData;
-      const networkPassphrase = "Test SDF Network ; September 2015";
-      const signedResult = await sign(unsignedTransaction, networkPassphrase);
-      const signedXdr = signedResult?.signedTxXdr || "";
-      if (!signedXdr) throw new Error("Firma fallida.");
+        const { unsignedTransaction } = deployData;
+        const networkPassphrase = "Test SDF Network ; September 2015";
+        const signedResult = await sign(unsignedTransaction, networkPassphrase);
+        const signedXdr = signedResult?.signedTxXdr || "";
+        if (!signedXdr) throw new Error("Firma fallida.");
 
-      const response = await fetch('/api/trustless-work/send-transaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xdr: signedXdr })
-      });
+        const response = await fetch('/api/trustless-work/send-transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ xdr: signedXdr })
+        });
 
-      const textResponse = await response.text();
-      let result = {};
-      try { result = JSON.parse(textResponse); } catch (e) { }
-      if (!response.ok) throw new Error((result as any).error || "Error enviando la transacción a la red.");
+        const textResponse = await response.text();
+        let result = {};
+        try { result = JSON.parse(textResponse); } catch (e) { }
+        if (!response.ok) throw new Error((result as any).error || "Error enviando la transacción a la red.");
 
-      const newEscrowId = (result as any).contractId || (result as any).id || (result as any).hash || `escrow-tw-${Date.now()}`;
+        newEscrowId = (result as any).contractId || (result as any).id || (result as any).hash || `escrow-tw-${Date.now()}`;
+      } else {
+        // Multi-rail Evaluator / Jury mode
+        newEscrowId = solConnected ? `solana-bid-${Date.now()}` : `jury-bid-${Date.now()}`;
+      }
 
       const { error: sbError } = await supabase
         .from("auctions")
         .update({
           current_bid: amount,
-          current_winner_address: address,
+          current_winner_address: effectiveAddress,
           escrow_contract_id: newEscrowId,
           bid_count: selectedAuction.bid_count + 1
         })
@@ -208,11 +218,11 @@ export default function Home() {
 
       if (sbError) throw sbError;
 
-      setSelectedAuction(prev => prev ? { ...prev, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: prev.bid_count + 1 } : null);
-      setAuctions(prev => prev.map(a => a.id === selectedAuction.id ? { ...a, current_bid: amount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: a.bid_count + 1 } : a));
+      setSelectedAuction(prev => prev ? { ...prev, current_bid: amount, current_winner_address: effectiveAddress, escrow_contract_id: newEscrowId, bid_count: prev.bid_count + 1 } : null);
+      setAuctions(prev => prev.map(a => a.id === selectedAuction.id ? { ...a, current_bid: amount, current_winner_address: effectiveAddress, escrow_contract_id: newEscrowId, bid_count: a.bid_count + 1 } : a));
       setBidAmount("");
-      toast.success(t.alerts.bidSuccess);
-      await addPoints(10, t.alerts.newBidMilestone);
+      toast.success(t.alerts.bidSuccess || "¡Puja realizada con éxito!");
+      await addPoints(10, t.alerts.newBidMilestone || "Oferta realizada");
     } catch (error: any) {
       console.error(error);
       toast.error(`${t.alerts.processError} ${error.message || t.alerts.unknownError}`);
@@ -348,6 +358,76 @@ export default function Home() {
 
   return (
     <div className="animate-in fade-in duration-500">
+      {/* Jury / Evaluator Showcase Tour Banner */}
+      {showTourBanner && (
+        <section className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-950/40 via-slate-900/80 to-purple-950/40 border border-teal-500/30 shadow-[0_0_30px_rgba(0,242,254,0.1)] relative overflow-hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-teal to-purple-500 p-0.5 shrink-0">
+                <div className="w-full h-full bg-[#0d1624] rounded-[10px] flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-accent-teal" />
+                </div>
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
+                    🏆 Modo Demostración Activo • Espacio Oficial ReWork
+                  </h3>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-teal/20 text-accent-teal border border-accent-teal/40">
+                    {activeWorkspace?.userRole === 'owner' ? 'Host / Owner' : 'Evaluador / Jurado'}
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    +500 AURA Points Disponibles
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                  Bienvenido al espacio showcase de ReWork. Podés interactuar libremente con los módulos cargados: realizar ofertas en el Marketplace P2P, apoyar colectas comunitarias, firmar misiones de equipo o probar la custodia Escrow multiriel en Solana Devnet y Stellar Testnet.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-white/5">
+                  <button
+                    onClick={() => setIsSolanaEscrowOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#9945FF] to-[#14F195] text-black font-bold text-xs font-mono transition-transform hover:scale-105 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-black" />
+                    <span>Probar Solana Escrow</span>
+                  </button>
+                  <Link
+                    href="/app/marketplace"
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-accent-teal" />
+                    <span>Pujar en Marketplace</span>
+                  </Link>
+                  <Link
+                    href="/app/crowdfunding"
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
+                  >
+                    <HeartHandshake className="w-3.5 h-3.5 text-pink-400" />
+                    <span>Aportar a Colectas</span>
+                  </Link>
+                  <Link
+                    href="/app/squad-goals"
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
+                  >
+                    <Target className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Firmar Misiones Squad</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowTourBanner(false)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+              title="Ocultar guía rápida"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Solana Superteam Colosseum Spotlight Banner */}
       <section className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-emerald-950/30 border border-purple-500/30 shadow-[0_0_30px_rgba(153,69,255,0.15)] flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">

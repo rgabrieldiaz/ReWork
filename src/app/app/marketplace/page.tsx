@@ -5,6 +5,7 @@ import { Gavel, Clock, Search, ShieldCheck, Plus, XCircle, HandCoins, ChevronDow
 import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER } from "@/lib/stellar";
 import { useWallet } from "@/hooks/useWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 // signTransaction is handled by useWallet().sign
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
 import { AuctionDetailModal } from "@/components/AuctionDetailModal";
@@ -98,10 +99,13 @@ export default function MarketplacePage() {
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
     const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
     const { connected, address, sign } = useWallet();
-    const { addPoints } = useProfile();
+    const { address: solAddress, connected: solConnected } = useSolanaWallet();
+    const { profile, addPoints } = useProfile();
     const { t, language } = useSettings();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
+
+    const effectiveAddress = address || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -280,8 +284,8 @@ export default function MarketplacePage() {
     }, [auctions, debouncedSearchQuery, activeTab, activeFilter, activeSort, address, hideFinished]);
 
     const handleBid = async (auction: Auction, bidAmount: number) => {
-        if (!connected || !address) {
-            toast.error("Por favor, conecta tu wallet primero.");
+        if (!effectiveAddress) {
+            toast.error("Por favor, inicia sesión con Google o conecta tu wallet para ofertar.");
             return;
         }
 
@@ -294,89 +298,95 @@ export default function MarketplacePage() {
 
         try {
             const assetSymbol = auction.currency || "USDC";
+            let newEscrowId = "";
 
-            // 1. Prepare Payload for Trustless Work Escrow
-            const sellerAddress = auction.seller.length > 20 ? auction.seller : REWORK_PLATFORM_ADDRESS;
-            
-            const payload: any = {
-                signer: address,
-                engagementId: `rework-auction-${auction.id}-${Date.now()}`,
-                title: `Puja para ${auction.title}`,
-                description: `Bloqueando fondos para oferta de ${bidAmount} ${assetSymbol} en Marketplace ReWork.`,
-                roles: {
-                    approver: address,
-                    serviceProvider: sellerAddress,
-                    platformAddress: REWORK_PLATFORM_ADDRESS,
-                    releaseSigner: address,
-                    disputeResolver: REWORK_PLATFORM_ADDRESS,
-                    receiver: sellerAddress,
-                },
-                amount: bidAmount,
-                platformFee: 0.5,
-                milestones: [
-                    { 
-                        description: "Aprobación y entrega del artículo por el vendedor"
+            if (connected && address) {
+                // 1. Prepare Payload for Trustless Work Escrow
+                const sellerAddress = auction.seller.length > 20 ? auction.seller : REWORK_PLATFORM_ADDRESS;
+                
+                const payload: any = {
+                    signer: address,
+                    engagementId: `rework-auction-${auction.id}-${Date.now()}`,
+                    title: `Puja para ${auction.title}`,
+                    description: `Bloqueando fondos para oferta de ${bidAmount} ${assetSymbol} en Marketplace ReWork.`,
+                    roles: {
+                        approver: address,
+                        serviceProvider: sellerAddress,
+                        platformAddress: REWORK_PLATFORM_ADDRESS,
+                        releaseSigner: address,
+                        disputeResolver: REWORK_PLATFORM_ADDRESS,
+                        receiver: sellerAddress,
+                    },
+                    amount: bidAmount,
+                    platformFee: 0.5,
+                    milestones: [
+                        { 
+                            description: "Aprobación y entrega del artículo por el vendedor"
+                        }
+                    ],
+                    trustline: {
+                        address: USDC_ISSUER,
+                        symbol: assetSymbol
                     }
-                ],
-                trustline: {
-                    address: USDC_ISSUER,
-                    symbol: assetSymbol
+                };
+
+                console.log("[Marketplace] Sending TW Payload:", JSON.stringify(payload, null, 2));
+
+                // 2. Proxy deploy
+                const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const deployData = await deployRes.json();
+
+                if (!deployRes.ok) {
+                    if (deployRes.status === 401) {
+                        throw new Error("Error de Autenticación: La API Key de Trustless Work es inválida. Por favor, revisá tu .env.local y generá una nueva en el Dashboard de TW.");
+                    }
+                    throw new Error(deployData.error || deployData.message || "Error al crear el Escrow en el servidor.");
                 }
-            };
 
-            console.log("[Marketplace] Sending TW Payload:", JSON.stringify(payload, null, 2));
+                const { unsignedTransaction } = deployData;
+                if (!unsignedTransaction) throw new Error("No XDR proveniente de Trustless Work.");
 
-            // 2. Proxy deploy
-            const deployRes = await fetch('/api/trustless-work/deploy-escrow', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const deployData = await deployRes.json();
+                // 3. Sign Transaction via Wallet
+                const networkPassphrase = "Test SDF Network ; September 2015";
+                const signedResult = await sign(unsignedTransaction, networkPassphrase);
+                const signedXdr = signedResult?.signedTxXdr || "";
 
-            if (!deployRes.ok) {
-                if (deployRes.status === 401) {
-                    throw new Error("Error de Autenticación: La API Key de Trustless Work es inválida. Por favor, revisá tu .env.local y generá una nueva en el Dashboard de TW.");
+                if (!signedXdr) throw new Error("Firma cancelada o fallida.");
+
+                // 4. Submit to Trustless Work 
+                const response = await fetch('/api/trustless-work/send-transaction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ xdr: signedXdr })
+                });
+
+                const textResponse = await response.text();
+                let result;
+                try {
+                    result = textResponse ? JSON.parse(textResponse) : {};
+                } catch (e) {
+                    // Empty string happens if the Next.js API returns 200 without a body
+                    result = {};
                 }
-                throw new Error(deployData.error || deployData.message || "Error al crear el Escrow en el servidor.");
+
+                if (!response.ok) throw new Error(result.error || result.message || "Error enviando la transacción a la red.");
+
+                newEscrowId = result.contractId || result.id || `escrow-tw-${Date.now()}`;
+            } else {
+                // Multi-rail Evaluator / Jury Mode
+                newEscrowId = solConnected ? `solana-eval-bid-${Date.now()}` : `jury-bid-${Date.now()}`;
             }
-
-            const { unsignedTransaction } = deployData;
-            if (!unsignedTransaction) throw new Error("No XDR proveniente de Trustless Work.");
-
-            // 3. Sign Transaction via Wallet
-            const networkPassphrase = "Test SDF Network ; September 2015";
-            const signedResult = await sign(unsignedTransaction, networkPassphrase);
-            const signedXdr = signedResult?.signedTxXdr || "";
-
-            if (!signedXdr) throw new Error("Firma cancelada o fallida.");
-
-            // 4. Submit to Trustless Work 
-            const response = await fetch('/api/trustless-work/send-transaction', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ xdr: signedXdr })
-            });
-
-            const textResponse = await response.text();
-            let result;
-            try {
-                result = textResponse ? JSON.parse(textResponse) : {};
-            } catch (e) {
-                // Empty string happens if the Next.js API returns 200 without a body
-                result = {};
-            }
-
-            if (!response.ok) throw new Error(result.error || result.message || "Error enviando la transacción a la red.");
-
-            const newEscrowId = result.contractId || result.id || `escrow-tw-${Date.now()}`;
 
             // 5. Update Supabase
             const { error: sbError } = await supabase
                 .from("auctions")
                 .update({
                     current_bid: bidAmount,
-                    current_winner_address: address,
+                    current_winner_address: effectiveAddress,
                     escrow_contract_id: newEscrowId,
                     bid_count: auction.bid_count + 1
                 })
@@ -386,13 +396,22 @@ export default function MarketplacePage() {
 
             // Optimistic update
             const updatedAuctions = auctions.map(a => a.id === auction.id ? {
-                ...a, current_bid: bidAmount, current_winner_address: address, escrow_contract_id: newEscrowId, bid_count: auction.bid_count + 1
+                ...a, current_bid: bidAmount, current_winner_address: effectiveAddress, escrow_contract_id: newEscrowId, bid_count: auction.bid_count + 1
             } : a);
             setAuctions(updatedAuctions);
 
             // Update selected auction in modal
             if (selectedAuction && selectedAuction.id === auction.id) {
                 setSelectedAuction(updatedAuctions.find(a => a.id === auction.id) || null);
+            }
+
+            await addPoints(10, "Oferta en Marketplace (Modo Evaluador)");
+            if (solConnected) {
+                toast.success("¡Oferta registrada con tu cuenta Solana! (Modo Jurado / Evaluador)");
+            } else if (!connected) {
+                toast.success("¡Oferta registrada con tu perfil! (Modo Jurado / Evaluador)");
+            } else {
+                toast.success("¡Oferta enviada y confirmada en la blockchain!");
             }
 
             // --- DISPARAR NOTIFICACION ---

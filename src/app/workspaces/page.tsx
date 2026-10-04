@@ -233,13 +233,18 @@ export default function WorkspacesPage() {
                         : <Building2 className="w-7 h-7 text-foreground" />
                       }
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {(ws.slug === 'rework' || ws.slug === 'rework-global' || ws.name?.toLowerCase().includes('rework')) && (
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-accent-teal border border-accent-teal/40 uppercase tracking-wider shadow-sm">
+                          ⭐ Showcase Oficial
+                        </span>
+                      )}
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
                         ws.userRole === 'owner' ? 'bg-accent-teal/10 border-accent-teal/30 text-accent-teal' :
                         ws.userRole === 'admin' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
                         'bg-foreground/5 border-border-subtle text-muted'
                       }`}>
-                        {ws.userRole || 'Collaborator'}
+                        {ws.userRole === 'owner' ? 'Host / Owner' : (ws.userRole === 'member' ? 'Evaluador / Colaborador' : ws.userRole || 'Colaborador')}
                       </span>
                       {(isAdmin || (ws.is_premium && (ws.userRole === 'admin' || ws.userRole === 'owner'))) && (
                         <button 

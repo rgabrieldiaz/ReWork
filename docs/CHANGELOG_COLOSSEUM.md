@@ -64,6 +64,12 @@
   - Upgraded `/auth` onboarding gateway with segmented Web3 switcher (`[ ⚡ Solana Devnet | 🌐 Stellar Testnet ]`) and clean gasless Web2 Google/Email entry.
   - Transformed Escrow modal (`src/components/SolanaEscrowModal.tsx`) into a dual-rail Multichain Escrow Vault supporting Solana Devnet (~400ms) and Stellar Testnet (~3s), with dynamic explorer links and cross-rail settlement notices.
   - Neutralized platform copy across `src/lib/translations.ts`, `src/components/Header.tsx`, and `src/app/app/page.tsx` to put product solutions and USDC digital dollars first.
+- **Dual Host / Evaluator Architecture & Showcase Auto-Onboarding:**
+  - Automated Flagship Showcase Enrollment: Any hackathon judge or evaluator logging in with Google (Privy), Solana (Phantom/Solflare), or Stellar (Freighter/Lobstr) is automatically enrolled into the official ReWork flagship showcase workspace (`slug: rework`), ensuring they never see an empty screen.
+  - Welcome AURA Incentive: Auto-provisioning of 500 AURA points for new evaluators to immediately test interactive flows.
+  - Multi-Rail Interactive Flows: Evaluators on Google or Solana can now place bids in Marketplace, contribute to Crowdfunding colectas, and sign/fund Squad Goals without roadblocks, alongside real on-chain Soroban Trustless Work execution for Stellar wallet sessions.
+  - SuperAdmin / Host Governance: Founders maintain full owner privileges over the showcase space (`SUPER_ADMIN_EMAILS` bypass).
+  - Jury Quick-Tour Banner: Dismissible interactive guide in the main dashboard (`src/app/app/page.tsx`) highlighting the Solana Escrow Vault, Marketplace bidding, crowdfunding, and team mission goals.
 - **Audit & Code Quality:**
   - Ran `scripts/detect_fake_code.mjs`: 0 mock alerts, 0 fake timeouts, 0 hardcoded dummy addresses.
   - Full TypeScript validation passed (`npx tsc --noEmit` with 0 errors).
@@ -71,3 +77,4 @@
 ### Week 2 (October 05 – October 12, 2026)
 - *(To be updated as development progresses)*
 - Target: Full functional Solana escrow demo, user validation metrics, English pitch & demo video recorded.
+

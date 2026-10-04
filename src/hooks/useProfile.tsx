@@ -4,6 +4,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@/hooks/useWallet';
+import { useSolanaWallet } from '@/hooks/useSolanaWallet';
 import { useGamification } from '@/hooks/useGamification';
 import { isSuperAdmin } from '@/lib/admins';
 
@@ -36,6 +37,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export function ProfileProvider({ children }: { children: ReactNode }) {
     const { ready, authenticated, user: privyUser } = usePrivy();
     const { address: walletAddress, loading: walletLoading, injectAddress } = useWallet();
+    const { address: solAddress, connected: solConnected } = useSolanaWallet();
     const { notifyPointsEarned } = useGamification();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -47,24 +49,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
             setLoading(true);
             try {
-                // Determine identity: Privy user email or wallet address
+                // Determine identity: Privy user email, Stellar wallet, or Solana wallet
                 const privyEmail = privyUser?.email?.address || privyUser?.google?.email || null;
 
                 let query = supabase.from('users').select('*');
 
                 if (privyEmail) {
-                    // Fetch by email if authenticated via Privy
                     query = query.eq('email', privyEmail);
                 } else if (walletAddress) {
-                    // Fetch by wallet if connected via SWK
                     query = query.eq('wallet_address', walletAddress);
+                } else if (solAddress) {
+                    query = query.or(`solana_address.eq.${solAddress},wallet_address.eq.${solAddress}`);
                 } else {
                     setProfile(null);
                     setLoading(false);
                     return;
                 }
 
-                const { data, error } = await query.single();
+                const { data, error } = await query.maybeSingle();
 
                 if (error && error.code !== 'PGRST116') {
                     console.warn('Error fetching profile detail HTTP/DB:', JSON.stringify({
@@ -78,13 +80,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 if (data) {
                     const currentProfile = data as UserProfile;
                     const applyAdmin = (p: UserProfile): UserProfile => {
-                        if (isSuperAdmin(p.email, p.wallet_address, p.role)) {
+                        if (isSuperAdmin(p.email, p.wallet_address || p.solana_address, p.role)) {
                             return { ...p, role: 'Admin' };
                         }
                         return p;
                     };
 
-                    if (isSuperAdmin(currentProfile.email, currentProfile.wallet_address, currentProfile.role) && currentProfile.role !== 'Admin') {
+                    // Welcome points bonus for new evaluators / judges with 0 points
+                    if ((!currentProfile.points || currentProfile.points === 0) && !isSuperAdmin(currentProfile.email, currentProfile.wallet_address, currentProfile.role)) {
+                        currentProfile.points = 500;
+                        supabase.from('users').update({ points: 500 }).eq('id', currentProfile.id).then();
+                    }
+
+                    if (isSuperAdmin(currentProfile.email, currentProfile.wallet_address || currentProfile.solana_address, currentProfile.role) && currentProfile.role !== 'Admin') {
                         currentProfile.role = 'Admin';
                         supabase.from('users').update({ role: 'Admin' }).eq('id', currentProfile.id).then();
                     }
@@ -99,7 +107,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                         
                         const { data: updatedData } = await supabase
                             .from('users')
-                            .update({ wallet_address: assignWallet, updated_at: new Date().toISOString() })
+                            .update({ 
+                                wallet_address: assignWallet, 
+                                stellar_address: assignWallet,
+                                solana_address: solAddress || currentProfile.solana_address,
+                                updated_at: new Date().toISOString() 
+                            })
                             .eq('id', currentProfile.id)
                             .select()
                             .single();
@@ -107,22 +120,40 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                         setProfile(applyAdmin((updatedData || { ...currentProfile, wallet_address: assignWallet }) as UserProfile));
                         if (typeof injectAddress === 'function') injectAddress(assignWallet);
                     } 
-                    // 2. Auto-link explicit visible wallet address if Privy user connects a new/different external wallet
+                    // 2. Auto-link explicit visible wallet address if Privy user connects external wallet
                     else if (authenticated && assignWallet && currentProfile.wallet_address !== assignWallet) {
                         const { data: updatedData } = await supabase
                             .from('users')
-                            .update({ wallet_address: assignWallet, updated_at: new Date().toISOString() })
+                            .update({ 
+                                wallet_address: assignWallet, 
+                                stellar_address: assignWallet,
+                                solana_address: solAddress || currentProfile.solana_address,
+                                updated_at: new Date().toISOString() 
+                            })
                             .eq('id', currentProfile.id)
                             .select()
                             .single();
 
                         setProfile(applyAdmin((updatedData || currentProfile) as UserProfile));
+                    } else if (solAddress && !currentProfile.solana_address) {
+                        // Link Solana address if user connects Phantom
+                        const { data: updatedData } = await supabase
+                            .from('users')
+                            .update({ 
+                                solana_address: solAddress,
+                                updated_at: new Date().toISOString() 
+                            })
+                            .eq('id', currentProfile.id)
+                            .select()
+                            .single();
+
+                        setProfile(applyAdmin((updatedData || { ...currentProfile, solana_address: solAddress }) as UserProfile));
                     } else {
                         setProfile(applyAdmin(currentProfile));
                     }
                 } else if (authenticated && privyEmail) {
                     // Create new profile for Privy user
-                    const privyName = privyUser?.google?.name || privyUser?.email?.address?.split('@')[0] || '';
+                    const privyName = privyUser?.google?.name || privyUser?.email?.address?.split('@')[0] || 'Evaluador ReWork';
                     const privyAvatar = (privyUser as any)?.google?.picture || '';
 
                     let assignWallet = walletAddress;
@@ -142,13 +173,58 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             first_name: privyName,
                             avatar_url: privyAvatar,
                             wallet_address: assignWallet || null,
+                            stellar_address: assignWallet || null,
+                            solana_address: solAddress || null,
+                            preferred_rail: solAddress ? 'solana' : 'stellar',
                             role: initialRole,
-                            points: 0
+                            points: 500 // Sandbox welcome bonus for judges & new users
                         })
                         .select()
                         .single();
 
                     if (newData) setProfile(newData as UserProfile);
+                } else if (solConnected && solAddress) {
+                    // Create new profile for standalone Solana user
+                    const initialRole = isSuperAdmin(null, solAddress) ? 'Admin' : 'Colaborador';
+                    const shortAddr = `${solAddress.slice(0, 4)}...${solAddress.slice(-4)}`;
+                    const { data: newSolData } = await supabase
+                        .from('users')
+                        .insert({
+                            email: null,
+                            first_name: 'Solana Builder',
+                            last_name: `(${shortAddr})`,
+                            avatar_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${solAddress}`,
+                            wallet_address: solAddress,
+                            solana_address: solAddress,
+                            preferred_rail: 'solana',
+                            role: initialRole,
+                            points: 500 // Sandbox welcome bonus for judges & new users
+                        })
+                        .select()
+                        .single();
+
+                    if (newSolData) setProfile(newSolData as UserProfile);
+                } else if (walletAddress) {
+                    // Create new profile for standalone Stellar user
+                    const initialRole = isSuperAdmin(null, walletAddress) ? 'Admin' : 'Colaborador';
+                    const shortAddr = `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+                    const { data: newStellarData } = await supabase
+                        .from('users')
+                        .insert({
+                            email: null,
+                            first_name: 'Stellar Explorer',
+                            last_name: `(${shortAddr})`,
+                            avatar_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${walletAddress}`,
+                            wallet_address: walletAddress,
+                            stellar_address: walletAddress,
+                            preferred_rail: 'stellar',
+                            role: initialRole,
+                            points: 500 // Sandbox welcome bonus for judges & new users
+                        })
+                        .select()
+                        .single();
+
+                    if (newStellarData) setProfile(newStellarData as UserProfile);
                 }
             } catch (err) {
                 console.error('Error in fetchProfile:', err);
@@ -158,7 +234,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         };
 
         fetchProfile();
-    }, [ready, authenticated, privyUser, walletAddress, walletLoading]);
+    }, [ready, authenticated, privyUser, walletAddress, walletLoading, solAddress, solConnected]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
         const identifier = profile?.id;
