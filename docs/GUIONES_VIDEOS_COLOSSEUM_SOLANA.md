@@ -44,11 +44,11 @@
 
 | Bloque | Segundos | Foco Narrativo | Pantalla / Visual |
 | :--- | :---: | :--- | :--- |
-| **1. Hook & El Problema** | 0:00 - 0:28 | Dolor real en LatAm: 20% en comisiones, 14 días de espera, impagos | Diapositiva 1 y 2 de `/deck` (Fricción en LatAm) |
-| **2. La Solución ReWork** | 0:28 - 0:55 | Marketplace freelance + Escrow programable sin intermediarios | Diapositiva 3 y 4 de `/deck` (Plataforma y Propuesta) |
-| **3. Por qué Solana & UX** | 0:55 - 1:25 | Sub-second finality, comisiones de $0.0008, Privy + Phantom | Diapositiva 6 y 7 (Stack Solana + Onboarding Híbrido) |
-| **4. Modelo de Negocio & Tracción** | 1:25 - 1:45 | 1% fee vs 20% de Web2, SaaS de tesorería, mercado de $1.5T | Diapositiva 8 y 9 (Modelo & Go-To-Market) |
-| **5. Equipo & Call to Action** | 1:45 - 2:00 | Founders argentinos, listos para la mentoría y Colosseum | Diapositiva 12 (Equipo con ubicación Argentina) |
+| **1. Hook & El Problema** | 0:00 - 0:28 | 20% comisiones, 14 días de espera, impagos en LatAm | **Slide 0** (Portada Solana) y **Slide 1** (El Problema en LatAm) |
+| **2. La Solución ReWork** | 0:28 - 0:55 | Custodia programable en Solana + Suite descentralizada | **Slide 2** (La Solución) y **Slide 3** (Módulos de Plataforma) |
+| **3. Por qué Solana & UX** | 0:55 - 1:25 | 400ms finality, comisiones de $0.0008, Privy + Phantom | **Slide 4** (4 Pilares Solana) y **Slide 6** (Arquitectura @solana/kit) |
+| **4. Modelo & Comparativa** | 1:25 - 1:45 | 1% fee vs 20% Web2, SaaS de tesorería, mercado de $1.5T | **Slide 7** (Modelo de Negocio) y **Slide 9** (Comparativa vs Upwork) |
+| **5. Roadmap, Equipo & Cierre** | 1:45 - 2:00 | Founders argentinos, listos para mentoría y Colosseum | **Slide 10** (Roadmap a Escala) y **Slide 11** (Equipo en Argentina) |
 
 ---
 
@@ -56,29 +56,29 @@
 ### 🎙️ Guion en Español (Pitch · Palabra por palabra)
 
 **[0:00 - 0:28] — Hook y El Problema:**  
-*(Cámara con founder o Slide 1 de `/deck` y transición rápida a Slide 2)*  
+*(Slide 0 de `/deck` y transición fluida a Slide 1)*  
 > *"Hola, somos el equipo de **ReWork**, co-fundado en Argentina.  
-> Hoy, más de 40 millones de freelancers y trabajadores remotos en mercados emergentes enfrentan una pesadilla financiera: plataformas tradicionales como Upwork o Deel cobran hasta un 20% de comisión, retienen pagos durante 14 días y los bancos recortan hasta un 15% adicional en transferencias internacionales.  
+> Hoy, más de 40 millones de freelancers y trabajadores remotos en economías emergentes enfrentan una pesadilla financiera: plataformas tradicionales como Upwork o Deel cobran hasta un 20% de comisión, retienen pagos durante 14 días y las transferencias bancarias internacionales recortan hasta un 15% adicional por tipos de cambio forzados.  
 > Los trabajadores pierden dinero, y los clientes temen pagar por adelantado sin garantías de entrega."*
 
 **[0:28 - 0:55] — La Solución:**  
-*(Slide 3 y 4 de `/deck`)*  
-> *"Para resolverlo creamos **ReWork**: el marketplace freelance descentralizado con custodia programable en stablecoins.  
-> En ReWork, el cliente deposita los fondos del proyecto en un smart contract de custodia. El dinero queda protegido en USDC; el freelancer trabaja sabiendo que los fondos están garantizados, y se liberan de forma automática e inmediata apenas se aprueban los hitos de trabajo."*
+*(Transición a Slide 2 y Slide 3 de `/deck`)*  
+> *"Para resolverlo creamos **ReWork**: el marketplace freelance descentralizado con custodia programable en stablecoins sobre Solana.  
+> En ReWork, el cliente deposita los fondos del proyecto en un smart contract de custodia. El dinero queda protegido en USDC; el freelancer trabaja sabiendo que los fondos existen y están garantizados, y se liberan de forma automática e inmediata al verificar cada hito de trabajo en menos de 500 milisegundos."*
 
 **[0:55 - 1:25] — Por qué Solana y Onboarding Híbrido:**  
-*(Slide 6 y 7 de `/deck` con visual de Solana y Privy)*  
-> *"¿Por qué sobre Solana? Porque ninguna otra red ofrece confirmaciones en 400 milisegundos y comisiones de menos de un centavo de dólar, haciendo viables los micropagos por hora o por tarea.  
-> Y derribamos por completo la barrera Web3: gracias a billeteras embebidas con Privy, un usuario común inicia sesión con su cuenta de Google o email, recibiendo su wallet de Solana sin fricción ni necesidad de comprar criptomonedas previas. Al mismo tiempo, los nativos Web3 operan directamente con Phantom o Solflare."*
+*(Transición a Slide 4 y Slide 6 de `/deck`)*  
+> *"¿Por qué sobre Solana? Porque ninguna otra red ofrece confirmaciones en 400 milisegundos y comisiones de menos de un centavo de dólar ($0.0008), haciendo viables micropagos ágiles por entregable o por hora.  
+> Y eliminamos la barrera de entrada Web3: gracias a billeteras embebidas con Privy, un usuario común inicia sesión con Google o email, recibiendo su wallet de Solana sin fricción ni necesidad de comprar criptomonedas previas. Al mismo tiempo, los constructores nativos operan directamente con Phantom o Solflare."*
 
-**[1:25 - 1:45] — Modelo de Negocio y Mercado:**  
-*(Slide 8 y 9 de `/deck`)*  
-> *"Nuestro modelo es directo y sustentable: cobramos solo un 1% por contrato liquidado con éxito —20 veces menos que la banca tradicional y Web2—, sumado a planes SaaS para agencias y DAOs que gestionan tesorerías de equipos. Apuntamos a un mercado global de trabajo remoto de 1.5 billones de dólares."*
+**[1:25 - 1:45] — Modelo de Negocio y Comparativa Defendible:**  
+*(Transición a Slide 7 y Slide 9 de `/deck`)*  
+> *"Nuestro modelo es directo y sustentable: cobramos solo un 1% por contrato liquidado con éxito —20 veces menos que la banca tradicional y Web2—, sumado a planes SaaS para agencias y DAOs que gestionan tesorerías de equipos. Frente a Upwork y los bancos, ofrecemos 20x menor costo, liquidación instantánea y custodia 100% no-custodial."*
 
-**[1:45 - 2:00] — Equipo y Cierre:**  
-*(Slide 12 de `/deck` mostrando los perfiles del equipo en Argentina)*  
-> *"Somos un equipo multidisciplinario 100% basado en Argentina, con experiencia combinada en arquitectura web, contratos inteligentes y diseño de producto.  
-> Ya tenemos el producto funcionando en Solana Devnet con 0 mocks, y estamos listos para ingresar a la mentoría de Superteam, escalar la tracción y llevar a ReWork a ganar en Colosseum.  
+**[1:45 - 2:00] — Roadmap, Equipo y Cierre:**  
+*(Transición a Slide 10 y Slide 11 de `/deck` mostrando los perfiles radicados en Argentina)*  
+> *"Somos ingenieros y constructores 100% basados en Argentina.  
+> Ya tenemos el producto funcionando en Solana Devnet con 0 mocks, y estamos listos para ingresar a la mentoría Top Talent de Superteam, escalar los pilotos con agencias y llevar a ReWork a ganar en Colosseum.  
 > ¡Muchas gracias!"*
 
 ---
@@ -87,24 +87,29 @@
 ### 🎙️ English Script (Pitch · Word for Word — Mandatory for Colosseum)
 
 **[0:00 - 0:28] — Hook and The Problem:**  
+*(Slide 0 on `/deck` and transition to Slide 1)*  
 > *"Hi everyone, we are the team behind **ReWork**, co-founded in Argentina.  
 > Today, over 40 million freelancers and remote workers in emerging economies face a financial trap: legacy platforms like Upwork take up to 20% in predatory fees, hold funds for up to 14 days, and cross-border bank wires eat another 10 to 15% through forced exchange rates.  
 > Builders lose hard-earned income, while clients risk paying upfront without verified milestone delivery guarantees."*
 
 **[0:28 - 0:55] — The Solution:**  
-> *"That's why we built **ReWork**: an autonomous freelance marketplace powered by programmable milestone escrow in stable digital dollars.  
-> With ReWork, client funds are locked in an audited smart contract vault. The freelancer works with complete peace of mind knowing the funds exist, and payments are unlocked automatically upon verified deliverable approval."*
+*(Transition to Slide 2 and Slide 3 on `/deck`)*  
+> *"That's why we built **ReWork**: an autonomous freelance marketplace powered by programmable milestone escrow in stable digital dollars on Solana.  
+> With ReWork, client funds are locked in an audited smart contract vault. The freelancer works with complete peace of mind knowing the funds exist, and payments are unlocked automatically upon verified deliverable approval in under 500 milliseconds."*
 
 **[0:55 - 1:25] — Why Solana & Seamless Onboarding:**  
+*(Transition to Slide 4 and Slide 6 on `/deck`)*  
 > *"Why Solana? Because it is the only chain that provides sub-second finality and sub-cent fees (~$0.0008), making micro-milestones and continuous streaming payouts economically viable.  
 > Crucially, we solved the Web3 onboarding barrier: via Privy embedded wallets, Web2 freelancers sign in with Google or Email in one second—no seed phrases, no pre-funded gas needed. Native builders can seamlessly connect with Phantom or Solflare via Wallet Standard."*
 
-**[1:25 - 1:45] — Business Model & Global Market:**  
-> *"Our business model aligns directly with our users: we charge a transparent 1% fee on successful milestones—20 times cheaper than legacy platforms—combined with SaaS treasury tiers for agencies and DAOs. We are tackling a $1.5 trillion global freelance economy."*
+**[1:25 - 1:45] — Business Model & Defensible Advantages:**  
+*(Transition to Slide 7 and Slide 9 on `/deck`)*  
+> *"Our business model aligns directly with our users: we charge a transparent 1% fee on successful milestones—20 times cheaper than legacy platforms—combined with SaaS treasury tiers for agencies and DAOs. Compared to Upwork and SWIFT banks, we offer 20x lower cost, instant settlement, and 100% non-custodial control."*
 
-**[1:45 - 2:00] — Team & Vision:**  
-> *"We are a dedicated team based in Argentina combining full-stack systems engineering and product growth.  
-> Our MVP is live on Solana Devnet with zero mocks, ready for real users. We are excited to join Superteam's Top Talent Mentorship, scale our traction, and win globally at Colosseum. Thank you!"*
+**[1:45 - 2:00] — Roadmap, Team & Vision:**  
+*(Transition to Slide 10 and Slide 11 on `/deck`)*  
+> *"We are a dedicated engineering team based in Argentina.  
+> Our MVP is live on Solana Devnet with zero mocks, ready for real users. We are excited to join Superteam's Top Talent Mentorship, scale agency pilots, and win globally at Colosseum. Thank you!"*
 
 ---
 

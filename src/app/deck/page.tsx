@@ -287,7 +287,7 @@ export default function PresentationDeckPage() {
           <div key={idx} className="slide-page bg-[#050c14] text-white p-12">
             <SlideRenderer slideIndex={idx} language={language} />
             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between text-xs font-mono text-slate-400">
-              <span>ReWork — Argentina Builder Challenge 2026 (Scale Track)</span>
+              <span>ReWork — Superteam Argentina Track · Colosseum Hackathon 2026</span>
               <span>
                 {t.nav.slidePrefix} {idx + 1} {t.nav.of} {totalSlides}
               </span>
@@ -338,7 +338,7 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge1Sub}</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
+              <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
               <p className="font-mono text-xs font-bold">{s.badge2Title}</p>
               <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge2Sub}</p>
             </div>
@@ -570,14 +570,14 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {/* 1. Pagos Móviles SEP-0007 */}
-            <div className="p-4 bg-white/5 border border-purple-500/30 rounded-2xl flex gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0">
-                <QrCode className="w-5 h-5" />
+            {/* 1. Sub-Second Escrow Vaults on Solana */}
+            <div className="p-4 bg-white/5 border border-[#00f2ff]/30 rounded-2xl flex gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0">
+                <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">{s.card1Badge}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00f2ff]/20 text-[#00f2ff] font-bold">{s.card1Badge}</span>
                   <h3 className="font-bold text-white text-sm">{s.card1Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -586,14 +586,14 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 2. Smart Contracts en Soroban */}
-            <div className="p-4 bg-white/5 border border-[#00f2ff]/30 rounded-2xl flex gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0">
-                <ShieldCheck className="w-5 h-5" />
+            {/* 2. Hybrid Privy & Wallet Standard */}
+            <div className="p-4 bg-white/5 border border-purple-500/30 rounded-2xl flex gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <Wallet className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00f2ff]/20 text-[#00f2ff] font-bold">{s.card2Badge}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">{s.card2Badge}</span>
                   <h3 className="font-bold text-white text-sm">{s.card2Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -602,14 +602,14 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 3. DeFi Yield Farming & Swaps */}
-            <div className="p-4 bg-white/5 border border-emerald-500/30 rounded-2xl flex gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                <TrendingUp className="w-5 h-5" />
+            {/* 3. Native SOL Rail & Live DEX Swap */}
+            <div className="p-4 bg-white/5 border border-cyan-500/30 rounded-2xl flex gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 flex-shrink-0">
+                <Coins className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">{s.card3Badge}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">{s.card3Badge}</span>
                   <h3 className="font-bold text-white text-sm">{s.card3Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -618,14 +618,14 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 4. Identidad Soberana & Onboarding */}
-            <div className="p-4 bg-white/5 border border-amber-500/30 rounded-2xl flex gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
-                <Star className="w-5 h-5" />
+            {/* 4. Solana DeFi Treasury Yield Vaults */}
+            <div className="p-4 bg-white/5 border border-emerald-500/30 rounded-2xl flex gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                <TrendingUp className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">{s.card4Badge}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">{s.card4Badge}</span>
                   <h3 className="font-bold text-white text-sm">{s.card4Title}</h3>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -720,13 +720,13 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
 
                   {/* Quick Action Buttons */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2 bg-purple-500/15 border border-purple-500/30 rounded-xl text-center">
-                      <QrCode className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-                      <span className="text-[10px] font-bold text-purple-200 block">{s.mobileQr}</span>
-                      <span className="text-[8px] text-purple-400/80 font-mono">{s.mobileQrSub}</span>
+                    <div className="p-2 bg-cyan-500/15 border border-cyan-500/30 rounded-xl text-center">
+                      <Coins className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+                      <span className="text-[10px] font-bold text-cyan-200 block">{s.mobileQr}</span>
+                      <span className="text-[8px] text-cyan-400/80 font-mono">{s.mobileQrSub}</span>
                     </div>
                     <div className="p-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
-                      <Landmark className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
                       <span className="text-[10px] font-bold text-emerald-200 block">{s.mobileBank}</span>
                       <span className="text-[8px] text-emerald-400/80 font-mono">{s.mobileBankSub}</span>
                     </div>
@@ -1194,9 +1194,9 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
             <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
               {/* Highlight cards */}
               <div className="space-y-2">
-                <div className="p-3 bg-white/5 border border-purple-500/30 rounded-xl flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
-                    <QrCode className="w-4 h-4" />
+                <div className="p-3 bg-white/5 border border-[#00f2ff]/30 rounded-xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet1Title}</h4>
@@ -1204,9 +1204,9 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
                   </div>
                 </div>
 
-                <div className="p-3 bg-white/5 border border-[#00f2ff]/30 rounded-xl flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0 mt-0.5">
-                    <ShieldCheck className="w-4 h-4" />
+                <div className="p-3 bg-white/5 border border-purple-500/30 rounded-xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
+                    <Coins className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet2Title}</h4>
@@ -1216,7 +1216,7 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
 
                 <div className="p-3 bg-white/5 border border-emerald-500/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
-                    <Star className="w-4 h-4" />
+                    <TrendingUp className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet3Title}</h4>
