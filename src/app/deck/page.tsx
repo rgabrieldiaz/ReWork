@@ -32,15 +32,26 @@ import {
   Youtube
 } from "lucide-react";
 import { ReWorkIcon, ReWorkLogo } from "@/components/ReWorkLogo";
-import { deckTranslations, DeckLanguage } from "./deckTranslations";
+import { deckTranslations, DeckLanguage, DeckEcosystem } from "./deckTranslations";
 
 export default function PresentationDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [language, setLanguage] = useState<DeckLanguage>("en");
+  const [ecosystem, setEcosystem] = useState<DeckEcosystem>("solana");
   const totalSlides = 13;
 
-  const t = deckTranslations[language];
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const eco = params.get("eco");
+      if (eco === "stellar" || eco === "solana") {
+        setEcosystem(eco);
+      }
+    }
+  }, []);
+
+  const t = deckTranslations[ecosystem][language];
   const slidesData = t.slidesData;
 
   const nextSlide = useCallback(() => {
@@ -173,6 +184,32 @@ export default function PresentationDeckPage() {
 
           {/* Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Ecosystem Switcher */}
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
+              <button
+                onClick={() => setEcosystem("solana")}
+                className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+                  ecosystem === "solana"
+                    ? "bg-purple-500/25 text-purple-300 font-bold border border-purple-500/40 shadow-[0_0_8px_rgba(168,85,247,0.3)]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Solana (Crypto World's Fair / Colosseum)"
+              >
+                <span>⚡ Solana</span>
+              </button>
+              <button
+                onClick={() => setEcosystem("stellar")}
+                className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+                  ecosystem === "stellar"
+                    ? "bg-[#00f2ff]/25 text-[#00f2ff] font-bold border border-[#00f2ff]/40 shadow-[0_0_8px_rgba(0,242,255,0.3)]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Stellar (BAF Argentina Builder Challenge)"
+              >
+                <span>🌐 Stellar</span>
+              </button>
+            </div>
+
             {/* Language Switcher */}
             <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
               <button
@@ -182,7 +219,7 @@ export default function PresentationDeckPage() {
                     ? "bg-[#00f2ff]/20 text-[#00f2ff] font-bold shadow-[0_0_8px_rgba(0,242,255,0.3)]"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
-                title="English (Default)"
+                title="English"
               >
                 <Globe className="w-3 h-3" />
                 <span>EN</span>
@@ -243,7 +280,7 @@ export default function PresentationDeckPage() {
           <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Slide Content Dynamic Renderer */}
-          <SlideRenderer slideIndex={currentSlide} language={language} />
+          <SlideRenderer slideIndex={currentSlide} language={language} ecosystem={ecosystem} />
 
           {/* Slide Footer */}
           <div className="mt-6 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-slate-500">
@@ -285,9 +322,9 @@ export default function PresentationDeckPage() {
       <div className="print-deck-container">
         {Array.from({ length: totalSlides }).map((_, idx) => (
           <div key={idx} className="slide-page bg-[#050c14] text-white p-12">
-            <SlideRenderer slideIndex={idx} language={language} />
+            <SlideRenderer slideIndex={idx} language={language} ecosystem={ecosystem} />
             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between text-xs font-mono text-slate-400">
-              <span>ReWork — Superteam Argentina Track · Colosseum Hackathon 2026</span>
+              <span>{ecosystem === "solana" ? "ReWork — Superteam Argentina Track · Colosseum Hackathon 2026" : "ReWork — Argentina Builder Challenge 2026 (Scale Track)"}</span>
               <span>
                 {t.nav.slidePrefix} {idx + 1} {t.nav.of} {totalSlides}
               </span>
@@ -302,8 +339,8 @@ export default function PresentationDeckPage() {
 // -------------------------------------------------------------
 // Component: Slide Content Renderer for Screen & PDF
 // -------------------------------------------------------------
-function SlideRenderer({ slideIndex, language }: { slideIndex: number; language: DeckLanguage }) {
-  const t = deckTranslations[language];
+function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number; language: DeckLanguage; ecosystem: DeckEcosystem }) {
+  const t = deckTranslations[ecosystem][language];
 
   switch (slideIndex) {
     // ---------------------------------------------------------
@@ -338,7 +375,11 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge1Sub}</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
+              {ecosystem === "solana" ? (
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
+              ) : (
+                <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
+              )}
               <p className="font-mono text-xs font-bold">{s.badge2Title}</p>
               <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge2Sub}</p>
             </div>
@@ -570,10 +611,10 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {/* 1. Sub-Second Escrow Vaults on Solana */}
+            {/* Card 1 */}
             <div className="p-4 bg-white/5 border border-[#00f2ff]/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0">
-                <ShieldCheck className="w-5 h-5" />
+                {ecosystem === "solana" ? <ShieldCheck className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -586,10 +627,10 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 2. Hybrid Privy & Wallet Standard */}
+            {/* Card 2 */}
             <div className="p-4 bg-white/5 border border-purple-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0">
-                <Wallet className="w-5 h-5" />
+                {ecosystem === "solana" ? <Wallet className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -602,10 +643,10 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 3. Native SOL Rail & Live DEX Swap */}
+            {/* Card 3 */}
             <div className="p-4 bg-white/5 border border-cyan-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 flex-shrink-0">
-                <Coins className="w-5 h-5" />
+                {ecosystem === "solana" ? <Coins className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -618,10 +659,10 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               </div>
             </div>
 
-            {/* 4. Solana DeFi Treasury Yield Vaults */}
+            {/* Card 4 */}
             <div className="p-4 bg-white/5 border border-emerald-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                <TrendingUp className="w-5 h-5" />
+                {ecosystem === "solana" ? <TrendingUp className="w-5 h-5" /> : <Star className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -721,12 +762,20 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
                   {/* Quick Action Buttons */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 bg-cyan-500/15 border border-cyan-500/30 rounded-xl text-center">
-                      <Coins className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+                      {ecosystem === "solana" ? (
+                        <Coins className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+                      ) : (
+                        <QrCode className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+                      )}
                       <span className="text-[10px] font-bold text-cyan-200 block">{s.mobileQr}</span>
                       <span className="text-[8px] text-cyan-400/80 font-mono">{s.mobileQrSub}</span>
                     </div>
                     <div className="p-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-center">
-                      <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      {ecosystem === "solana" ? (
+                        <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      ) : (
+                        <Landmark className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      )}
                       <span className="text-[10px] font-bold text-emerald-200 block">{s.mobileBank}</span>
                       <span className="text-[8px] text-emerald-400/80 font-mono">{s.mobileBankSub}</span>
                     </div>
@@ -1196,7 +1245,11 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
               <div className="space-y-2">
                 <div className="p-3 bg-white/5 border border-[#00f2ff]/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0 mt-0.5">
-                    <ShieldCheck className="w-4 h-4" />
+                    {ecosystem === "solana" ? (
+                      <ShieldCheck className="w-4 h-4" />
+                    ) : (
+                      <QrCode className="w-4 h-4" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet1Title}</h4>
@@ -1206,7 +1259,11 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
 
                 <div className="p-3 bg-white/5 border border-purple-500/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
-                    <Coins className="w-4 h-4" />
+                    {ecosystem === "solana" ? (
+                      <Coins className="w-4 h-4" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet2Title}</h4>
@@ -1216,7 +1273,11 @@ function SlideRenderer({ slideIndex, language }: { slideIndex: number; language:
 
                 <div className="p-3 bg-white/5 border border-emerald-500/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
-                    <TrendingUp className="w-4 h-4" />
+                    {ecosystem === "solana" ? (
+                      <TrendingUp className="w-4 h-4" />
+                    ) : (
+                      <Star className="w-4 h-4" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-xs">{s.bullet3Title}</h4>
