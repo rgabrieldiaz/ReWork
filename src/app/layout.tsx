@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
@@ -15,14 +15,19 @@ import { Toaster } from "sonner";
 import { PrivyWrapper } from "@/components/PrivyWrapper";
 import { SolanaProvider } from "@/components/SolanaProvider";
 import { SolanaWalletProvider } from "@/hooks/useSolanaWallet";
+import { CeloWalletProvider } from "@/hooks/useCeloWallet";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-jakarta",
+});
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rework.network"),
   title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-  description: "Plataforma descentralizada de Workspaces B2B, Custodia Inteligente en Soroban y Pagos Móviles QR (SEP-0007) sobre Stellar.",
+  description: "Plataforma Multichain (Celo Mainnet · Solana · Stellar) de Custodia Inteligente, Agentes Autónomos ERC-8004, wFIAT LatAm, USA₮ x402 y Pagos QR.",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -34,7 +39,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-    description: "Workspaces Descentralizados · Escrow en Soroban · Pagos SEP-0007 · DeFi Stellar",
+    description: "Agentes en Celo Mainnet · wFIAT Ripio · USA₮ x402 · Textile FX · Solana · Stellar",
     url: "https://rework.network",
     siteName: "ReWork",
     images: [
@@ -42,7 +47,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ReWork — Stellar × BAF",
+        alt: "ReWork — Multichain Operating System",
       },
     ],
     locale: "es_AR",
@@ -51,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-    description: "Workspaces Descentralizados · Escrow en Soroban · Pagos SEP-0007 · DeFi Stellar",
+    description: "Agentes en Celo Mainnet · wFIAT Ripio · USA₮ x402 · Textile FX · Solana · Stellar",
     images: ["/og-image.png"],
   },
 };
@@ -63,26 +68,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/30 custom-scrollbar`} suppressHydrationWarning>
+      <body className={`${jakarta.variable} ${jetbrains.variable} font-sans bg-background text-foreground antialiased min-h-screen selection:bg-accent-teal/20 custom-scrollbar`} suppressHydrationWarning>
         <SettingsProvider>
           <PrivyWrapper>
             <SolanaProvider>
               <SolanaWalletProvider>
-                <WalletProvider>
-                  <ProfileProvider>
-                    <BalanceProvider>
-                      <StakingProvider>
-                        <WorkspaceProvider>
-                          <TWProvider>
-                            <MainLayout>
-                              {children}
-                            </MainLayout>
-                          </TWProvider>
-                        </WorkspaceProvider>
-                      </StakingProvider>
-                    </BalanceProvider>
-                  </ProfileProvider>
-                </WalletProvider>
+                <CeloWalletProvider>
+                  <WalletProvider>
+                    <ProfileProvider>
+                      <BalanceProvider>
+                        <StakingProvider>
+                          <WorkspaceProvider>
+                            <TWProvider>
+                              <MainLayout>
+                                {children}
+                              </MainLayout>
+                            </TWProvider>
+                          </WorkspaceProvider>
+                        </StakingProvider>
+                      </BalanceProvider>
+                    </ProfileProvider>
+                  </WalletProvider>
+                </CeloWalletProvider>
               </SolanaWalletProvider>
             </SolanaProvider>
           </PrivyWrapper>

@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@celo/attribution-tags": "^0.5.0",
     "@creit.tech/stellar-wallets-kit": "^2.1.0",
     "@privy-io/react-auth": "^3.19.0",
     "@solana-program/system": "^0.15.0",
@@ -30,7 +31,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "viem": "^2.57.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

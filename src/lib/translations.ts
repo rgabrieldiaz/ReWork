@@ -20,22 +20,22 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "ReWork Protocol V2.0 Active",
-                title1: "El valor de la confianza, ",
-                title2: "garantizado por código.",
-                desc: "La infraestructura donde la reputación es tu activo más valioso y los pagos en USDC se liberan automáticamente al cumplir objetivos.",
-                ctaPrimary: "Comenzar mi Identidad",
-                ctaSecondary: "Explorar Infraestructura"
+                badge: "ReWork Multichain V2.0",
+                title1: "Custodia inteligente y ",
+                title2: "objetivos de equipo.",
+                desc: "Depósitos en garantía con rendimiento compartido, misiones con pagos por hitos y liquidación en Celo, Solana y Stellar.",
+                ctaPrimary: "Ingresar a la Plataforma",
+                ctaSecondary: "Ver Módulos"
             },
             features: {
-                title: "Pilares de Confianza",
-                desc: "Construido con tecnología blockchain de vanguardia para garantizar transparencia absoluta.",
-                f1Title: "Pagos Automatizados",
-                f1Desc: "Contratos Escrow inteligentes (Trustless Work) que aseguran los fondos y los liberan instantáneamente solo cuando el trabajo es validado por la comunidad o líderes.",
-                f2Title: "Identidad Soberana (AURA)",
-                f2Desc: "Tu reputación profesional es inmutable y te pertenece. Acumulá AURA a través de colaboraciones exitosas y llévatela a cualquier ecosistema B2B.",
-                f3Title: "Liquidación Multichain USDC",
-                f3Desc: "Liquidaciones globales en segundos con tarifas casi nulas usando USDC nativo sobre Solana y Stellar, con rampas bancarias directas en moneda local."
+                title: "Cómo Funciona",
+                desc: "Custodia programable y acuerdos claros para profesionales, agencias y equipos.",
+                f1Title: "Custodia Escrow Inteligente",
+                f1Desc: "Fondos bloqueados en contratos inteligentes que se liberan solo cuando el trabajo es verificado por las partes o resuelto por arbitraje.",
+                f2Title: "Reputación e Historial Verificado",
+                f2Desc: "Registro inmutable de acuerdos completados, hitos validados y reputación profesional asociada a tu cuenta.",
+                f3Title: "Liquidación Multiriel y Moneda Local",
+                f3Desc: "Pagos instantáneos con USDC, USA₮ y moneda local mediante rampas bancarias directas en Celo, Solana y Stellar."
             },
             solutions: {
                 title: "¿Para Quién es ReWork?",

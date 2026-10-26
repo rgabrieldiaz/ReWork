@@ -13,6 +13,12 @@
       "skillPath": "skills/assets/SKILL.md",
       "computedHash": "0956b083414f93df2e2b1015c24558b07b3c51511ef39ed4a9c7d047d06afac3"
     },
+    "celopedia-skill": {
+      "source": "celo-org/celopedia-skills",
+      "sourceType": "github",
+      "skillPath": "skills/celopedia-skill/SKILL.md",
+      "computedHash": "20c1bf0f32a27e579395fd0d32f72b91d36592dd75eb55c74bba80728b5b767f"
+    },
     "cross-chain": {
       "source": "stellar/stellar-dev-skill",
       "sourceType": "github",
@@ -30,6 +36,30 @@
       "sourceType": "github",
       "skillPath": "skills/data/SKILL.md",
       "computedHash": "0944f2679f533e6898e0425c9d9922c9f287256634d20c90c4c75bc3c331473a"
+    },
+    "data-availability": {
+      "source": "celo-org/buy-skill",
+      "sourceType": "github",
+      "skillPath": "skills/data-availability/SKILL.md",
+      "computedHash": "36c5f0b20560ebc5ccb85968c4e696d04fe7efc7a8890c59c19c0f9781cbf393"
+    },
+    "docs-watch": {
+      "source": "celo-org/celopedia-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/docs-watch/SKILL.md",
+      "computedHash": "8053170ab3f3adc4933ee88d37016c0a89281ebb77d1649cd6ad1885303764e7"
+    },
+    "file-feedback": {
+      "source": "celo-org/buy-skill",
+      "sourceType": "github",
+      "skillPath": "skills/file-feedback/SKILL.md",
+      "computedHash": "28d1f29b0240853d36d10de0158da1fb75dd660789e3d91e94a31f65fe731c4e"
+    },
+    "order-compute": {
+      "source": "celo-org/buy-skill",
+      "sourceType": "github",
+      "skillPath": "skills/order-compute/SKILL.md",
+      "computedHash": "06c8e592a64148a1d5463cff392e500d77f0db53aa52fbb8719b1bd813a07116"
     },
     "smart-contracts": {
       "source": "stellar/stellar-dev-skill",
@@ -60,6 +90,12 @@
       "sourceType": "github",
       "skillPath": "trustless-work-dev/SKILL.md",
       "computedHash": "2cabcf7e6fe7f9a4bab56447550a7c8caaf4b9a918af79d5d94b4bcef2071500"
+    },
+    "use-api-gateway": {
+      "source": "celo-org/buy-skill",
+      "sourceType": "github",
+      "skillPath": "skills/use-api-gateway/SKILL.md",
+      "computedHash": "a380117ccc486e9b8f4de21b2efe0bfbcf103a5568e7d4995b6e2b1133e93dac"
     },
     "zk-proofs": {
       "source": "stellar/stellar-dev-skill",

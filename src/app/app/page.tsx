@@ -21,6 +21,9 @@ import { useState, useEffect } from "react";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
 import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
+import { SmartRentalEscrowModal } from "@/components/SmartRentalEscrowModal";
+import { CeloAgentHubModal } from "@/components/CeloAgentHubModal";
+import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { DEFAULT_RATES, convertCurrency } from "@/lib/currency";
 import { solanaClient } from "@/lib/solana";
 import { toast } from "sonner";
@@ -75,6 +78,9 @@ export default function Home() {
   const [isSwapping, setIsSwapping] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
+  const [isRentalEscrowOpen, setIsRentalEscrowOpen] = useState(false);
+  const [isCeloHubOpen, setIsCeloHubOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Home Marketplace State
   const [auctions, setAuctions] = useState<Auction[]>([]);
@@ -83,6 +89,8 @@ export default function Home() {
   const [bidAmount, setBidAmount] = useState("");
   const [loadingBid, setLoadingBid] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState<"custodias" | "mercado" | "modulos">("custodias");
+  const [activeTreasuryTab, setActiveTreasuryTab] = useState<"yield" | "swap">("yield");
 
   // Fetch real counts for ReWork Ecosystem items
   useEffect(() => {
@@ -400,630 +408,638 @@ export default function Home() {
 
 
   return (
-    <div className="animate-in fade-in duration-500">
-      {/* Jury / Evaluator Showcase Tour Banner */}
-      {showTourBanner && (
-        <section className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-950/40 via-slate-900/80 to-purple-950/40 border border-teal-500/30 shadow-[0_0_30px_rgba(0,242,254,0.1)] relative overflow-hidden">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-teal to-purple-500 p-0.5 shrink-0">
-                <div className="w-full h-full bg-[#0d1624] rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-accent-teal" />
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                    🏆 Modo Demostración Activo • Espacio Oficial ReWork
-                  </h3>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-teal/20 text-accent-teal border border-accent-teal/40">
-                    {activeWorkspace?.userRole === 'owner' ? 'Host / Owner' : 'Evaluador / Jurado'}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    +500 AURA Points Disponibles
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
-                  Bienvenido al espacio showcase de ReWork. Podés interactuar libremente con los módulos cargados: realizar ofertas en el Marketplace P2P, apoyar colectas comunitarias, firmar misiones de equipo o probar la custodia Escrow multiriel en Solana Devnet y Stellar Testnet.
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-white/5">
-                  <button
-                    onClick={() => setIsSolanaEscrowOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#9945FF] to-[#14F195] text-black font-bold text-xs font-mono transition-transform hover:scale-105 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-black" />
-                    <span>Probar Solana Escrow</span>
-                  </button>
-                  <Link
-                    href="/app/marketplace"
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5 text-accent-teal" />
-                    <span>Pujar en Marketplace</span>
-                  </Link>
-                  <Link
-                    href="/app/crowdfunding"
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
-                  >
-                    <HeartHandshake className="w-3.5 h-3.5 text-pink-400" />
-                    <span>Aportar a Colectas</span>
-                  </Link>
-                  <Link
-                    href="/app/squad-goals"
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors flex items-center gap-1.5 border border-white/10"
-                  >
-                    <Target className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Firmar Misiones Squad</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowTourBanner(false)}
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
-              title="Ocultar guía rápida"
-            >
-              <X className="w-4 h-4" />
-            </button>
+    <div className="animate-in fade-in duration-300 space-y-6">
+      {/* ────────────────── CABECERA DEL ESPACIO (ESTILO LINEAR / STRIPE) ────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border-subtle">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate">
+              {activeWorkspace?.name || "Espacio ReWork"}
+            </h1>
+            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-accent-teal/10 text-accent-teal border border-accent-teal/25">
+              {activeWorkspace?.userRole === "owner" ? "Propietario" : "Miembro Activo"}
+            </span>
           </div>
-        </section>
-      )}
+          <p className="text-xs text-muted mt-1">
+            Panel operativo de contratos en garantía, misiones de equipo y tesorería multiriel.
+          </p>
+        </div>
 
-      {/* Solana Superteam Colosseum Spotlight Banner */}
-      <section className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-emerald-950/30 border border-purple-500/30 shadow-[0_0_30px_rgba(153,69,255,0.15)] flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#9945FF] to-[#14F195] p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(20,241,149,0.3)] shrink-0">
-            <div className="w-full h-full bg-[#0d1624] rounded-[10px] flex items-center justify-center">
-              <Zap className="w-6 h-6 text-[#14F195]" />
-            </div>
+        {/* Acciones principales (máximo 2 botones limpios) */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setIsCeloHubOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card hover:bg-foreground/[0.05] border border-border-subtle text-foreground text-xs font-medium transition-colors cursor-pointer"
+          >
+            <Zap className="w-3.5 h-3.5 text-accent-teal" />
+            <span>Agente DeFi & Rampa</span>
+          </button>
+          <button
+            onClick={() => setIsRentalEscrowOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-accent-teal hover:bg-accent-teal/90 text-slate-950 text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Nuevo Acuerdo 50/50</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ────────────────── 4 INDICADORES UNIFICADOS (SIN ARCOÍRIS) ────────────────── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="glass-card p-4 border border-border-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-muted mb-2">
+            <span className="font-medium">Custodia Activa</span>
+            <Lock className="w-3.5 h-3.5 text-muted" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-white text-sm sm:text-base">
-                Riel de Alta Velocidad Solana Devnet Activo
-              </h3>
-              <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-emerald-500/20 text-[#14F195] border border-[#14F195]/40">
-                Superteam Track
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5 max-w-xl leading-relaxed">
-              Custodia programable de hitos y pagos P2P en USDC con finalidad de ~400ms y gas patrocinado (0 SOL requerido para freelancers).
-            </p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl sm:text-2xl font-bold font-mono text-foreground">$1,350.00</span>
+            <span className="text-[11px] font-mono text-muted">USDC</span>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-muted">
+            <span>2 contratos vigentes</span>
+            <span className="text-accent-teal font-mono">Protegido</span>
           </div>
         </div>
 
-        <button
-          onClick={() => setIsSolanaEscrowOpen(true)}
-          className="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:opacity-95 text-black font-black text-xs font-mono transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(20,241,149,0.25)] cursor-pointer"
+        <Link
+          href="/app/squad-goals"
+          className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-colors flex flex-col justify-between group"
         >
-          <Lock className="w-4 h-4 text-black" />
-          <span>Abrir Solana Escrow Vault</span>
-          <ArrowRight className="w-4 h-4 text-black" />
-        </button>
-      </section>
-
-      {/* BEGIN: ReWork Ecosystem Highlights Cards with Sparklines (Partner Feature) */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-accent-teal" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted">
-              {language === 'es' ? "Ecosistema ReWork en Cifras" : "ReWork Ecosystem in Numbers"}
-            </h2>
+          <div className="flex items-center justify-between text-xs text-muted mb-2">
+            <span className="font-medium group-hover:text-foreground transition-colors">Misiones de Equipo</span>
+            <Target className="w-3.5 h-3.5 text-muted group-hover:text-accent-teal transition-colors" />
           </div>
-          <span className="text-xs font-mono text-accent-teal bg-accent-teal/10 px-3 py-1 rounded-full border border-accent-teal/20">
-            {language === 'es' ? "Métricas en Vivo • Plataforma ReWork" : "Live Metrics • ReWork Platform"}
-          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl sm:text-2xl font-bold font-mono text-foreground">
+              {ecosystemCounts.missions || 6}
+            </span>
+            <span className="text-[11px] text-muted">hitos activos</span>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-muted">
+            <span>Ver tablero de misiones</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </Link>
+
+        <div className="glass-card p-4 border border-border-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-muted mb-2">
+            <span className="font-medium">Rendimiento en Bóvedas</span>
+            <TrendingUp className="w-3.5 h-3.5 text-accent-teal" />
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl sm:text-2xl font-bold font-mono text-accent-teal">+14.1%</span>
+            <span className="text-[11px] font-mono text-muted">APY prom.</span>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-muted">
+            <span>Celo, Solana y Stellar</span>
+            <span className="font-mono text-foreground">+$25.24 USD</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {/* Card 1: Red de Servicios */}
-          <Link
-            href="/app/global-network"
-            className="glass-card p-4 hover:border-accent-teal/50 transition-all group flex flex-col justify-between relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-muted group-hover:text-accent-teal transition-colors uppercase tracking-wider">
-                {t.nav.servicesNetwork || (language === 'es' ? "Red de Servicios" : "Services Network")}
-              </span>
-              <div className="p-1.5 rounded-lg bg-accent-teal/10 text-accent-teal group-hover:scale-110 transition-transform">
-                <Globe className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black font-mono tracking-tight group-hover:text-accent-teal transition-colors">
-                {ecosystemCounts.services}
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                +28%
-              </span>
-            </div>
-            {/* Sparkline Graphic */}
-            <div className="h-9 w-full mt-auto">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad-services" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00f2ff" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#00f2ff" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0,25 Q 25,18 45,22 T 75,10 T 100,5 L 100,30 L 0,30 Z" fill="url(#grad-services)" />
-                <path d="M 0,25 Q 25,18 45,22 T 75,10 T 100,5" fill="none" stroke="#00f2ff" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>{language === 'es' ? "Bounties globales" : "Global Bounties"}</span>
-              <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 2: Misiones */}
-          <Link
-            href="/app/squad-goals"
-            className="glass-card p-4 hover:border-purple-400/50 transition-all group flex flex-col justify-between relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-muted group-hover:text-purple-400 transition-colors uppercase tracking-wider">
-                {t.nav.squadGoals || (language === 'es' ? "Misiones" : "Missions")}
-              </span>
-              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                <Target className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black font-mono tracking-tight group-hover:text-purple-400 transition-colors">
-                {ecosystemCounts.missions}
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                +14%
-              </span>
-            </div>
-            {/* Sparkline Graphic */}
-            <div className="h-9 w-full mt-auto">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad-missions" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#a855f7" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0,22 Q 30,26 50,15 T 80,12 T 100,4 L 100,30 L 0,30 Z" fill="url(#grad-missions)" />
-                <path d="M 0,22 Q 30,26 50,15 T 80,12 T 100,4" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>{language === 'es' ? "Metas con Escrow" : "Escrow-backed Goals"}</span>
-              <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 3: Colectas */}
-          <Link
-            href="/app/crowdfunding"
-            className="glass-card p-4 hover:border-pink-400/50 transition-all group flex flex-col justify-between relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-muted group-hover:text-pink-400 transition-colors uppercase tracking-wider">
-                {t.nav.crowdfunding || (language === 'es' ? "Colectas" : "Pools")}
-              </span>
-              <div className="p-1.5 rounded-lg bg-pink-500/10 text-pink-400 group-hover:scale-110 transition-transform">
-                <HeartHandshake className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black font-mono tracking-tight group-hover:text-pink-400 transition-colors">
-                {ecosystemCounts.colectas}
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                +35%
-              </span>
-            </div>
-            {/* Sparkline Graphic */}
-            <div className="h-9 w-full mt-auto">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad-colectas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ec4899" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#ec4899" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0,26 Q 20,15 40,20 T 70,8 T 100,3 L 100,30 L 0,30 Z" fill="url(#grad-colectas)" />
-                <path d="M 0,26 Q 20,15 40,20 T 70,8 T 100,3" fill="none" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>{language === 'es' ? "Pools comunitarios" : "Community Pools"}</span>
-              <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 4: Marketplace */}
-          <Link
-            href="/app/marketplace"
-            className="glass-card p-4 hover:border-amber-400/50 transition-all group flex flex-col justify-between relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-muted group-hover:text-amber-400 transition-colors uppercase tracking-wider">
-                {t.nav.marketplace || (language === 'es' ? "MarketPlace" : "Marketplace")}
-              </span>
-              <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform">
-                <ShoppingBag className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black font-mono tracking-tight group-hover:text-amber-400 transition-colors">
-                {ecosystemCounts.marketplace}
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                +10%
-              </span>
-            </div>
-            {/* Sparkline Graphic */}
-            <div className="h-9 w-full mt-auto">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad-market" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0,20 Q 30,10 50,18 T 80,6 T 100,5 L 100,30 L 0,30 Z" fill="url(#grad-market)" />
-                <path d="M 0,20 Q 30,10 50,18 T 80,6 T 100,5" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>{language === 'es' ? "Subastas & Tienda" : "Auctions & Store"}</span>
-              <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 5: Equipos */}
-          <Link
-            href="/app/teams"
-            className="glass-card p-4 hover:border-blue-400/50 transition-all group flex flex-col justify-between relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-muted group-hover:text-blue-400 transition-colors uppercase tracking-wider">
-                {t.nav.people || (language === 'es' ? "Equipos" : "Teams")}
-              </span>
-              <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:scale-110 transition-transform">
-                <Users className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black font-mono tracking-tight group-hover:text-blue-400 transition-colors">
-                {ecosystemCounts.teams}
-              </span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                +43%
-              </span>
-            </div>
-            {/* Sparkline Graphic */}
-            <div className="h-9 w-full mt-auto">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="grad-teams" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0,24 Q 25,25 45,14 T 75,8 T 100,2 L 100,30 L 0,30 Z" fill="url(#grad-teams)" />
-                <path d="M 0,24 Q 25,25 45,14 T 75,8 T 100,2" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="mt-2 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[10px] text-muted">
-              <span>{language === 'es' ? "Miembros activos" : "Active Members"}</span>
-              <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-          </Link>
-        </div>
+        <Link
+          href="/app/teams"
+          className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-colors flex flex-col justify-between group"
+        >
+          <div className="flex items-center justify-between text-xs text-muted mb-2">
+            <span className="font-medium group-hover:text-foreground transition-colors">Colaboradores</span>
+            <Users className="w-3.5 h-3.5 text-muted group-hover:text-accent-teal transition-colors" />
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl sm:text-2xl font-bold font-mono text-foreground">
+              {ecosystemCounts.teams || 4}
+            </span>
+            <span className="text-[11px] text-muted">integrantes</span>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-muted">
+            <span>Directorio del espacio</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </Link>
       </section>
 
-      <div className="grid grid-cols-12 gap-8 custom-scrollbar">
-        {/* BEGIN: Left Column - Active Contracts & Market */}
-        <div className="col-span-12 xl:col-span-8 space-y-8">
-
-          {/* BEGIN: Active Contract Card */}
-          <section className="glass-card overflow-hidden p-6 relative group border border-accent-teal/10">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <svg className="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div className="flex items-center gap-3">
-                <div className="bg-accent-teal/10 p-2 rounded-lg">
-                  <svg className="w-5 h-5 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                </div>
-                <h2 className="text-xs font-bold text-accent-teal uppercase tracking-widest">{t.dashboard.mainPool}</h2>
-              </div>
-              <span className="text-xs font-mono text-muted bg-muted/10 px-3 py-1 rounded-full border border-slate-700">{t.dashboard.statusInProgress} • {t.dashboard.endsOn} OCT 31</span>
-            </div>
-
-            <div className="mb-6 sm:mb-10">
-              <h3 className="text-2xl sm:text-4xl font-bold mb-2">
-                {language === 'es' ? "Asado de equipo" : "Team Barbecue"}
-              </h3>
-              <p className="text-sm sm:text-base text-muted max-w-lg">
-                {language === 'es'
-                  ? "Ayudanos a financiar el evento de integración de fin de mes para celebrar los objetivos alcanzados de todo el equipo de ReWork."
-                  : "Help us fund the end-of-month team building event to celebrate achieved milestones across the ReWork team."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 mb-8">
-              <div className="bg-background/30 p-4 rounded-xl border border-border-subtle md:bg-transparent md:p-0 md:border-none">
-                <p className="text-muted text-xs sm:text-sm mb-1">{t.dashboard.goal}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">150</span>
-                  <span className="text-accent-teal font-bold text-sm sm:text-base">USDC</span>
-                </div>
-                <div className="mt-4 w-full bg-muted/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-accent-teal h-full w-[85%] glow-teal"></div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between mt-2 text-[10px] sm:text-xs font-mono gap-1">
-                  <span className="text-muted">85% {t.dashboard.completed}</span>
-                  <span className="text-accent-teal">+12% {t.dashboard.thisWeek}</span>
-                </div>
-              </div>
-              <div className="md:border-l md:border-border-subtle md:pl-12 flex flex-col justify-center bg-background/30 p-4 rounded-xl border border-border-subtle md:bg-transparent md:p-0 md:border-none">
-                <p className="text-muted text-xs sm:text-sm mb-1">{t.dashboard.estimatedContribution}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-mono font-bold tracking-tighter">15</span>
-                  <span className="text-accent-teal font-bold text-sm sm:text-base">USDC</span>
-                </div>
-                <p className="text-[10px] sm:text-xs text-muted mt-2">{t.dashboard.rankingLabel} #12 / 24 {t.dashboard.contributorsLabel}</p>
-              </div>
-            </div>
-
-            {/* Smart Contract Info */}
-            <div className="flex items-center gap-3">
+      {/* ────────────────── ÁREA DE TRABAJO EN 2 PANELES CON PESTAÑAS ────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* PANEL IZQUIERDO (7 COLUMNAS): Contratos, Mercado y Módulos */}
+        <div className="lg:col-span-7 space-y-4 min-w-0">
+          {/* Barra de pestañas izquierda */}
+          <div className="flex items-center justify-between gap-2 border-b border-border-subtle pb-2.5">
+            <div className="flex items-center gap-1 p-1 bg-card rounded-lg border border-border-subtle">
               <button
-                onClick={() => setIsContractModalOpen(true)}
-                className="flex items-center gap-2 text-xs font-mono text-muted hover:text-accent-teal transition-colors bg-background border border-border-subtle px-4 py-2 rounded-xl group"
+                type="button"
+                onClick={() => setActiveMainTab("custodias")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  activeMainTab === "custodias"
+                    ? "bg-foreground/[0.08] text-foreground font-semibold"
+                    : "text-muted hover:text-foreground"
+                }`}
               >
-                <span>stellar_escrow_contract.rs</span>
-                <span className="text-accent-teal border border-accent-teal/20 bg-accent-teal/10 px-2 py-0.5 rounded flex items-center gap-1 group-hover:bg-accent-teal/20 transition-colors">
-                  <ShieldCheck className="w-3 h-3" /> {t.dashboard.verified}
-                </span>
+                Custodias y Garantías (2)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainTab("mercado")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  activeMainTab === "mercado"
+                    ? "bg-foreground/[0.08] text-foreground font-semibold"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                Mercado P2P ({auctions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainTab("modulos")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  activeMainTab === "modulos"
+                    ? "bg-foreground/[0.08] text-foreground font-semibold"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                Módulos
               </button>
             </div>
-          </section>
+          </div>
 
-          {/* BEGIN: Market Highlights */}
-          <section>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-lg sm:text-xl font-bold">{t.marketplace.title}</h2>
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-                {[
-                  { key: 'TODOS', label: t.marketplace.all },
-                  { key: 'NUEVO', label: t.marketplace.new },
-                  { key: 'USADO', label: t.marketplace.used }
-                ].map(filter => (
-                  <button
-                    key={filter.key}
-                    onClick={() => setConditionFilter(filter.key)}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 font-bold rounded-xl text-[10px] sm:text-xs transition-colors whitespace-nowrap ${conditionFilter === filter.key
-                      ? 'bg-accent-teal text-background border-transparent hover:bg-foreground'
-                      : 'bg-foreground/5 border border-border-subtle text-muted hover:text-foreground'
-                      }`}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {auctions.map((item, index) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedAuction(item)}
-                  className="glass-card group cursor-pointer overflow-hidden border-none relative h-72"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10"></div>
-                  {/* Dynamic background array for fallbacks */}
-                  <div className={`absolute inset-0 -z-10 ${index % 2 === 0 ? 'bg-gradient-to-br from-emerald-900 to-deep-navy' : 'bg-gradient-to-br from-orange-900 to-deep-navy'}`}></div>
-
-                  {item.image && item.image.length > 5 ? (
-                    <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover z-0" />
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-7xl z-0 group-hover:scale-110 transition-transform duration-500">{item.image}</span>
-                  )}
-
-                  <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase mb-2 inline-block ${item.condition === 'nuevo'
-                      ? 'text-accent-teal bg-accent-teal/20'
-                      : 'text-orange-400 bg-orange-400/20'
-                      }`}>
-                      {item.condition === 'nuevo' ? (language === 'es' ? 'nuevo' : 'new') : (language === 'es' ? 'usado' : 'used')}
-                    </span>
-                    <h4 className="text-lg font-bold mb-4 line-clamp-2">{item.title}</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted uppercase">
-                          {item.is_direct_buy ? t.marketplace.buyNow : t.marketplace.currentBid}
-                        </span>
-                        <span className="font-mono text-accent-teal font-bold">
-                          {item.current_bid > 0 ? item.current_bid : item.base_price} {item.currency}
+          {/* VISTA 1: CUSTODIAS Y GARANTÍAS */}
+          {activeMainTab === "custodias" && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              {/* Contrato 1: Alquiler Comercial 50/50 en Celo Mainnet */}
+              <section className="glass-card p-5 border border-border-subtle space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          Garantía de Alquiler Comercial #104 (50/50 Yield)
+                        </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal border border-accent-teal/20">
+                          Activo
                         </span>
                       </div>
-                      <button className="w-10 h-10 bg-foreground/10 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-accent-teal group-hover:text-background transition-all shrink-0 ml-4">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                      </button>
+                      <p className="text-xs text-muted font-mono mt-0.5">
+                        Celo Mainnet (42220) • Inquilino 0x742d...44e ↔ Propietario 0x814a...92b
+                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
 
-              {auctions.length === 0 && (
-                <div className="col-span-12 sm:col-span-2 text-center py-12 border border-border-subtle border-dashed rounded-2xl bg-card/20">
-                  <p className="text-muted text-sm">{t.marketplace.noProducts}</p>
+                  <button
+                    onClick={() => setIsRentalEscrowOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Gestionar contrato</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 p-3.5 rounded-lg bg-background border border-border-subtle">
+                  <div>
+                    <span className="text-[11px] text-muted block">Capital en garantía</span>
+                    <span className="text-base font-bold font-mono text-foreground mt-0.5 block">
+                      $1,200.00 <span className="text-xs font-normal text-muted">USDC</span>
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-muted block">Interés generado</span>
+                    <span className="text-base font-bold font-mono text-accent-teal mt-0.5 block">
+                      +$18.40 <span className="text-xs font-normal text-muted">USD</span>
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-muted block">Reparto de intereses</span>
+                    <span className="text-xs font-semibold font-mono text-foreground mt-1 block">
+                      50% Inq. / 50% Prop.
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Contrato 2: Misión de Equipo con Escrow por Hitos */}
+              <section className="glass-card p-5 border border-border-subtle space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-foreground/[0.04] border border-border-subtle flex items-center justify-center text-foreground shrink-0">
+                      <Target className="w-4 h-4 text-accent-teal" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          Hito de Equipo: Entregables y Cierre Operativo
+                        </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-foreground/5 text-muted border border-border-subtle">
+                          85% completado
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted font-mono mt-0.5">
+                        Custodia multifirma Soroban • 24 colaboradores vinculados
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsContractModalOpen(true)}
+                      className="px-2.5 py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.07] border border-border-subtle text-xs font-mono text-muted hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      Código
+                    </button>
+                    <Link
+                      href="/app/squad-goals"
+                      className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors flex items-center gap-1"
+                    >
+                      <span>Ver hitos</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted" />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-background border border-border-subtle space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted">Fondos bloqueados en contrato</span>
+                    <span className="font-mono font-semibold text-foreground">$150.00 USDC (Tu aporte: $15.00)</span>
+                  </div>
+                  <div className="w-full bg-foreground/[0.06] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-accent-teal h-full w-[85%] rounded-full" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Barra inferior para crear nuevos contratos */}
+              <div className="p-4 rounded-xl bg-card border border-border-subtle flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-muted">
+                  <strong className="text-foreground font-medium">¿Necesitás abrir una nueva custodia?</strong>{" "}
+                  Desplegá un contrato de alquiler 50/50 o un pago por hitos.
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsSolanaEscrowOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors cursor-pointer"
+                  >
+                    + Escrow en Solana
+                  </button>
+                  <button
+                    onClick={() => setIsRentalEscrowOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-accent-teal/15 hover:bg-accent-teal/25 border border-accent-teal/30 text-xs font-semibold text-accent-teal transition-colors cursor-pointer"
+                  >
+                    + Garantía 50/50 en Celo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* VISTA 2: MERCADO P2P DEL ESPACIO */}
+          {activeMainTab === "mercado" && (
+            <section className="glass-card p-5 border border-border-subtle space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Publicaciones P2P del Espacio</h3>
+                  <p className="text-xs text-muted mt-0.5">
+                    Servicios y equipamiento con pago protegido por contrato de garantía.
+                  </p>
+                </div>
+                <Link
+                  href="/app/marketplace"
+                  className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground flex items-center gap-1.5"
+                >
+                  <span>Ir al Marketplace completo</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              {auctions.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {auctions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedAuction(item)}
+                      className="p-3.5 rounded-xl bg-background hover:bg-foreground/[0.03] border border-border-subtle cursor-pointer transition-all flex items-center gap-3.5"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-card border border-border-subtle flex items-center justify-center shrink-0 overflow-hidden">
+                        {item.image && item.image.length > 5 ? (
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">{item.image}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground truncate">{item.title}</p>
+                        <p className="text-xs font-mono text-accent-teal font-semibold mt-0.5">
+                          {item.current_bid > 0 ? item.current_bid : item.base_price} {item.currency}
+                        </p>
+                      </div>
+                      <span className="text-[11px] font-medium text-foreground bg-foreground/5 border border-border-subtle px-2.5 py-1 rounded-md">
+                        Ver
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 rounded-xl bg-background border border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-foreground/5 flex items-center justify-center text-muted shrink-0">
+                      <ShoppingBag className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">
+                        Sin publicaciones activas en este entorno
+                      </p>
+                      <p className="text-xs text-muted mt-0.5">
+                        Publicá un servicio profesional o artículo con liquidación automática en USDC.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/app/marketplace"
+                    className="px-3.5 py-2 rounded-lg bg-accent-teal text-slate-950 text-xs font-semibold transition-all whitespace-nowrap"
+                  >
+                    Publicar oferta
+                  </Link>
                 </div>
               )}
+            </section>
+          )}
+
+          {/* VISTA 3: DIRECTORIO DE MÓDULOS DEL ESPACIO */}
+          {activeMainTab === "modulos" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-in fade-in duration-200">
+              <Link
+                href="/app/squad-goals"
+                className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-all flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                  <Target className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-foreground group-hover:text-accent-teal transition-colors">
+                      Misiones Squad
+                    </h4>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
+                    Objetivos de equipo con liberación de pagos sujeta al cumplimiento de entregables.
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/app/crowdfunding"
+                className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-all flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                  <HeartHandshake className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-foreground group-hover:text-accent-teal transition-colors">
+                      Financiamiento Colectivo
+                    </h4>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
+                    Colectas transparentes para equipamiento e iniciativas comunes del espacio.
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/app/global-network"
+                className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-all flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-foreground group-hover:text-accent-teal transition-colors">
+                      Red Global de Bounties
+                    </h4>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
+                    Requerimientos abiertos entre distintos espacios de trabajo con pago en garantía.
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/app/web3-identity"
+                className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-all flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-foreground group-hover:text-accent-teal transition-colors">
+                      Identidad y Billeteras
+                    </h4>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
+                    Reputación verificada en cadena, credenciales ERC-8004 y vinculación de cuentas.
+                  </p>
+                </div>
+              </Link>
             </div>
-          </section>
+          )}
         </div>
 
-        {/* BEGIN: Right Column - Swap Widget & Activity */}
-        <div className="col-span-12 xl:col-span-4 space-y-8">
-
-          {/* BEGIN: Swap Widget */}
-          <section className="glass-card p-6 border border-border-subtle">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-bold">{t.dashboard.swapTitle}</h2>
-              <button className="text-muted hover:text-foreground transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        {/* PANEL DERECHO (5 COLUMNAS): Tesorería, Rendimientos DeFi y Conversión */}
+        <div className="lg:col-span-5 space-y-4 min-w-0">
+          {/* Barra de pestañas derecha */}
+          <div className="flex items-center justify-between gap-2 border-b border-border-subtle pb-2.5">
+            <div className="flex items-center gap-1 p-1 bg-card rounded-lg border border-border-subtle w-full">
+              <button
+                type="button"
+                onClick={() => setActiveTreasuryTab("yield")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  activeTreasuryTab === "yield"
+                    ? "bg-foreground/[0.08] text-foreground font-semibold"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                Rendimientos DeFi
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTreasuryTab("swap")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  activeTreasuryTab === "swap"
+                    ? "bg-foreground/[0.08] text-foreground font-semibold"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                Conversión y Rampa ARS
               </button>
             </div>
+          </div>
 
-            <div className="space-y-4 relative">
-              {/* Pay Section */}
-              <div className="bg-muted/10 p-5 rounded-2xl border border-border-subtle focus-within:border-accent-teal/50 transition-colors">
-                <div className="flex justify-between items-center mb-4 text-xs font-semibold text-muted">
-                  <span>{t.dashboard.swapGive}</span>
-                  <span>{t.dashboard.swapBalance}: {getBalanceDisplay(fromToken)} {fromToken}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <input
-                    className="bg-transparent outline-none border-none p-0 text-3xl font-mono font-bold focus:ring-0 w-1/2 text-foreground placeholder:text-foreground/20"
-                    type="number"
-                    value={swapAmount}
-                    onChange={(e) => setSwapAmount(e.target.value)}
-                    placeholder="0.00"
-                  />
-                  <select
-                    value={fromToken}
-                    onChange={(e) => {
-                      const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
-                      setFromToken(val);
-                      if (val === toToken) setToToken(fromToken);
-                    }}
-                    className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
-                  >
-                    <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
-                    <option value="SOL" className="bg-[#0d1624] text-[#14F195] py-1 font-bold">SOL (Solana)</option>
-                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM (Stellar)</option>
-                    <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
-                  </select>
-                </div>
-              </div>
+          {/* PESTAÑA TESORERÍA 1: RENDIMIENTOS DEFI (COMPACTO Y SIN DESBORDE) */}
+          {activeTreasuryTab === "yield" ? (
+            <div className="space-y-3.5 animate-in fade-in duration-200">
+              <StellarPoolsAgent compact />
 
-              {/* Swap Arrow */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pt-1">
-                <button
-                  onClick={handleSwapTokens}
-                  className="w-10 h-10 bg-muted/10 border-4 border-deep-navy rounded-full flex items-center justify-center text-muted hover:text-accent-teal hover:rotate-180 transition-all duration-300 shadow-xl cursor-pointer"
-                >
-                  <ArrowRightLeft className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Receive Section */}
-              <div className="bg-muted/10 p-5 rounded-2xl border border-border-subtle">
-                <div className="flex justify-between items-center mb-4 text-xs font-semibold text-muted">
-                  <span>{t.dashboard.swapReceive}</span>
-                  <span className="text-accent-teal font-mono">1 {fromToken} ≈ {getExchangeRate()} {toToken} ↗</span>
+              <Link
+                href="/app/goals"
+                className="glass-card p-3.5 border border-border-subtle hover:border-foreground/20 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-accent-teal/10 flex items-center justify-center text-accent-teal shrink-0">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground group-hover:text-accent-teal transition-colors truncate">
+                      {language === "es" ? "Simulador de Objetivos Financieros" : "Financial Goals Simulator"}
+                    </p>
+                    <p className="text-[11px] text-muted truncate">
+                      {language === "es"
+                        ? "Proyectá rendimientos compuestos para tu tesorería"
+                        : "Project compound yield for your treasury"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-3xl font-mono font-bold text-accent-teal">{receivedAmount}</span>
-                  <select
-                    value={toToken}
-                    onChange={(e) => {
-                      const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
-                      setToToken(val);
-                      if (val === fromToken) setFromToken(toToken);
-                    }}
-                    className="flex items-center gap-2 bg-[#0d1624] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 font-bold text-sm cursor-pointer outline-none transition-colors shadow-inner"
-                  >
-                    <option value="SOL" className="bg-[#0d1624] text-[#14F195] py-1 font-bold">SOL (Solana)</option>
-                    <option value="USDC" className="bg-[#0d1624] text-white py-1">USDC</option>
-                    <option value="XLM" className="bg-[#0d1624] text-white py-1">XLM (Stellar)</option>
-                    <option value="ARS" className="bg-[#0d1624] text-white py-1">ARS ($)</option>
-                  </select>
-                </div>
-              </div>
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-accent-teal shrink-0 transition-colors" />
+              </Link>
             </div>
-
-            {/* ARS Bank Ramp Alert */}
-            {(fromToken === "ARS" || toToken === "ARS") && (
-              <div className="mt-4 p-3 rounded-xl bg-accent-teal/10 border border-accent-teal/20 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2 text-accent-teal font-medium">
-                  <Landmark className="w-4 h-4 shrink-0" />
-                  <span>Rampa en Pesos (CBU / CVU / Alias)</span>
+          ) : (
+            /* PESTAÑA TESORERÍA 2: CONVERSIÓN Y RAMPA ARS */
+            <section className="glass-card p-5 border border-border-subtle space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-foreground">{t.dashboard.swapTitle}</h2>
+                  <p className="text-[11px] text-muted">Liquidez inmediata entre USDC, SOL, XLM y Pesos (ARS)</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsBankModalOpen(true)}
-                  className="text-[10px] font-bold uppercase tracking-wider bg-accent-teal text-background px-2.5 py-1 rounded hover:bg-accent-teal/90 transition-colors shadow-sm cursor-pointer"
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="px-2.5 py-1 rounded-md bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-[11px] font-mono text-foreground cursor-pointer"
                 >
-                  Operar ARS
+                  Cobrar con QR
                 </button>
               </div>
-            )}
 
-            <div className="mt-6 space-y-2 text-xs font-mono text-muted px-2">
-              <div className="flex justify-between">
+              <div className="space-y-2.5 relative">
+                {/* Entregás */}
+                <div className="bg-background p-4 rounded-xl border border-border-subtle focus-within:border-accent-teal/50 transition-colors">
+                  <div className="flex justify-between items-center mb-2 text-xs text-muted">
+                    <span>{t.dashboard.swapGive}</span>
+                    <span className="font-mono text-[11px]">
+                      {t.dashboard.swapBalance}: {getBalanceDisplay(fromToken)} {fromToken}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <input
+                      className="bg-transparent outline-none border-none p-0 text-2xl font-mono font-bold focus:ring-0 w-1/2 text-foreground placeholder:text-muted/40"
+                      type="number"
+                      value={swapAmount}
+                      onChange={(e) => setSwapAmount(e.target.value)}
+                      placeholder="0.00"
+                    />
+                    <select
+                      value={fromToken}
+                      onChange={(e) => {
+                        const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
+                        setFromToken(val);
+                        if (val === toToken) setToToken(fromToken);
+                      }}
+                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none"
+                    >
+                      <option value="USDC">USDC</option>
+                      <option value="SOL">SOL (Solana)</option>
+                      <option value="XLM">XLM (Stellar)</option>
+                      <option value="ARS">ARS ($)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Botón invertir */}
+                <div className="flex justify-center -my-1.5 relative z-10">
+                  <button
+                    type="button"
+                    onClick={handleSwapTokens}
+                    className="w-8 h-8 bg-card border border-border-subtle rounded-lg flex items-center justify-center text-muted hover:text-accent-teal transition-all shadow-sm cursor-pointer"
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Recibís */}
+                <div className="bg-background p-4 rounded-xl border border-border-subtle">
+                  <div className="flex justify-between items-center mb-2 text-xs text-muted">
+                    <span>{t.dashboard.swapReceive}</span>
+                    <span className="text-accent-teal font-mono text-[11px]">
+                      1 {fromToken} ≈ {getExchangeRate()} {toToken}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-2xl font-mono font-bold text-accent-teal truncate">
+                      {receivedAmount}
+                    </span>
+                    <select
+                      value={toToken}
+                      onChange={(e) => {
+                        const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
+                        setToToken(val);
+                        if (val === fromToken) setFromToken(toToken);
+                      }}
+                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none"
+                    >
+                      <option value="SOL">SOL (Solana)</option>
+                      <option value="USDC">USDC</option>
+                      <option value="XLM">XLM (Stellar)</option>
+                      <option value="ARS">ARS ($)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-muted px-1">
                 <span>{t.dashboard.swapNetworkFee}</span>
                 <span>
                   {fromToken === "ARS" || toToken === "ARS"
-                    ? "0% (Transferencia Directa)"
-                    : (fromToken === "SOL" || toToken === "SOL")
-                    ? "~0.000005 SOL ($0.0008) • Solana Devnet"
-                    : "0.00001 XLM • Stellar Testnet"}
+                    ? "0% (Rampa Bancaria)"
+                    : fromToken === "SOL" || toToken === "SOL"
+                    ? "~0.000005 SOL"
+                    : "0.00001 XLM"}
                 </span>
               </div>
-            </div>
 
-            <button
-              onClick={executeSwap}
-              disabled={(!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") || Number(swapAmount) <= 0 || isSwapping}
-              className="w-full mt-8 py-4 bg-gradient-to-r from-accent-teal/20 to-accent-teal/40 border border-accent-teal/30 hover:border-accent-teal/60 rounded-2xl font-bold flex items-center justify-center gap-4 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-            >
-              <div className={`absolute left-0 top-0 h-full w-full bg-accent-teal/10 flex items-center justify-center transition-transform duration-500 -translate-x-full ${!((!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") || Number(swapAmount) <= 0 || isSwapping) ? 'group-hover:translate-x-0' : ''}`}>
-              </div>
-              <span className="uppercase tracking-[0.2em] text-accent-teal group-hover:text-foreground transition-colors z-10">
-                {isSwapping 
-                  ? 'Procesando...' 
-                  : (fromToken === "ARS" || toToken === "ARS" 
-                      ? 'Transferir con Banco / MP (ARS)' 
-                      : ((fromToken === "SOL" || toToken === "SOL")
-                          ? (solConnected ? `Intercambiar en Solana (${fromToken} → ${toToken})` : 'Conectar Phantom / Solflare')
-                          : (!connected ? t.common.connectWallet : t.dashboard.swapConfirm)
-                        )
-                    )
+              <button
+                onClick={executeSwap}
+                disabled={
+                  (!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") ||
+                  Number(swapAmount) <= 0 ||
+                  isSwapping
                 }
-              </span>
-            </button>
-          </section>
+                className="w-full py-2.5 bg-accent-teal hover:bg-accent-teal/90 text-slate-950 rounded-lg font-semibold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSwapping
+                  ? "Procesando..."
+                  : fromToken === "ARS" || toToken === "ARS"
+                  ? "Operar con CBU / Alias (ARS)"
+                  : fromToken === "SOL" || toToken === "SOL"
+                  ? solConnected
+                    ? `Convertir ${fromToken} a ${toToken}`
+                    : "Conectar Wallet Solana"
+                  : !connected
+                  ? t.common.connectWallet
+                  : t.dashboard.swapConfirm}
+              </button>
 
-          {/* BEGIN: Multichain DeFi Yield & Treasury Pools (Solana + Stellar) */}
-          <section className="space-y-4">
-            <StellarPoolsAgent compact />
-
-            {/* Quick link to Financial Goals Simulator */}
-            <Link
-              href="/app/goals"
-              className="glass-card p-4 border border-accent-teal/20 bg-accent-teal/5 hover:border-accent-teal/40 transition-all flex items-center justify-between group rounded-2xl"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent-teal/10 flex items-center justify-center text-accent-teal group-hover:scale-105 transition-transform">
-                  <Target className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold group-hover:text-accent-teal transition-colors">
-                    {language === 'es' ? "Simulador de Objetivos" : "Financial Goals Simulator"}
-                  </p>
-                  <p className="text-[11px] text-muted">
-                    {language === 'es' ? "Planificá tu meta con interés compuesto y liquidez" : "Plan your goal with compound interest and liquidity"}
-                  </p>
-                </div>
-              </div>
-              <ArrowUpRight className="w-4 h-4 text-accent-teal group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </Link>
-          </section>
-
+              <button
+                type="button"
+                onClick={() => setIsBankModalOpen(true)}
+                className="w-full py-2 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.06] border border-border-subtle text-xs font-medium text-muted hover:text-foreground transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Landmark className="w-3.5 h-3.5 text-accent-teal" />
+                <span>Abrir Rampa Bancaria CBU / CVU (ARS ↔ USDC)</span>
+              </button>
+            </section>
+          )}
         </div>
       </div>
 
@@ -1179,6 +1195,24 @@ export default function Home() {
       />
 
       {/* Solana USDC Escrow Modal */}
+            {/* Smart Rental Escrow 50/50 Modal */}
+      <SmartRentalEscrowModal
+        isOpen={isRentalEscrowOpen}
+        onClose={() => setIsRentalEscrowOpen(false)}
+      />
+
+      {/* Celo Agent Hub Modal */}
+      <CeloAgentHubModal
+        isOpen={isCeloHubOpen}
+        onClose={() => setIsCeloHubOpen(false)}
+      />
+
+      {/* QR Payments Modal */}
+      <QRPaymentsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+      />
+
       <SolanaEscrowModal
         isOpen={isSolanaEscrowOpen}
         onClose={() => setIsSolanaEscrowOpen(false)}

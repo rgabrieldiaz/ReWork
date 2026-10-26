@@ -23,6 +23,9 @@ import { formatCurrency, getTripleValues, SupportedCurrency, DEFAULT_RATES } fro
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
+import { SmartRentalEscrowModal } from "@/components/SmartRentalEscrowModal";
+import { CeloAgentHubModal } from "@/components/CeloAgentHubModal";
+import { ShieldCheck, Bot } from "lucide-react";
 import { toast } from "sonner";
 
 export default function GoalsPage() {
@@ -54,6 +57,8 @@ export default function GoalsPage() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [isPoolsAgentOpen, setIsPoolsAgentOpen] = useState(false);
+  const [isRentalEscrowOpen, setIsRentalEscrowOpen] = useState(false);
+  const [isCeloAgentHubOpen, setIsCeloAgentHubOpen] = useState(false);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [newStakeAmount, setNewStakeAmount] = useState<string>("100");
   const [stakeSuccess, setStakeSuccess] = useState(false);
@@ -170,6 +175,42 @@ export default function GoalsPage() {
               {c}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* 🌱 Celo Mainnet Flagship Banner: Depósito Inteligente de Alquiler 50/50 & 4-Track Agent Hub */}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-teal-950/60 border border-emerald-500/40 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              🌱 Celo Mainnet (42220) · Agents on Open Rails
+            </span>
+            <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/40">
+              Yield Split 50% Inquilino / 50% Propietario
+            </span>
+          </div>
+          <h2 className="text-xl font-black text-white tracking-tight">
+            Depósito Inteligente de Alquiler & Garantías con Árbitro IA (@celo/buy x402)
+          </h2>
+          <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+            Inmovilizá garantías de alquiler en <strong>USA₮ (gasless EIP-3009)</strong>, <strong>wARS / wBRL (Ripio)</strong> o <strong>USDC/USD₮</strong>. El capital principal queda 100% protegido mientras genera rendimiento real en pools de <strong>DeFiLlama Celo</strong> repartido <strong>50/50</strong>, con liberación por doble firma o arbitraje on-chain de nuestro agente <strong>ERC-8004</strong>.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <button
+            onClick={() => setIsRentalEscrowOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Abrir Depósito de Alquiler 50/50
+          </button>
+          <button
+            onClick={() => setIsCeloAgentHubOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Bot className="w-4 h-4" />
+            Celo Agent Hub (4 Tracks)
+          </button>
         </div>
       </div>
 
@@ -824,6 +865,15 @@ export default function GoalsPage() {
           </div>
         </div>
       )}
+      <SmartRentalEscrowModal
+        isOpen={isRentalEscrowOpen}
+        onClose={() => setIsRentalEscrowOpen(false)}
+      />
+      <CeloAgentHubModal
+        isOpen={isCeloAgentHubOpen}
+        onClose={() => setIsCeloAgentHubOpen(false)}
+        onOpenRentalEscrow={() => setIsRentalEscrowOpen(true)}
+      />
     </div>
   );
 }

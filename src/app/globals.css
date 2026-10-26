@@ -10,38 +10,32 @@
   --color-accent-teal: var(--accent-teal);
   --color-accent-teal-dark: var(--accent-teal-dark);
 
-  /* Typography */
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* Typography — Anti-Slop Pairing: Plus Jakarta Sans + JetBrains Mono */
+  --font-sans: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
 }
 
 @layer base {
   :root {
-    /* LIGHT MODE (De facto base variable values) */
-    --bg: #f1f5f9;
-    /* slate-100 / light gray for separation */
-    --fg: #0f172a;
-    /* slate-900 */
+    /* LIGHT MODE (Refined Zinc Neutral) */
+    --bg: #f8fafc;
+    --fg: #09090b;
     --card-bg: #ffffff;
-    /* pure white */
     --muted-fg: #64748b;
-    /* slate-500 */
-    --border-glass: rgba(0, 0, 0, 0.1);
-    --glass-opacity: 0.7;
-    --accent-teal: #0369a1;
-    /* very dark blue-teal for high contrast */
+    --border-glass: rgba(15, 23, 42, 0.08);
+    --glass-opacity: 0.92;
+    --accent-teal: #0d9488;
   }
 
   .dark {
-    /* DARK MODE (Stitch Navy override) */
-    --bg: #050c14;
-    --fg: #ffffff;
-    --card-bg: #0d1624;
-    --muted-fg: #94a3b8;
-    /* slate-400 */
-    --border-glass: rgba(255, 255, 255, 0.1);
-    --glass-opacity: 0.7;
-    --accent-teal: #00f2ff;
+    /* DARK MODE (Linear / Stripe Carbon Graphite — Zero Neon Blur) */
+    --bg: #090a0f;
+    --fg: #f4f4f5;
+    --card-bg: #11131a;
+    --muted-fg: #8b95a5;
+    --border-glass: rgba(255, 255, 255, 0.07);
+    --glass-opacity: 0.95;
+    --accent-teal: #2dd4bf;
 
     /* Emoji Picker React Overrides */
     --epr-bg-color: var(--card-bg);
@@ -58,41 +52,46 @@
   body {
     background-color: var(--bg);
     color: var(--fg);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Global Dropdown & Select Styling (Dark Theme & High Contrast) */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Global Dropdown & Select Styling */
   select {
     color-scheme: dark;
   }
 
   select option {
-    background-color: #0d1624 !important;
-    color: #f8fafc !important;
+    background-color: #11131a !important;
+    color: #f4f4f5 !important;
   }
 }
 
 @layer utilities {
   .glass-card {
-    background: color-mix(in srgb, var(--card-bg) calc(var(--glass-opacity) * 100%), transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--card-bg);
     border: 1px solid var(--border-glass);
-    border-radius: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    /* Subtle shadow for light mode visibility */
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
   .dark .glass-card {
-    box-shadow: none;
-    /* Remove light mode shadow in dark mode */
+    background: #11131a;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 4px 20px -4px rgba(0, 0, 0, 0.4);
   }
 
   .glow-teal {
-    box-shadow: 0 0 15px color-mix(in srgb, var(--accent-teal) 30%, transparent);
+    box-shadow: none;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
+    height: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -100,8 +99,8 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--border-glass);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
   }
 
   .active-nav-border {
@@ -109,15 +108,14 @@
   }
 
   .active-nav-border::after {
-    content: '';
+    content: "";
     position: absolute;
-    right: 0;
+    left: 0;
     top: 50%;
     transform: translateY(-50%);
-    height: 24px;
-    width: 4px;
+    height: 18px;
+    width: 3px;
     background: var(--accent-teal);
-    border-radius: 4px 0 0 4px;
-    box-shadow: -2px 0 10px color-mix(in srgb, var(--accent-teal) 50%, transparent);
+    border-radius: 0 3px 3px 0;
   }
 }

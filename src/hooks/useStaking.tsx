@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { SupportedCurrency, convertCurrency, formatCurrency, getTripleValues } from "@/lib/currency";
+import { SupportedCurrency } from "@/lib/currency";
 
 export interface StakePosition {
   id: string;
@@ -11,7 +11,7 @@ export interface StakePosition {
   startDate: string;
   durationMonths: number;
   poolName: string;
-  chain?: 'solana' | 'stellar';
+  chain?: 'solana' | 'stellar' | 'celo';
 }
 
 interface StakingContextType {
@@ -20,7 +20,7 @@ interface StakingContextType {
   accruedYield: number; // total USDC earned yield
   activeCurrency: SupportedCurrency;
   setActiveCurrency: (curr: SupportedCurrency) => void;
-  stake: (amount: number, durationMonths?: number, poolName?: string, apy?: number, chain?: 'solana' | 'stellar') => Promise<boolean>;
+  stake: (amount: number, durationMonths?: number, poolName?: string, apy?: number, chain?: 'solana' | 'stellar' | 'celo') => Promise<boolean>;
   unstake: (amount: number) => Promise<boolean>;
   unstakePosition: (positionId: string) => Promise<boolean>;
   positions: StakePosition[];
@@ -29,6 +29,16 @@ interface StakingContextType {
 const StakingContext = createContext<StakingContextType | undefined>(undefined);
 
 const DEFAULT_POSITIONS: StakePosition[] = [
+  {
+    id: "stake-pos-celo-1",
+    amount: 200,
+    currency: "USAT",
+    apy: 11.4,
+    chain: "celo",
+    startDate: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+    durationMonths: 24,
+    poolName: "Celo Aave V3 / Uniswap V3 Stable Yield (DeFiLlama Live)",
+  },
   {
     id: "stake-pos-sol-1",
     amount: 150,
@@ -49,26 +59,15 @@ const DEFAULT_POSITIONS: StakePosition[] = [
     durationMonths: 6,
     poolName: "Stellar AMM Nativo (USDC / XLM)",
   },
-  {
-    id: "stake-pos-2",
-    amount: 25,
-    currency: "USDC",
-    apy: 8.5,
-    chain: "stellar",
-    startDate: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
-    durationMonths: 12,
-    poolName: "RWA Real-World Yield Vault",
-  },
 ];
 
 export function StakingProvider({ children }: { children: ReactNode }) {
   const [activeCurrency, setActiveCurrency] = useState<SupportedCurrency>("USDC");
-  const [stakedAmount, setStakedAmount] = useState<number>(75);
-  const [activeApy, setActiveApy] = useState<number>(12.8);
-  const [accruedYield, setAccruedYield] = useState<number>(3.42);
+  const [stakedAmount, setStakedAmount] = useState<number>(400);
+  const [activeApy, setActiveApy] = useState<number>(14.1);
+  const [accruedYield, setAccruedYield] = useState<number>(6.84);
   const [positions, setPositions] = useState<StakePosition[]>(DEFAULT_POSITIONS);
 
-  // Load from local storage
   useEffect(() => {
     const saved = localStorage.getItem("rework_staked_amount");
     if (saved) {
@@ -93,7 +92,6 @@ export function StakingProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Calculate weighted average APY from positions
   useEffect(() => {
     if (positions.length === 0) {
       setActiveApy(12.8);
@@ -108,12 +106,10 @@ export function StakingProvider({ children }: { children: ReactNode }) {
     setActiveApy(Number(weighted.toFixed(1)));
   }, [positions]);
 
-  // Real-time ticking yield generator (simulates live DeFi interest stream)
   useEffect(() => {
     if (stakedAmount <= 0) return;
 
     const interval = setInterval(() => {
-      // Yield accrued per second: (Principal * (APY / 100)) / (365 * 24 * 3600)
       const yieldPerSec = (stakedAmount * (activeApy / 100)) / 31536000;
       setAccruedYield((prev) => {
         const next = prev + yieldPerSec;
@@ -128,9 +124,9 @@ export function StakingProvider({ children }: { children: ReactNode }) {
   const stake = async (
     amount: number,
     durationMonths: number = 3,
-    poolName: string = "Solana Yield Vault",
-    poolApy: number = 18.2,
-    chain: 'solana' | 'stellar' = 'solana'
+    poolName: string = "Celo Yield Vault",
+    poolApy: number = 11.4,
+    chain: 'solana' | 'stellar' | 'celo' = 'celo'
   ) => {
     if (amount <= 0) return false;
     const newTotal = stakedAmount + amount;
