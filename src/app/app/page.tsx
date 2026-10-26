@@ -14,6 +14,7 @@ import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER, REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
 import * as StellarSdk from "@stellar/stellar-sdk";
@@ -58,6 +59,7 @@ export default function Home() {
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
+  const { isPro, isJuror, escrowFeePercent, openUpgradeModal } = useSubscription();
   const { notifyPointsEarned } = useGamification();
   const { t, language } = useSettings();
   const [showTourBanner, setShowTourBanner] = useState(true);
@@ -186,7 +188,7 @@ export default function Home() {
             receiver: selectedAuction.seller.length > 20 ? selectedAuction.seller : REWORK_PLATFORM_ADDRESS,
           },
           amount: amount,
-          platformFee: 0.5,
+          platformFee: escrowFeePercent,
           milestones: [{ description: "Aprobación y entrega" }],
           trustline: { address: USDC_ISSUER, symbol: assetSymbol }
         };
@@ -419,6 +421,24 @@ export default function Home() {
             <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-accent-teal/10 text-accent-teal border border-accent-teal/25">
               {activeWorkspace?.userRole === "owner" ? "Propietario" : "Miembro Activo"}
             </span>
+            <button
+              type="button"
+              onClick={() => openUpgradeModal()}
+              className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-md border transition-colors cursor-pointer ${
+                isJuror
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/25 hover:bg-amber-500/15"
+                  : isPro
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/15"
+                    : "bg-foreground/[0.04] text-muted border-border-subtle hover:text-foreground"
+              }`}
+              title="Gestionar plan o Pase de Jurado"
+            >
+              {isJuror
+                ? "Pase Jurado • Fee 0%"
+                : isPro
+                  ? `Plan Pro • Fee ${escrowFeePercent}%`
+                  : `Plan Free (${escrowFeePercent}% fee) • Subir a Pro`}
+            </button>
           </div>
           <p className="text-xs text-muted mt-1">
             Panel operativo de contratos en garantía, misiones de equipo y tesorería multiriel.

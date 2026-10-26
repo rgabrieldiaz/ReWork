@@ -18,10 +18,13 @@ import {
     Briefcase,
     ChevronDown,
     Plus,
+    Sparkles,
+    Award,
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
+import { useSubscription } from "@/hooks/useSubscription";
 import { usePrivy } from "@privy-io/react-auth";
 import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
@@ -34,6 +37,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const { authenticated, user: privyUser, login: privyLogin } = usePrivy();
     const { profile, loading } = useProfile();
     const { t, language, isSidebarCollapsed, toggleSidebar } = useSettings();
+    const { plan, isPro, isJuror, escrowFeePercent, openUpgradeModal } = useSubscription();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     const isUserAuthenticated = connected || authenticated || !!profile?.first_name;
@@ -315,10 +319,52 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
                 {/* Bottom User / Auth Card */}
                 <div
-                    className={`p-3 border-t border-border-subtle mt-auto transition-all duration-300 ${
+                    className={`p-3 border-t border-border-subtle mt-auto space-y-2 transition-all duration-300 ${
                         isSidebarCollapsed ? "lg:px-2" : ""
                     }`}
                 >
+                    {/* Plan / Juror Pass Indicator Button */}
+                    <button
+                        type="button"
+                        onClick={() => openUpgradeModal()}
+                        title={
+                            isJuror
+                                ? "Pase de Jurado Activo (Sin límites)"
+                                : isPro
+                                ? "Plan Pro B2B Activo"
+                                : "Plan Gratuito • Subir a Pro o Pase Jurado"
+                        }
+                        className={`w-full rounded-lg border text-left transition-all flex items-center cursor-pointer ${
+                            isJuror || isPro
+                                ? "bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/15"
+                                : "bg-foreground/[0.02] border-border-subtle text-muted hover:text-foreground hover:bg-foreground/[0.05]"
+                        } ${isSidebarCollapsed ? "p-2 lg:justify-center" : "px-3 py-2 gap-2.5"}`}
+                    >
+                        {isJuror ? (
+                            <Award className="w-4 h-4 text-accent-teal shrink-0" />
+                        ) : (
+                            <Sparkles className="w-4 h-4 text-accent-teal shrink-0" />
+                        )}
+                        {!isSidebarCollapsed && (
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold truncate text-foreground">
+                                    {isJuror
+                                        ? "Pase de Jurado Activo"
+                                        : isPro
+                                        ? "Plan Pro B2B Activo"
+                                        : "Plan Gratuito (Free)"}
+                                </p>
+                                <p className="text-[10px] font-mono text-muted truncate">
+                                    {isJuror
+                                        ? "Ilimitado • Fee 0%"
+                                        : isPro
+                                        ? `Ilimitado • Fee ${escrowFeePercent}%`
+                                        : "Subir a Pro / Pase Jurado →"}
+                                </p>
+                            </div>
+                        )}
+                    </button>
+
                     {isUserAuthenticated ? (
                         <button
                             onClick={() => setIsProfileModalOpen(true)}

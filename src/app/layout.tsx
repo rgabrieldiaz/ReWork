@@ -11,6 +11,8 @@ import { MainLayout } from "@/components/MainLayout";
 import { BalanceProvider } from "@/hooks/useSharedBalances";
 import { StakingProvider } from "@/hooks/useStaking";
 import { WorkspaceProvider } from "@/hooks/useWorkspace";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { Toaster } from "sonner";
 import { PrivyWrapper } from "@/components/PrivyWrapper";
 import { SolanaProvider } from "@/components/SolanaProvider";
@@ -79,11 +81,14 @@ export default function RootLayout({
                       <BalanceProvider>
                         <StakingProvider>
                           <WorkspaceProvider>
-                            <TWProvider>
-                              <MainLayout>
-                                {children}
-                              </MainLayout>
-                            </TWProvider>
+                            <SubscriptionProvider>
+                              <TWProvider>
+                                <MainLayout>
+                                  {children}
+                                </MainLayout>
+                                <UpgradePlanModal />
+                              </TWProvider>
+                            </SubscriptionProvider>
                           </WorkspaceProvider>
                         </StakingProvider>
                       </BalanceProvider>

@@ -24,6 +24,9 @@ import {
   X as XIcon,
   RotateCcw,
   Sparkles,
+  Plus,
+  Award,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSettings } from "@/hooks/useSettings";
@@ -31,6 +34,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useWorkspace, Workspace as HookWorkspace } from "@/hooks/useWorkspace";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase";
 
 interface GlobalBounty {
@@ -50,9 +54,31 @@ export default function WorkspacesPage() {
   const { address, connected } = useWallet();
   const { profile } = useProfile();
   const { xlmBalance, usdcBalance } = useBalances(address);
-  const { workspaces, loading: loadingWorkspaces, joinRequests, setActiveWorkspaceId } = useWorkspace();
+  const {
+    workspaces,
+    loading: loadingWorkspaces,
+    joinRequests,
+    setActiveWorkspaceId,
+    refreshWorkspaces,
+  } = useWorkspace();
+  const {
+    plan,
+    isPro,
+    isJuror,
+    ownedWorkspacesCount,
+    maxFreeWorkspaces,
+    canCreateWorkspace,
+    openUpgradeModal,
+  } = useSubscription();
 
   const isAdmin = profile?.role?.toLowerCase() === "admin";
+
+  // Create Workspace Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+  const [newWsDesc, setNewWsDesc] = useState("");
+  const [newWsPublic, setNewWsPublic] = useState(true);
+  const [isCreatingWs, setIsCreatingWs] = useState(false);
 
   // Reordering state
   const [orderedWorkspaces, setOrderedWorkspaces] = useState<HookWorkspace[]>([]);
@@ -206,6 +232,82 @@ export default function WorkspacesPage() {
   const enterWorkspace = (ws: HookWorkspace) => {
     setActiveWorkspaceId(ws.id);
     router.push("/app");
+  };
+
+  const handleOpenCreateWorkspace = () => {
+    if (!canCreateWorkspace) {
+      openUpgradeModal(
+        `El Plan Gratuito incluye ${maxFreeWorkspaces} espacio de trabajo propio. Suscribite al Plan Pro ($49 USDC/mes) o activá tu Pase de Jurado sin costo para crear espacios ilimitados.`
+      );
+      return;
+    }
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWsName.trim()) {
+      toast.error("Ingresá un nombre para tu espacio de trabajo.");
+      return;
+    }
+    if (!newWsPublic && !isPro) {
+      openUpgradeModal(
+        "Los espacios de trabajo privados con ocultación de red global son exclusivos del Plan Pro o Pase de Jurado."
+      );
+      return;
+    }
+
+    setIsCreatingWs(true);
+    try {
+      const cleanSlug =
+        newWsName
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") +
+        "-" +
+        Date.now().toString(36).slice(-4);
+
+      const ownerWallet =
+        address || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || null;
+
+      const { data: createdWs, error } = await supabase
+        .from("workspaces")
+        .insert({
+          name: newWsName.trim(),
+          slug: cleanSlug,
+          description: newWsDesc.trim() || "Espacio operativo en ReWork.",
+          owner_wallet: ownerWallet,
+          is_public: newWsPublic,
+          is_premium: isPro,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (createdWs && profile?.id) {
+        await supabase.from("workspace_members").upsert(
+          {
+            workspace_id: createdWs.id,
+            user_id: profile.id,
+            role: "owner",
+          },
+          { onConflict: "workspace_id,user_id" }
+        );
+      }
+
+      await refreshWorkspaces();
+      setIsCreateModalOpen(false);
+      setNewWsName("");
+      setNewWsDesc("");
+      toast.success(`¡Espacio "${createdWs.name}" creado con éxito!`);
+    } catch (err: any) {
+      console.error("[WorkspacesPage] Error creating workspace:", err);
+      toast.error(err?.message || "No se pudo crear el espacio de trabajo.");
+    } finally {
+      setIsCreatingWs(false);
+    }
   };
 
   const loadBounties = async () => {
@@ -406,6 +508,43 @@ export default function WorkspacesPage() {
                 <span className="hidden sm:inline">Restablecer</span>
               </button>
             )}
+
+            {/* Estado del Plan / Pase de Jurado */}
+            <button
+              type="button"
+              onClick={() => openUpgradeModal()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-xs font-mono transition-colors cursor-pointer"
+            >
+              {isJuror ? (
+                <>
+                  <Award className="w-3.5 h-3.5 text-accent-teal" />
+                  <span className="text-accent-teal font-semibold">Pase Jurado (Sin Límites)</span>
+                </>
+              ) : isPro ? (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-accent-teal" />
+                  <span className="text-accent-teal font-semibold">Plan Pro Activo</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3 text-muted" />
+                  <span className="text-muted">
+                    Plan Free ({ownedWorkspacesCount}/{maxFreeWorkspaces}) •{" "}
+                    <strong className="text-accent-teal">Subir a Pro</strong>
+                  </span>
+                </>
+              )}
+            </button>
+
+            {/* Botón Crear Nuevo Espacio */}
+            <button
+              type="button"
+              onClick={handleOpenCreateWorkspace}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent-teal hover:bg-accent-teal/90 text-slate-950 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nuevo Espacio</span>
+            </button>
           </div>
         </div>
 
@@ -770,6 +909,107 @@ export default function WorkspacesPage() {
           )}
         </div>
       </div>
+
+      {/* ── MODAL CREAR NUEVO ESPACIO DE TRABAJO ── */}
+      {isCreateModalOpen && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCreateModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div className="relative w-full max-w-md bg-card border border-border-subtle rounded-xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-accent-teal" />
+                <h3 className="text-base font-bold text-foreground">Crear Nuevo Espacio</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-1 rounded-lg text-muted hover:text-foreground cursor-pointer"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateWorkspace} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted block mb-1.5">
+                  Nombre de la Organización o Equipo
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newWsName}
+                  onChange={(e) => setNewWsName(e.target.value)}
+                  placeholder="Ej: Estudio Creativo LatAm"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-border-subtle text-xs text-foreground outline-none focus:border-accent-teal"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted block mb-1.5">
+                  Descripción operativa
+                </label>
+                <textarea
+                  rows={2}
+                  value={newWsDesc}
+                  onChange={(e) => setNewWsDesc(e.target.value)}
+                  placeholder="Gestión de proyectos, acuerdos en custodia y tesorería del equipo."
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-background border border-border-subtle text-xs text-foreground outline-none focus:border-accent-teal resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted block mb-1.5">
+                  Visibilidad en la Red
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewWsPublic(true)}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                      newWsPublic
+                        ? "bg-background border-accent-teal text-foreground"
+                        : "bg-background/40 border-border-subtle text-muted"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold">Público</p>
+                    <p className="text-[10px] text-muted mt-0.5">Incluido en Plan Free</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewWsPublic(false)}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                      !newWsPublic
+                        ? "bg-background border-accent-teal text-foreground"
+                        : "bg-background/40 border-border-subtle text-muted"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold">Privado</p>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-teal/15 text-accent-teal">
+                        Pro / Jurado
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted mt-0.5">Solo por invitación</p>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isCreatingWs}
+                className="w-full py-2.5 rounded-lg bg-accent-teal hover:bg-accent-teal/90 text-slate-950 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isCreatingWs ? "Creando entorno..." : "Crear Espacio de Trabajo"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

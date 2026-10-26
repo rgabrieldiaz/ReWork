@@ -12,6 +12,7 @@ import { InitializeMultiReleaseEscrowPayload, MultiReleaseReleaseFundsPayload } 
 import { useSettings } from "@/hooks/useSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export default function SquadGoalsPage() {
     const { t, language } = useSettings();
@@ -20,6 +21,7 @@ export default function SquadGoalsPage() {
     const { profile, addPoints } = useProfile();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
+    const { canCreateSquad, openUpgradeModal, isPro } = useSubscription();
     const effectiveVoter = publicKey || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
     const [activeTab, setActiveTab] = useState<"activas" | "propuestas">("propuestas");
     const [searchQuery, setSearchQuery] = useState("");
@@ -300,11 +302,24 @@ export default function SquadGoalsPage() {
                         <Info className="w-5 h-5" />
                     </button>
                     <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap"
+                        onClick={() => {
+                            if (!canCreateSquad(goals.length)) {
+                                openUpgradeModal(
+                                    "El Plan Gratuito incluye hasta 3 misiones activas por espacio. Suscribite al Plan Pro ($49 USDC/mes) o activá tu Pase de Jurado sin costo para misiones ilimitadas."
+                                );
+                                return;
+                            }
+                            setIsCreateModalOpen(true);
+                        }}
+                        className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap cursor-pointer"
                     >
                         <Plus className="w-5 h-5 text-black" />
                         <span>{t.squadGoals.propose}</span>
+                        {!isPro && (
+                            <span className="text-[10px] font-mono bg-black/15 px-1.5 py-0.5 rounded ml-1">
+                                {Math.min(goals.length, 3)}/3 Free
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>
