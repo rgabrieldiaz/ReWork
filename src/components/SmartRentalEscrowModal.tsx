@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ShieldCheck,
   Sparkles,
@@ -141,6 +142,27 @@ const INITIAL_AGREEMENTS: SmartRentalAgreement[] = [
     landlordSignedRelease: false,
     evidences: [],
   },
+  {
+    id: "celo-rent-103",
+    title: "Coworking Tech Paulista — Garantia em Reais (wBRL)",
+    propertyAddress: "Av. Paulista 1374, Bela Vista, São Paulo (Brasil)",
+    assetSymbol: "wBRL",
+    principalAmount: 8500,
+    apyPct: 12.8,
+    accruedYield: 1088,
+    poolName: "Celo wBRL / USD₮ Strategy (Ripio wFIAT)",
+    tenantName: "Dev Studio LatAm (Inquilino)",
+    tenantAddress: "0xd76f5faf6888e24d9f04bf92a0c8b921fe4390e0",
+    landlordName: "Paulista Corporate Hub S.A.",
+    landlordAddress: "0x465e642387d3d73a57CDc1368fFA53A800bA5D47",
+    createdAt: "2026-02-10",
+    maturityDate: "2027-02-10 (En Curso · Rendimiento 50/50)",
+    durationMonths: 12,
+    state: "YIELDING",
+    tenantSignedRelease: false,
+    landlordSignedRelease: false,
+    evidences: [],
+  },
 ];
 
 const STATE_BADGE_MAP: Record<
@@ -210,6 +232,7 @@ export function SmartRentalEscrowModal({
   const [selectedId, setSelectedId] = useState<string>(
     INITIAL_AGREEMENTS[0].id
   );
+  const [mounted, setMounted] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [showQrRelease, setShowQrRelease] = useState(false);
@@ -278,7 +301,20 @@ export function SmartRentalEscrowModal({
       .catch(() => {});
   }, [activeAgreement, attributionTag]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleCreateAndFund = async () => {
     if (!newTitle.trim() || !newPrincipal || Number(newPrincipal) <= 0) {
@@ -535,8 +571,13 @@ export function SmartRentalEscrowModal({
   const halfYield = Number((activeAgreement.accruedYield / 2).toFixed(2));
   const badge = STATE_BADGE_MAP[activeAgreement.state];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+  return createPortal(
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-5xl bg-slate-950 border border-emerald-500/30 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
         {/* Top Header */}
         <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-emerald-950/60 via-slate-900 to-teal-950/50 flex items-center justify-between gap-4">
@@ -686,6 +727,18 @@ export function SmartRentalEscrowModal({
                     </option>
                     <option value="wBRL">
                       🇧🇷 wBRL — Real Brasileño Ripio (Celo Mainnet)
+                    </option>
+                    <option value="wCOP">
+                      🇨🇴 wCOP — Peso Colombiano Ripio (Celo Mainnet)
+                    </option>
+                    <option value="wMXN">
+                      🇲🇽 wMXN — Peso Mexicano Ripio (Celo Mainnet)
+                    </option>
+                    <option value="wPEN">
+                      🇵🇪 wPEN — Sol Peruano Ripio (Celo Mainnet)
+                    </option>
+                    <option value="wCLP">
+                      🇨🇱 wCLP — Peso Chileno Ripio (Celo Mainnet)
                     </option>
                     <option value="USDC">
                       💵 USDC — Circle Native Celo Mainnet
@@ -1232,6 +1285,7 @@ export function SmartRentalEscrowModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

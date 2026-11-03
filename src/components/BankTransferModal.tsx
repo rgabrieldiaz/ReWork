@@ -28,9 +28,14 @@ import { toast } from "sonner";
 interface BankTransferModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialToken?: CeloAssetSymbol | string;
 }
 
-export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
+export function BankTransferModal({
+  isOpen,
+  onClose,
+  initialToken,
+}: BankTransferModalProps) {
   const { usdcBalance, refresh } = useSharedBalances();
   const { t, language } = useSettings();
   const {
@@ -68,6 +73,25 @@ export function BankTransferModal({ isOpen, onClose }: BankTransferModalProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (initialToken && isOpen) {
+      let mappedToken: CeloAssetSymbol = "wARS";
+      if (initialToken.startsWith("w")) {
+        mappedToken = initialToken as CeloAssetSymbol;
+      } else if (initialToken === "ARS") mappedToken = "wARS";
+      else if (initialToken === "BRL") mappedToken = "wBRL";
+      else if (initialToken === "COP") mappedToken = "wCOP";
+      else if (initialToken === "MXN") mappedToken = "wMXN";
+      else if (initialToken === "PEN") mappedToken = "wPEN";
+      else if (initialToken === "CLP") mappedToken = "wCLP";
+
+      if (CELO_ASSETS[mappedToken]) {
+        setRipioToken(mappedToken);
+        setRipioCountry(CELO_ASSETS[mappedToken]?.countryCode || "AR");
+      }
+    }
+  }, [initialToken, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

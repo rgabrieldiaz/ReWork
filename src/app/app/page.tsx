@@ -15,6 +15,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER, REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
 import * as StellarSdk from "@stellar/stellar-sdk";
@@ -56,6 +57,11 @@ export default function Home() {
     connectSolana,
     refreshBalances: refreshSolanaBalances,
   } = useSolanaWallet();
+  const {
+    connected: celoConnected,
+    balances: celoBalances,
+    connectCelo,
+  } = useCeloWallet();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
@@ -73,12 +79,14 @@ export default function Home() {
     teams: 43
   });
 
-  // Swap Widget State with ARS & SOL support
-  const [fromToken, setFromToken] = useState<"USDC" | "XLM" | "ARS" | "SOL">("USDC");
-  const [toToken, setToToken] = useState<"USDC" | "XLM" | "ARS" | "SOL">("SOL");
+  // Swap Widget State with LatAm Fiat & Multi-Chain support
+  type SwapCurrency = "USDC" | "SOL" | "XLM" | "CELO" | "ARS" | "BRL" | "COP" | "MXN" | "PEN" | "CLP";
+  const [fromToken, setFromToken] = useState<SwapCurrency>("USDC");
+  const [toToken, setToToken] = useState<SwapCurrency>("ARS");
   const [swapAmount, setSwapAmount] = useState<string>("100");
   const [isSwapping, setIsSwapping] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [bankInitialToken, setBankInitialToken] = useState<string>("wARS");
   const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
   const [isRentalEscrowOpen, setIsRentalEscrowOpen] = useState(false);
   const [isCeloHubOpen, setIsCeloHubOpen] = useState(false);
@@ -249,20 +257,47 @@ export default function Home() {
     }
   };
 
+  const isLatamFiat = (token: string) =>
+    ["ARS", "BRL", "COP", "MXN", "PEN", "CLP"].includes(token);
+
   const getBalanceDisplay = (token: string) => {
     if (token === "SOL") {
       return (solBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
     }
     if (token === "USDC") {
-      const total = (usdcBalance || 0) + (solUsdcBalance || 0);
-      return total.toLocaleString();
+      const total = (usdcBalance || 0) + (solUsdcBalance || 0) + (celoBalances?.USDC?.numeric || 0);
+      return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     if (token === "XLM") {
-      return (xlmBalance || 0).toLocaleString();
+      return (xlmBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+    if (token === "CELO") {
+      return (celoBalances?.CELO?.numeric || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    const totalUsdc = (usdcBalance || 0) + (solUsdcBalance || 0) + (celoBalances?.USDC?.numeric || 0);
     if (token === "ARS") {
-      const totalUsdc = (usdcBalance || 0) + (solUsdcBalance || 0);
-      return (totalUsdc * DEFAULT_RATES.USDC_TO_ARS).toLocaleString();
+      const celoArs = celoBalances?.wARS?.numeric || 0;
+      return (celoArs > 0 ? celoArs : totalUsdc * DEFAULT_RATES.USDC_TO_ARS).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+    }
+    if (token === "BRL") {
+      const celoBrl = celoBalances?.wBRL?.numeric || 0;
+      return (celoBrl > 0 ? celoBrl : totalUsdc * 5.75).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (token === "COP") {
+      const celoCop = celoBalances?.wCOP?.numeric || 0;
+      return (celoCop > 0 ? celoCop : totalUsdc * 4250).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+    }
+    if (token === "MXN") {
+      const celoMxn = celoBalances?.wMXN?.numeric || 0;
+      return (celoMxn > 0 ? celoMxn : totalUsdc * 20.1).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (token === "PEN") {
+      const celoPen = celoBalances?.wPEN?.numeric || 0;
+      return (celoPen > 0 ? celoPen : totalUsdc * 3.75).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (token === "CLP") {
+      const celoClp = celoBalances?.wCLP?.numeric || 0;
+      return (celoClp > 0 ? celoClp : totalUsdc * 960).toLocaleString('es-CL', { maximumFractionDigits: 0 });
     }
     return "0.00";
   };
@@ -283,9 +318,25 @@ export default function Home() {
   const executeSwap = async () => {
     if (Number(swapAmount) <= 0) return;
 
-    // Direct Fiat ARS Ramps open BankTransferModal
-    if (fromToken === "ARS" || toToken === "ARS") {
+    // Direct LatAm Fiat Ramps open BankTransferModal with the selected token
+    if (isLatamFiat(fromToken) || isLatamFiat(toToken)) {
+      const selectedFiat = isLatamFiat(fromToken) ? fromToken : toToken;
+      setBankInitialToken(selectedFiat);
       setIsBankModalOpen(true);
+      return;
+    }
+
+    // Celo Native Swap Route
+    if (fromToken === "CELO" || toToken === "CELO") {
+      if (!celoConnected) {
+        try {
+          await connectCelo();
+        } catch {
+          toast.error("Por favor conecta tu wallet de Celo.");
+          return;
+        }
+      }
+      setIsCeloHubOpen(true);
       return;
     }
 
@@ -962,16 +1013,26 @@ export default function Home() {
                     <select
                       value={fromToken}
                       onChange={(e) => {
-                        const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
+                        const val = e.target.value as SwapCurrency;
                         setFromToken(val);
                         if (val === toToken) setToToken(fromToken);
                       }}
-                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none"
+                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <option value="USDC">USDC</option>
-                      <option value="SOL">SOL (Solana)</option>
-                      <option value="XLM">XLM (Stellar)</option>
-                      <option value="ARS">ARS ($)</option>
+                      <optgroup label="Cripto & Dólar">
+                        <option value="USDC">USDC (Circle)</option>
+                        <option value="SOL">SOL (Solana)</option>
+                        <option value="XLM">XLM (Stellar)</option>
+                        <option value="CELO">CELO (Celo)</option>
+                      </optgroup>
+                      <optgroup label="Monedas LatAm">
+                        <option value="ARS">🇦🇷 ARS (Pesos)</option>
+                        <option value="BRL">🇧🇷 BRL (Reais)</option>
+                        <option value="COP">🇨🇴 COP (Col$)</option>
+                        <option value="MXN">🇲🇽 MXN (Mex$)</option>
+                        <option value="PEN">🇵🇪 PEN (Soles)</option>
+                        <option value="CLP">🇨🇱 CLP (Ch$)</option>
+                      </optgroup>
                     </select>
                   </div>
                 </div>
@@ -1002,16 +1063,26 @@ export default function Home() {
                     <select
                       value={toToken}
                       onChange={(e) => {
-                        const val = e.target.value as "USDC" | "XLM" | "ARS" | "SOL";
+                        const val = e.target.value as SwapCurrency;
                         setToToken(val);
                         if (val === fromToken) setFromToken(toToken);
                       }}
-                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none"
+                      className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <option value="SOL">SOL (Solana)</option>
-                      <option value="USDC">USDC</option>
-                      <option value="XLM">XLM (Stellar)</option>
-                      <option value="ARS">ARS ($)</option>
+                      <optgroup label="Cripto & Dólar">
+                        <option value="USDC">USDC (Circle)</option>
+                        <option value="SOL">SOL (Solana)</option>
+                        <option value="XLM">XLM (Stellar)</option>
+                        <option value="CELO">CELO (Celo)</option>
+                      </optgroup>
+                      <optgroup label="Monedas LatAm">
+                        <option value="ARS">🇦🇷 ARS (Pesos)</option>
+                        <option value="BRL">🇧🇷 BRL (Reais)</option>
+                        <option value="COP">🇨🇴 COP (Col$)</option>
+                        <option value="MXN">🇲🇽 MXN (Mex$)</option>
+                        <option value="PEN">🇵🇪 PEN (Soles)</option>
+                        <option value="CLP">🇨🇱 CLP (Ch$)</option>
+                      </optgroup>
                     </select>
                   </div>
                 </div>
@@ -1020,8 +1091,10 @@ export default function Home() {
               <div className="flex items-center justify-between text-[11px] font-mono text-muted px-1">
                 <span>{t.dashboard.swapNetworkFee}</span>
                 <span>
-                  {fromToken === "ARS" || toToken === "ARS"
-                    ? "0% (Rampa Bancaria)"
+                  {isLatamFiat(fromToken) || isLatamFiat(toToken)
+                    ? "0% (Rampa Bancaria Ripio)"
+                    : fromToken === "CELO" || toToken === "CELO"
+                    ? "~0.001 CELO"
                     : fromToken === "SOL" || toToken === "SOL"
                     ? "~0.000005 SOL"
                     : "0.00001 XLM"}
@@ -1031,7 +1104,7 @@ export default function Home() {
               <button
                 onClick={executeSwap}
                 disabled={
-                  (!connected && !solConnected && fromToken !== "ARS" && toToken !== "ARS") ||
+                  (!connected && !solConnected && !celoConnected && !isLatamFiat(fromToken) && !isLatamFiat(toToken)) ||
                   Number(swapAmount) <= 0 ||
                   isSwapping
                 }
@@ -1039,8 +1112,12 @@ export default function Home() {
               >
                 {isSwapping
                   ? "Procesando..."
-                  : fromToken === "ARS" || toToken === "ARS"
-                  ? "Operar con CBU / Alias (ARS)"
+                  : isLatamFiat(fromToken) || isLatamFiat(toToken)
+                  ? `Operar en Banco / Rampa LatAm (${isLatamFiat(toToken) ? toToken : fromToken})`
+                  : fromToken === "CELO" || toToken === "CELO"
+                  ? celoConnected
+                    ? `Abrir Corredor Celo Textile FX (${fromToken} → ${toToken})`
+                    : "Conectar Wallet Celo"
                   : fromToken === "SOL" || toToken === "SOL"
                   ? solConnected
                     ? `Convertir ${fromToken} a ${toToken}`
@@ -1212,6 +1289,7 @@ export default function Home() {
       <BankTransferModal
         isOpen={isBankModalOpen}
         onClose={() => setIsBankModalOpen(false)}
+        initialToken={bankInitialToken}
       />
 
       {/* Solana USDC Escrow Modal */}

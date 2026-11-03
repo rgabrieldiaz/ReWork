@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Bot,
   ShieldCheck,
@@ -72,6 +73,7 @@ export function CeloAgentHubModal({
   const [activeTab, setActiveTab] = useState<
     "checklist" | "textile" | "usat_p2p" | "buy_catalog"
   >("checklist");
+  const [mounted, setMounted] = useState(false);
 
   // Tab 1: Attribution & ERC-8004 state
   const [tagInput, setTagInput] = useState(attributionTag);
@@ -120,7 +122,20 @@ export function CeloAgentHubModal({
     }
   }, [isOpen, activeTab, buyCatalog.length]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   const quote = computeTextileCorridorQuote({
     sellToken,
@@ -282,8 +297,13 @@ export function CeloAgentHubModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+  return createPortal(
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto custom-scrollbar animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-5xl bg-slate-950 border border-emerald-500/30 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-slate-800 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/60 flex items-center justify-between gap-4">
@@ -640,10 +660,16 @@ export function CeloAgentHubModal({
                     >
                       <option value="wARS">🇦🇷 wARS (Peso Argentino)</option>
                       <option value="wBRL">🇧🇷 wBRL (Real Brasileño)</option>
-                      <option value="cNGN">🇳🇬 cNGN (Nigerian Naira)</option>
-                      <option value="IDRX">🇮🇩 IDRX (Indonesian Rupiah)</option>
+                      <option value="wCOP">🇨🇴 wCOP (Peso Colombiano)</option>
+                      <option value="wMXN">🇲🇽 wMXN (Peso Mexicano)</option>
+                      <option value="wPEN">🇵🇪 wPEN (Sol Peruano)</option>
+                      <option value="wCLP">🇨🇱 wCLP (Peso Chileno)</option>
+                      <option value="USAT">🇺🇸 USA₮ (Tether America)</option>
                       <option value="USDC">💵 USDC (Circle Native)</option>
                       <option value="USDT">🟢 USD₮ (Tether Native)</option>
+                      <option value="CELO">🌱 CELO (Celo Native)</option>
+                      <option value="cNGN">🇳🇬 cNGN (Nigerian Naira)</option>
+                      <option value="IDRX">🇮🇩 IDRX (Indonesian Rupiah)</option>
                     </select>
                   </div>
                   <div>
@@ -670,8 +696,14 @@ export function CeloAgentHubModal({
                     >
                       <option value="USDT">🟢 USD₮ (Tether Native)</option>
                       <option value="USDC">💵 USDC (Circle Native)</option>
+                      <option value="USAT">🇺🇸 USA₮ (Tether America)</option>
                       <option value="wARS">🇦🇷 wARS (Peso Argentino)</option>
                       <option value="wBRL">🇧🇷 wBRL (Real Brasileño)</option>
+                      <option value="wCOP">🇨🇴 wCOP (Peso Colombiano)</option>
+                      <option value="wMXN">🇲🇽 wMXN (Peso Mexicano)</option>
+                      <option value="wPEN">🇵🇪 wPEN (Sol Peruano)</option>
+                      <option value="wCLP">🇨🇱 wCLP (Peso Chileno)</option>
+                      <option value="CELO">🌱 CELO (Celo Native)</option>
                       <option value="cNGN">🇳🇬 cNGN (Nigerian Naira)</option>
                       <option value="IDRX">🇮🇩 IDRX (Indonesian Rupiah)</option>
                     </select>
@@ -781,7 +813,7 @@ export function CeloAgentHubModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs text-slate-400 block mb-1">
-                      Activo a Enviar (USA₮, wARS, wBRL, USDC, USD₮)
+                      Activo a Enviar (USA₮, wFIAT LatAm, USDC, USD₮, CELO)
                     </label>
                     <select
                       value={p2pAsset}
@@ -799,11 +831,26 @@ export function CeloAgentHubModal({
                       <option value="wBRL">
                         🇧🇷 wBRL — Real Brasileño Ripio (0xd76f...90e0)
                       </option>
+                      <option value="wCOP">
+                        🇨🇴 wCOP — Peso Colombiano Ripio (0x8a1d...2d76)
+                      </option>
+                      <option value="wMXN">
+                        🇲🇽 wMXN — Peso Mexicano Ripio (0x337e...0d34)
+                      </option>
+                      <option value="wPEN">
+                        🇵🇪 wPEN — Sol Peruano Ripio (0x4F34...2eBE)
+                      </option>
+                      <option value="wCLP">
+                        🇨🇱 wCLP — Peso Chileno Ripio (0x61D4...8651)
+                      </option>
                       <option value="USDC">
                         💵 USDC — Circle Native (0xcebA...118C)
                       </option>
                       <option value="USDT">
                         🟢 USD₮ — Tether Native (0x4806...3D5e)
+                      </option>
+                      <option value="CELO">
+                        🌱 CELO — Celo Native Token (0x471E...a438)
                       </option>
                     </select>
                   </div>
@@ -940,6 +987,7 @@ export function CeloAgentHubModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
