@@ -321,7 +321,7 @@ export function CeloAgentHubModal({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Agents on Open Rails Hackathon · Ripio wFIAT (Track 1) · Textile
+                Agents on Open Rails Hackathon · Ripio wFIAT LatAm (Track 1) · Textile
                 FX (Track 2) · @celo/buy (Track 3) · USA₮ x402 (Track 4)
               </p>
             </div>
@@ -360,7 +360,7 @@ export function CeloAgentHubModal({
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            1. Wallets, wFIAT, ERC-8021 & ERC-8004
+            1. Wallets, wFIAT LatAm, ERC-8021 & ERC-8004
           </button>
           <button
             onClick={() => setActiveTab("textile")}
@@ -371,7 +371,7 @@ export function CeloAgentHubModal({
             }`}
           >
             <ArrowLeftRight className="w-4 h-4" />
-            2. Track 2: Textile FX Treasury Agent
+            2. Corredores Textile FX LatAm (wARS, wBRL, wCOP...)
           </button>
           <button
             onClick={() => setActiveTab("usat_p2p")}
@@ -382,7 +382,7 @@ export function CeloAgentHubModal({
             }`}
           >
             <Send className="w-4 h-4" />
-            3. Track 4: USA₮ Gasless x402 & Email P2P
+            3. Liquidación Gasless USA₮ & P2P LatAm
           </button>
           <button
             onClick={() => setActiveTab("buy_catalog")}

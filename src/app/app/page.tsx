@@ -944,7 +944,7 @@ export default function Home() {
                     : "text-muted hover:text-foreground"
                 }`}
               >
-                Conversión y Rampa ARS
+                Swap & Rampa LatAm
               </button>
             </div>
           </div>
@@ -977,12 +977,14 @@ export default function Home() {
               </Link>
             </div>
           ) : (
-            /* PESTAÑA TESORERÍA 2: CONVERSIÓN Y RAMPA ARS */
+            /* PESTAÑA TESORERÍA 2: CONVERSIÓN Y RAMPA LATAM */
             <section className="glass-card p-5 border border-border-subtle space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">{t.dashboard.swapTitle}</h2>
-                  <p className="text-[11px] text-muted">Liquidez inmediata entre USDC, SOL, XLM y Pesos (ARS)</p>
+                  <p className="text-[11px] text-muted">
+                    Liquidez multiriel: USDC, SOL, XLM, CELO y Monedas LatAm (ARS, BRL, COP, MXN, PEN, CLP)
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -991,6 +993,35 @@ export default function Home() {
                 >
                   Cobrar con QR
                 </button>
+              </div>
+
+              {/* Botones de Acceso Rápido a Monedas LatAm */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-[11px] font-mono">
+                <span className="text-muted text-[10px] uppercase tracking-wider shrink-0 mr-1">Rutas LatAm:</span>
+                {[
+                  { sym: "ARS", flag: "🇦🇷", label: "ARS" },
+                  { sym: "BRL", flag: "🇧🇷", label: "BRL" },
+                  { sym: "COP", flag: "🇨🇴", label: "COP" },
+                  { sym: "MXN", flag: "🇲🇽", label: "MXN" },
+                  { sym: "PEN", flag: "🇵🇪", label: "PEN" },
+                  { sym: "CLP", flag: "🇨🇱", label: "CLP" },
+                ].map((item) => (
+                  <button
+                    key={item.sym}
+                    type="button"
+                    onClick={() => {
+                      setFromToken("USDC");
+                      setToToken(item.sym as SwapCurrency);
+                    }}
+                    className={`px-2 py-0.5 rounded-md border shrink-0 transition-all cursor-pointer ${
+                      toToken === item.sym
+                        ? "bg-accent-teal/20 border-accent-teal text-accent-teal font-bold"
+                        : "bg-background border-border-subtle text-muted hover:text-foreground"
+                    }`}
+                  >
+                    {item.flag} {item.label}
+                  </button>
+                ))}
               </div>
 
               <div className="space-y-2.5 relative">

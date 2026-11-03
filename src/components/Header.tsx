@@ -104,7 +104,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   };
 
   return (
-    <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-border-subtle sticky top-0 bg-background/80 backdrop-blur-md z-40">
+    <>
+      <header className="h-20 flex items-center justify-between px-4 sm:px-8 border-b border-border-subtle sticky top-0 bg-background/80 backdrop-blur-md z-40">
       <div className="flex items-center gap-4">
         {onMenuClick && (
           <button
@@ -517,37 +518,38 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           )}
         </div>
       </div>
-
-      <NotificationsDrawer
-        isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-      />
-
-      <QRPaymentsModal
-        isOpen={isQrModalOpen}
-        onClose={() => setIsQrModalOpen(false)}
-      />
-
-      <BankTransferModal
-        isOpen={isBankModalOpen}
-        onClose={() => setIsBankModalOpen(false)}
-      />
-
-      <SolanaEscrowModal
-        isOpen={isSolanaEscrowOpen}
-        onClose={() => setIsSolanaEscrowOpen(false)}
-      />
-
-      <CeloAgentHubModal
-        isOpen={isCeloAgentHubOpen}
-        onClose={() => setIsCeloAgentHubOpen(false)}
-        onOpenRentalEscrow={() => setIsRentalEscrowOpen(true)}
-      />
-
-      <SmartRentalEscrowModal
-        isOpen={isRentalEscrowOpen}
-        onClose={() => setIsRentalEscrowOpen(false)}
-      />
     </header>
-  );
+
+    <NotificationsDrawer
+      isOpen={isNotificationsOpen}
+      onClose={() => setIsNotificationsOpen(false)}
+    />
+
+    <QRPaymentsModal
+      isOpen={isQrModalOpen}
+      onClose={() => setIsQrModalOpen(false)}
+    />
+
+    <BankTransferModal
+      isOpen={isBankModalOpen}
+      onClose={() => setIsBankModalOpen(false)}
+    />
+
+    <SolanaEscrowModal
+      isOpen={isSolanaEscrowOpen}
+      onClose={() => setIsSolanaEscrowOpen(false)}
+    />
+
+    <CeloAgentHubModal
+      isOpen={isCeloAgentHubOpen}
+      onClose={() => setIsCeloAgentHubOpen(false)}
+      onOpenRentalEscrow={() => setIsRentalEscrowOpen(true)}
+    />
+
+    <SmartRentalEscrowModal
+      isOpen={isRentalEscrowOpen}
+      onClose={() => setIsRentalEscrowOpen(false)}
+    />
+  </>
+);
 }
