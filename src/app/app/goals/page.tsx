@@ -19,7 +19,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useStaking } from "@/hooks/useStaking";
 import { useSettings } from "@/hooks/useSettings";
-import { formatCurrency, getTripleValues, SupportedCurrency, DEFAULT_RATES } from "@/lib/currency";
+import { formatCurrency, getTripleValues, convertCurrency, SupportedCurrency, DEFAULT_RATES } from "@/lib/currency";
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
 import { BankTransferModal } from "@/components/BankTransferModal";
 import { StellarPoolsAgent } from "@/components/StellarPoolsAgent";
@@ -82,6 +82,11 @@ export default function GoalsPage() {
   const tripleProfit = getTripleValues(projectedProfit, "USDC");
   const tripleStaked = getTripleValues(stakedAmount, "USDC");
   const tripleYield = getTripleValues(accruedYield, "USDC");
+
+  const formatInSelectedCurrency = (usdcAmount: number) => {
+    const converted = convertCurrency(usdcAmount, "USDC", currency);
+    return formatCurrency(converted, currency);
+  };
 
   // Chart data points generator
   const pointsCount = 12;
@@ -162,7 +167,7 @@ export default function GoalsPage() {
         {/* Currency Selector */}
         <div className="flex items-center gap-2 p-1.5 bg-foreground/5 rounded-2xl border border-border-subtle shrink-0">
           <span className="text-xs text-muted font-bold px-2">{t.goalsPage.currencyLabel}</span>
-          {(["USDC", "ARS", "XLM", "SOL"] as SupportedCurrency[]).map((c) => (
+          {(["USDC", "CELO", "SOL", "XLM", "ARS", "BRL", "COP", "MXN", "PEN", "CLP"] as SupportedCurrency[]).map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
@@ -233,13 +238,7 @@ export default function GoalsPage() {
               <div className="flex justify-between text-xs font-semibold text-muted">
                 <label>{t.goalsPage.capitalLabel}</label>
                 <span className="font-mono text-foreground font-bold">
-                  {currency === "ARS"
-                    ? formatCurrency(initialCapital * DEFAULT_RATES.USDC_TO_ARS, "ARS")
-                    : currency === "XLM"
-                    ? formatCurrency(initialCapital / DEFAULT_RATES.XLM_TO_USDC, "XLM")
-                    : currency === "SOL"
-                    ? formatCurrency(initialCapital / DEFAULT_RATES.SOL_TO_USDC, "SOL")
-                    : `${initialCapital} USDC`}
+                  {formatInSelectedCurrency(initialCapital)}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-3 bg-foreground/5 rounded-2xl border border-border-subtle focus-within:border-accent-teal/50">
@@ -261,13 +260,7 @@ export default function GoalsPage() {
               <div className="flex justify-between text-xs font-semibold text-muted">
                 <label>{t.goalsPage.targetProfitLabel}</label>
                 <span className="font-mono text-emerald-400 font-bold">
-                  {currency === "ARS"
-                    ? formatCurrency(targetProfit * DEFAULT_RATES.USDC_TO_ARS, "ARS")
-                    : currency === "XLM"
-                    ? formatCurrency(targetProfit / DEFAULT_RATES.XLM_TO_USDC, "XLM")
-                    : currency === "SOL"
-                    ? formatCurrency(targetProfit / DEFAULT_RATES.SOL_TO_USDC, "SOL")
-                    : `+${targetProfit} USDC`}
+                  +{formatInSelectedCurrency(targetProfit)}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-3 bg-foreground/5 rounded-2xl border border-border-subtle focus-within:border-emerald-400/50">
@@ -366,25 +359,13 @@ export default function GoalsPage() {
               <div>
                 <span className="text-xs text-muted block">{t.goalsPage.accruedYieldLabel}</span>
                 <div className="text-3xl font-black font-mono text-emerald-400 glow-green">
-                  {currency === "ARS"
-                    ? formatCurrency(accruedYield * DEFAULT_RATES.USDC_TO_ARS, "ARS")
-                    : currency === "XLM"
-                    ? formatCurrency(accruedYield / DEFAULT_RATES.XLM_TO_USDC, "XLM")
-                    : currency === "SOL"
-                    ? formatCurrency(accruedYield / DEFAULT_RATES.SOL_TO_USDC, "SOL")
-                    : `+${accruedYield.toFixed(4)} USDC`}
+                  +{formatInSelectedCurrency(accruedYield)}
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-xs text-muted block">{t.goalsPage.stakedCapitalLabel}</span>
                 <span className="text-base font-bold font-mono text-foreground">
-                  {currency === "ARS"
-                    ? formatCurrency(stakedAmount * DEFAULT_RATES.USDC_TO_ARS, "ARS")
-                    : currency === "XLM"
-                    ? formatCurrency(stakedAmount / DEFAULT_RATES.XLM_TO_USDC, "XLM")
-                    : currency === "SOL"
-                    ? formatCurrency(stakedAmount / DEFAULT_RATES.SOL_TO_USDC, "SOL")
-                    : `${stakedAmount.toFixed(2)} USDC`}
+                  {formatInSelectedCurrency(stakedAmount)}
                 </span>
               </div>
             </div>

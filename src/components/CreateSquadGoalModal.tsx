@@ -19,7 +19,8 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
-    const [currency, setCurrency] = useState<"USDC" | "XLM">("USDC");
+    const [currency, setCurrency] = useState<string>("USDC");
+    const [isGlobal, setIsGlobal] = useState(false);
     const [durationDays, setDurationDays] = useState<number>(7);
     const [image, setImage] = useState("🎯");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -76,6 +77,7 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
 
             // Attempt to insert additional fields if the DB schema supports them
             insertData.currency = currency;
+            insertData.is_global_bounty = isGlobal;
             insertData.deadline = deadline.toISOString();
             insertData.tags = tags;
             insertData.image = image || "🎯";
@@ -274,44 +276,102 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                             />
                         </div>
 
-                        {/* Reward & Currency */}
+                        {/* Reward & Multi-Currency Selector */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-bold text-foreground">
-                                {language === 'es' ? "Recompensa Total" : "Total Reward"} <span className="text-accent-teal">*</span>
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
+                            <div className="flex items-center justify-between">
+                                <label className="block text-sm font-bold text-foreground">
+                                    {language === 'es' ? "Recompensa del Hito" : "Milestone Reward"} <span className="text-accent-teal">*</span>
+                                </label>
+                                <span className="text-[11px] font-mono text-accent-teal">
+                                    Custodia Escrow
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.8fr] gap-3">
                                 <div className="relative group">
-                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
                                     <input
                                         required
                                         type="number"
                                         min="1"
-                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-10 pr-5 py-4 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
+                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-9 pr-4 py-3.5 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
                                         value={amount}
                                         onChange={e => setAmount(e.target.value)}
                                         placeholder="0.00"
                                     />
                                 </div>
-                                <div className="flex bg-neutral-900/50 border border-border-subtle rounded-2xl p-1.5 relative">
-                                    <div className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-neutral-800 rounded-xl transition-all duration-300 ease-out shadow-sm border border-white/5" style={{ left: currency === 'USDC' ? '6px' : 'calc(50% + 0px)' }} />
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrency('USDC')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'USDC' ? 'text-white' : 'text-muted hover:text-white'}`}
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-[10px] text-blue-400">U</div>
-                                        USDC
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrency('XLM')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-3 flex items-center justify-center gap-2 transition-colors ${currency === 'XLM' ? 'text-white' : 'text-muted hover:text-white'}`}
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-neutral-100/10 border border-neutral-400/50 flex items-center justify-center text-[10px] text-neutral-300">X</div>
-                                        XLM
-                                    </button>
-                                </div>
+                                <select
+                                    value={currency}
+                                    onChange={e => setCurrency(e.target.value)}
+                                    className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-4 py-3.5 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal font-mono cursor-pointer"
+                                >
+                                    <optgroup label="Dólar Digital & Stablecoins">
+                                        <option value="USDC">USDC (Circle Multi-red)</option>
+                                        <option value="USAT">USA₮ (Gasless x402 en Celo)</option>
+                                    </optgroup>
+                                    <optgroup label="Cripto Nativas">
+                                        <option value="CELO">CELO (Celo Mainnet)</option>
+                                        <option value="SOL">SOL (Solana Devnet)</option>
+                                        <option value="XLM">XLM (Stellar Testnet)</option>
+                                    </optgroup>
+                                    <optgroup label="Tokens Digitales LatAm (1:1 en Celo)">
+                                        <option value="wARS">🇦🇷 wARS (Peso Digital)</option>
+                                        <option value="wBRL">🇧🇷 wBRL (Real Digital)</option>
+                                        <option value="wCOP">🇨🇴 wCOP (Peso Digital)</option>
+                                        <option value="wMXN">🇲🇽 wMXN (Peso Digital)</option>
+                                        <option value="wPEN">🇵🇪 wPEN (Sol Digital)</option>
+                                        <option value="wCLP">🇨🇱 wCLP (Peso Digital)</option>
+                                    </optgroup>
+                                </select>
                             </div>
+                        </div>
+
+                        {/* Privacy & Scope Selection */}
+                        <div className="space-y-3">
+                            <label className="block text-sm font-bold text-foreground">
+                                {language === 'es' ? "Alcance & Privacidad" : "Scope & Privacy"} <span className="text-accent-teal">*</span>
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsGlobal(false)}
+                                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
+                                        !isGlobal
+                                            ? "bg-accent-teal/15 border-accent-teal text-white shadow-sm"
+                                            : "bg-neutral-900/50 border-border-subtle text-muted hover:border-border"
+                                    }`}
+                                >
+                                    <span>🔒 Solo este Espacio</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsGlobal(true)}
+                                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
+                                        isGlobal
+                                            ? "bg-accent-teal/15 border-accent-teal text-white shadow-sm"
+                                            : "bg-neutral-900/50 border-border-subtle text-muted hover:border-border"
+                                    }`}
+                                >
+                                    <span>🌐 Red Global ReWork</span>
+                                </button>
+                            </div>
+                            <p className="text-[11px] text-muted">
+                                {!isGlobal
+                                    ? "🔒 Visible únicamente para los miembros de esta comunidad u organización."
+                                    : "🌐 Visible en la Red Global para que cualquier colaborador externo pueda resolverla."}
+                            </p>
+                        </div>
+
+                        {/* Banner explicativo de flujo de roles */}
+                        <div className="p-3.5 rounded-2xl bg-foreground/[0.03] border border-border-subtle/80 text-xs space-y-1">
+                            <div className="flex items-center gap-2 font-semibold text-foreground">
+                                <span className="text-accent-teal font-mono">💡</span>
+                                <span>{language === 'es' ? "Flujo de Aprobación y Custodia" : "Approval & Escrow Flow"}</span>
+                            </div>
+                            <p className="text-[11px] text-muted leading-relaxed">
+                                {language === 'es'
+                                    ? "Como miembro podés proponer esta misión. Una vez reunidas las firmas o aprobada por el Coordinador, los fondos quedan bloqueados en el contrato de custodia y se liberan al validar el entregable."
+                                    : "As a member you propose this mission. Once signed or approved by the Coordinator, funds are locked in escrow and released upon deliverable validation."}
+                            </p>
                         </div>
 
                         {/* Duration Group for Voting */}

@@ -192,22 +192,46 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     onClick={() => setIsFinanceDetailOpen(false)}
                   />
                   <div className="absolute left-0 top-full mt-2 w-80 glass-card p-4 rounded-2xl shadow-2xl border border-border-subtle z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center justify-between pb-3 border-b border-border-subtle mb-3">
-                      <span className="text-xs font-bold text-muted uppercase tracking-wider">
-                        Desglose de Fondos
-                      </span>
+                    <div className="pb-3 border-b border-border-subtle mb-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-muted uppercase tracking-wider">
+                          Moneda de Referencia
+                        </span>
+                        <span className="text-[10px] font-mono text-accent-teal">
+                          {activeCurrency === "USDC" ? "Internacional" : `Ref. ${activeCurrency}`}
+                        </span>
+                      </div>
+                      
+                      {/* Fila 1: Cripto y Dólar Digital */}
                       <div className="flex items-center gap-1 p-0.5 bg-foreground/5 rounded-lg border border-border-subtle">
-                        {(["USDC", "wARS", "USAT", "CELO", "SOL", "XLM"] as SupportedCurrency[]).map((c) => (
+                        {(["USDC", "CELO", "SOL", "XLM"] as SupportedCurrency[]).map((c) => (
                           <button
                             key={c}
                             onClick={() => setActiveCurrency(c)}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${
+                            className={`flex-1 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
                               activeCurrency === c
                                 ? "bg-accent-teal text-background"
                                 : "text-muted hover:text-foreground"
                             }`}
                           >
-                            {c === "USAT" ? "USA₮" : c}
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Fila 2: Monedas Locales LatAm */}
+                      <div className="flex items-center gap-1 p-0.5 bg-foreground/5 rounded-lg border border-border-subtle">
+                        {(["ARS", "BRL", "COP", "MXN", "PEN", "CLP"] as SupportedCurrency[]).map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => setActiveCurrency(c)}
+                            className={`flex-1 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${
+                              activeCurrency === c
+                                ? "bg-accent-teal text-background"
+                                : "text-muted hover:text-foreground"
+                            }`}
+                          >
+                            {c}
                           </button>
                         ))}
                       </div>
@@ -434,18 +458,35 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             Tag: {attributionTag}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs font-mono">
-                          <span className="text-slate-300">🇺🇸 USA₮ (x402):</span>
-                          <span className="font-bold text-emerald-300">
-                            {celoBalances.USAT?.numeric.toFixed(2) || "0.00"}
-                          </span>
+                        <div className="space-y-1 text-xs font-mono">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-300">USA₮ (x402):</span>
+                            <span className="font-bold text-emerald-300">
+                              {celoBalances.USAT?.numeric.toFixed(2) || "0.00"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-300">wARS (Peso Digital):</span>
+                            <span className="font-bold text-cyan-300">
+                              {celoBalances.wARS?.numeric.toLocaleString() || "0"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-300">wBRL (Real Digital):</span>
+                            <span className="font-bold text-amber-300">
+                              {celoBalances.wBRL?.numeric.toLocaleString() || "0"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-300">CELO Nativo:</span>
+                            <span className="font-bold text-emerald-400">
+                              {celoBalances.CELO?.numeric.toFixed(2) || "0.00"}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between text-xs font-mono mt-1">
-                          <span className="text-slate-300">🇦🇷 wARS (Ripio):</span>
-                          <span className="font-bold text-cyan-300">
-                            {celoBalances.wARS?.numeric.toLocaleString() || "0"}
-                          </span>
-                        </div>
+                        <p className="text-[9px] text-muted/70 mt-1.5 italic">
+                          *Tokens digitales 1:1 en Celo Mainnet
+                        </p>
                       </div>
 
                       {/* Stellar Section */}

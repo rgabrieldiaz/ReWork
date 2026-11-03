@@ -1060,19 +1060,19 @@ export default function Home() {
                       }}
                       className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <optgroup label="Cripto & Dólar">
-                        <option value="USDC">USDC (Circle)</option>
+                      <optgroup label="Tokens y Dólar Digital">
+                        <option value="USDC">USDC (Dólar Digital)</option>
+                        <option value="CELO">CELO (Nativo Celo)</option>
                         <option value="SOL">SOL (Solana)</option>
                         <option value="XLM">XLM (Stellar)</option>
-                        <option value="CELO">CELO (Celo)</option>
                       </optgroup>
-                      <optgroup label="Monedas LatAm">
-                        <option value="ARS">🇦🇷 ARS (Pesos)</option>
-                        <option value="BRL">🇧🇷 BRL (Reais)</option>
-                        <option value="COP">🇨🇴 COP (Col$)</option>
-                        <option value="MXN">🇲🇽 MXN (Mex$)</option>
-                        <option value="PEN">🇵🇪 PEN (Soles)</option>
-                        <option value="CLP">🇨🇱 CLP (Ch$)</option>
+                      <optgroup label="Rampas Bancarias (CBU / PIX / SPEI)">
+                        <option value="ARS">🇦🇷 ARS (Banco CBU/CVU)</option>
+                        <option value="BRL">🇧🇷 BRL (Banco PIX)</option>
+                        <option value="COP">🇨🇴 COP (Banco Colombia)</option>
+                        <option value="MXN">🇲🇽 MXN (Banco SPEI)</option>
+                        <option value="PEN">🇵🇪 PEN (Banco Perú)</option>
+                        <option value="CLP">🇨🇱 CLP (Banco Chile)</option>
                       </optgroup>
                     </select>
                   </div>
@@ -1110,19 +1110,19 @@ export default function Home() {
                       }}
                       className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <optgroup label="Cripto & Dólar">
-                        <option value="USDC">USDC (Circle)</option>
+                      <optgroup label="Tokens y Dólar Digital">
+                        <option value="USDC">USDC (Dólar Digital)</option>
+                        <option value="CELO">CELO (Nativo Celo)</option>
                         <option value="SOL">SOL (Solana)</option>
                         <option value="XLM">XLM (Stellar)</option>
-                        <option value="CELO">CELO (Celo)</option>
                       </optgroup>
-                      <optgroup label="Monedas LatAm">
-                        <option value="ARS">🇦🇷 ARS (Pesos)</option>
-                        <option value="BRL">🇧🇷 BRL (Reais)</option>
-                        <option value="COP">🇨🇴 COP (Col$)</option>
-                        <option value="MXN">🇲🇽 MXN (Mex$)</option>
-                        <option value="PEN">🇵🇪 PEN (Soles)</option>
-                        <option value="CLP">🇨🇱 CLP (Ch$)</option>
+                      <optgroup label="Rampas Bancarias (CBU / PIX / SPEI)">
+                        <option value="ARS">🇦🇷 ARS (Banco CBU/CVU)</option>
+                        <option value="BRL">🇧🇷 BRL (Banco PIX)</option>
+                        <option value="COP">🇨🇴 COP (Banco Colombia)</option>
+                        <option value="MXN">🇲🇽 MXN (Banco SPEI)</option>
+                        <option value="PEN">🇵🇪 PEN (Banco Perú)</option>
+                        <option value="CLP">🇨🇱 CLP (Banco Chile)</option>
                       </optgroup>
                     </select>
                   </div>

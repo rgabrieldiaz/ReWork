@@ -7,6 +7,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
 import { Globe, Target, ShieldCheck, Sparkles, ChevronRight, UserPlus, Search, Filter } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { CreateServiceModal } from "@/components/CreateServiceModal";
 import { toast } from "sonner";
 
 interface Bounty {
@@ -29,26 +30,27 @@ export default function GlobalNetworkPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [applyingId, setApplyingId] = useState<string | null>(null);
     const [appliedIds, setAppliedIds] = useState<string[]>([]);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    const fetchGlobalBounties = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('squad_goals')
+                .select('*')
+                .or('is_global_bounty.eq.true,workspace_id.is.null')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setBounties(data || []);
+        } catch (err) {
+            console.error('Error fetching global bounties:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchGlobalBounties = async () => {
-            setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('squad_goals')
-                    .select('*')
-                    .or('is_global_bounty.eq.true,workspace_id.is.null')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                setBounties(data || []);
-            } catch (err) {
-                console.error('Error fetching global bounties:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchGlobalBounties();
     }, []);
 
@@ -98,7 +100,7 @@ export default function GlobalNetworkPage() {
                     </div>
 
                     <button 
-                        onClick={() => toast.info(language === 'es' ? "Para publicar un servicio en la Red de Servicios, creá un objetivo con el switch 'Servicio / Bounty Global' activado desde Misiones de Equipo." : "To publish a service on the Services Network, create a goal with the 'Global Service / Bounty' switch toggled from Squad Goals.", { duration: 5000 })}
+                        onClick={() => setIsCreateModalOpen(true)}
                         className="flex items-center gap-2 px-5 py-2.5 bg-accent-teal text-background rounded-xl font-bold hover:bg-accent-teal/90 transition-all text-sm shadow-[0_0_15px_rgba(0,242,255,0.2)] cursor-pointer"
                     >
                         <UserPlus className="w-4 h-4" />
@@ -207,6 +209,12 @@ export default function GlobalNetworkPage() {
                     <p className="text-xs font-bold text-muted uppercase tracking-widest">{language === 'es' ? "Aura acumulado" : "Accrued Aura"}</p>
                 </div>
             </div>
+            {/* Modal para Publicar Servicio Directo */}
+            <CreateServiceModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSuccess={fetchGlobalBounties}
+            />
         </div>
     );
 }

@@ -324,6 +324,32 @@ export default function SquadGoalsPage() {
                 </div>
             </div>
 
+            {/* Barra de Roles y Flujo Operativo de Misiones */}
+            <div className="p-4 rounded-2xl bg-card border border-border-subtle flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs shadow-sm">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-accent-teal/15 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
+                        <Target className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <p className="font-semibold text-foreground">
+                            {activeWorkspace?.userRole === "owner" || activeWorkspace?.userRole === "admin"
+                                ? "Vista de Coordinador: Gestión y Fondeo de Contratos Escrow"
+                                : "Vista de Colaborador: Proponé misiones, sumá firmas y postuláte a hitos"}
+                        </p>
+                        <p className="text-[11px] text-muted mt-0.5">
+                            {activeWorkspace?.userRole === "owner" || activeWorkspace?.userRole === "admin"
+                                ? "Cualquier integrante puede sugerir una misión. Como coordinador podés fondear el smart contract y liberar el pago al validar entregables."
+                                : "Proponé objetivos para el equipo. Al alcanzar las firmas requeridas o el aval del coordinador, se activa la custodia de fondos."}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+                    <span className="px-2.5 py-1 rounded-md bg-accent-teal/10 border border-accent-teal/20 font-mono text-[11px] font-bold text-accent-teal">
+                        Rol: {activeWorkspace?.userRole === "owner" ? "Coordinador" : "Colaborador"}
+                    </span>
+                </div>
+            </div>
+
             {/* Pills Filters */}
             <div className="flex items-center gap-2 overflow-x-auto py-3 px-2 mb-4 scrollbar-hide -mx-2">
                 <button

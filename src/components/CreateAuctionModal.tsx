@@ -34,10 +34,10 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
     const [image, setImage] = useState("📦");
     const [basePrice, setBasePrice] = useState("");
     const [durationDays, setDurationDays] = useState<number>(1);
-    const [currency, setCurrency] = useState<"USDC" | "XLM">("USDC");
+    const [currency, setCurrency] = useState<string>("USDC");
     const [condition, setCondition] = useState<"nuevo" | "usado">("nuevo");
     const [isDirectBuy, setIsDirectBuy] = useState(false);
-    const [privacy, setPrivacy] = useState<"public" | "private">("public");
+    const [privacy, setPrivacy] = useState<"public" | "private">("private");
     const [selectedSquadId, setSelectedSquadId] = useState<string>("");
     const [userSquads, setUserSquads] = useState<Squad[]>([]);
 
@@ -123,11 +123,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
             return;
         }
 
-        if (privacy === "private" && !selectedSquadId) {
-            toast.error("Por favor selecciona un equipo para la subasta privada.");
-            return;
-        }
-
+        // If private, it belongs to this workspace (and optionally to a specific squad)
         setLoading(true);
         try {
             const basePriceNum = Number(basePrice);
@@ -349,60 +345,64 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                             <label className="block text-sm font-bold text-foreground">
                                 {isDirectBuy ? (language === 'es' ? "Precio de Venta y Moneda" : "Selling Price & Currency") : (language === 'es' ? "Precio Base y Moneda" : "Starting Price & Currency")} <span className="text-accent-teal">*</span>
                             </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr] gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.8fr] gap-3">
                                 <div className="relative group">
-                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-bold transition-colors group-focus-within:text-accent-teal">$</span>
                                     <input
                                         required
                                         type="number"
                                         min="1"
-                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-10 pr-5 py-3 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
+                                        className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl pl-9 pr-4 py-3 text-base focus:outline-none focus:border-accent-teal focus:ring-1 focus:ring-accent-teal/50 transition-all font-mono placeholder:text-muted/50"
                                         value={basePrice}
                                         onChange={e => setBasePrice(e.target.value)}
                                         placeholder="0.00"
                                     />
                                 </div>
-                                <div className="flex bg-neutral-900/50 border border-border-subtle rounded-2xl p-1.5 relative">
-                                    <div className="absolute inset-y-1.5 w-[calc(50%-6px)] bg-neutral-800 rounded-xl transition-all duration-300 ease-out shadow-sm border border-white/5" style={{ left: currency === 'USDC' ? '6px' : 'calc(50% + 0px)' }} />
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrency('USDC')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center gap-2 transition-colors ${currency === 'USDC' ? 'text-white' : 'text-muted hover:text-white'}`}
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-[10px] text-blue-400">U</div>
-                                        USDC
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrency('XLM')}
-                                        className={`flex-1 relative z-10 font-bold text-sm rounded-xl py-2 flex items-center justify-center gap-2 transition-colors ${currency === 'XLM' ? 'text-white' : 'text-muted hover:text-white'}`}
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-neutral-100/10 border border-neutral-400/50 flex items-center justify-center text-[10px] text-neutral-300">X</div>
-                                        XLM
-                                    </button>
-                                </div>
+                                <select
+                                    value={currency}
+                                    onChange={e => setCurrency(e.target.value)}
+                                    className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-4 py-3 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal font-mono cursor-pointer"
+                                >
+                                    <optgroup label="Dólar Digital & Stablecoins">
+                                        <option value="USDC">USDC (Circle Multi-red)</option>
+                                        <option value="USAT">USA₮ (Gasless x402 en Celo)</option>
+                                    </optgroup>
+                                    <optgroup label="Cripto Nativas">
+                                        <option value="CELO">CELO (Celo Mainnet)</option>
+                                        <option value="SOL">SOL (Solana Devnet)</option>
+                                        <option value="XLM">XLM (Stellar Testnet)</option>
+                                    </optgroup>
+                                    <optgroup label="Tokens Digitales LatAm (1:1 en Celo)">
+                                        <option value="wARS">🇦🇷 wARS (Peso Digital)</option>
+                                        <option value="wBRL">🇧🇷 wBRL (Real Digital)</option>
+                                        <option value="wCOP">🇨🇴 wCOP (Peso Digital)</option>
+                                        <option value="wMXN">🇲🇽 wMXN (Peso Digital)</option>
+                                        <option value="wPEN">🇵🇪 wPEN (Sol Digital)</option>
+                                        <option value="wCLP">🇨🇱 wCLP (Peso Digital)</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
 
                         {/* Privacy Selection */}
                         <div className="space-y-3">
                             <label className="block text-sm font-bold text-foreground">
-                                {language === 'es' ? "Visibilidad" : "Visibility"} <span className="text-accent-teal">*</span>
+                                {language === 'es' ? "Visibilidad & Alcance" : "Visibility & Scope"} <span className="text-accent-teal">*</span>
                             </label>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => setPrivacy('public')}
-                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'public' ? 'bg-accent-teal/10 border-accent-teal text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                    onClick={() => setPrivacy('private')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${privacy === 'private' ? 'bg-accent-teal/15 border-accent-teal text-white shadow-sm' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Globe className="w-4 h-4" /> {language === 'es' ? "Público" : "Public"}
+                                    <Users className="w-4 h-4" /> <span>🔒 Solo este Espacio (P2P)</span>
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setPrivacy('private')}
-                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold transition-all border ${privacy === 'private' ? 'bg-orange-500/10 border-orange-500 text-white' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
+                                    onClick={() => setPrivacy('public')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${privacy === 'public' ? 'bg-accent-teal/15 border-accent-teal text-white shadow-sm' : 'bg-neutral-900/50 border-border-subtle text-muted hover:border-border'}`}
                                 >
-                                    <Users className="w-4 h-4" /> {language === 'es' ? "Solo Equipo" : "Team Only"}
+                                    <Globe className="w-4 h-4" /> <span>🌐 Red Global ReWork</span>
                                 </button>
                             </div>
 
@@ -489,7 +489,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                             <button
                                 type="submit"
                                 form="create-auction-form"
-                                disabled={loading || !title || !basePrice || (privacy === 'private' && !selectedSquadId)}
+                                disabled={loading || !title || !basePrice}
                                 className="flex justify-center items-center gap-2 px-5 py-3 bg-accent-teal hover:bg-accent-teal/80 text-black rounded-xl transition-all text-sm font-bold shadow-[0_0_15px_rgba(0,242,255,0.15)] shrink-0 whitespace-nowrap disabled:opacity-50 disabled:shadow-none disabled:hover:bg-accent-teal relative overflow-hidden group min-w-[180px]"
                             >
                                 {loading && (

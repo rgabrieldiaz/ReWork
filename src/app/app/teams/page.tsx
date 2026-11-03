@@ -311,8 +311,13 @@ export default function ColaboradoresPage() {
             <div className="bg-card flex flex-col items-center text-center rounded-2xl border border-border-subtle p-8 md:p-12 relative overflow-hidden">
                 <div className="absolute top-10 left-10 w-96 h-96 bg-accent-teal/10 rounded-full blur-[120px] pointer-events-none" />
                 <div className="relative z-10 max-w-3xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-teal/10 border border-accent-teal/20 rounded-full text-accent-teal text-[10px] font-bold uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(45,212,191,0.1)]">
-                        <Rocket className="w-3 h-3" /> Workspace: {activeWorkspace?.name || "Global"}
+                    <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-teal/10 border border-accent-teal/20 rounded-full text-accent-teal text-[10px] font-bold uppercase tracking-wider">
+                            <Rocket className="w-3 h-3" /> Espacio: {activeWorkspace?.name || "Global"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-foreground/5 border border-border-subtle rounded-full text-muted text-[10px] font-bold uppercase tracking-wider">
+                            🔒 Directorio Privado del Espacio
+                        </span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 flex items-center justify-center gap-4">
                         {t.colaboradores.title} <Users className="text-accent-teal w-10 h-10" />
