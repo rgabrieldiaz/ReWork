@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Copy, Wallet, ChevronRight, TrendingUp, Sparkles, LogOut, ArrowRightLeft,
   X, Clock, ShieldCheck, Globe, Target, HeartHandshake, ShoppingBag, Users,
@@ -26,6 +27,7 @@ import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
 import { SmartRentalEscrowModal } from "@/components/SmartRentalEscrowModal";
 import { CeloAgentHubModal } from "@/components/CeloAgentHubModal";
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
+import { InteractiveTour } from "@/components/InteractiveTour";
 import { DEFAULT_RATES, convertCurrency } from "@/lib/currency";
 import { solanaClient } from "@/lib/solana";
 import { toast } from "sonner";
@@ -48,6 +50,7 @@ interface Auction {
 }
 
 export default function Home() {
+  const router = useRouter();
   const { connected, address, network, sign } = useWallet();
   const {
     address: solAddress,
@@ -65,7 +68,7 @@ export default function Home() {
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
-  const { isPro, isJuror, escrowFeePercent, openUpgradeModal } = useSubscription();
+  const { isPro, isJuror, escrowFeePercent, openUpgradeModal, activateJurorPass } = useSubscription();
   const { notifyPointsEarned } = useGamification();
   const { t, language } = useSettings();
   const [showTourBanner, setShowTourBanner] = useState(true);
@@ -534,6 +537,7 @@ export default function Home() {
 
         <Link
           href="/app/squad-goals"
+          data-tour="squad-missions-card"
           className="glass-card p-4 border border-border-subtle hover:border-foreground/20 transition-colors flex flex-col justify-between group"
         >
           <div className="flex items-center justify-between text-xs text-muted mb-2">
@@ -635,7 +639,10 @@ export default function Home() {
           {activeMainTab === "custodias" && (
             <div className="space-y-4 animate-in fade-in duration-200">
               {/* Contrato 1: Alquiler Comercial 50/50 en Celo Mainnet */}
-              <section className="glass-card p-5 border border-border-subtle space-y-4">
+              <section
+                data-tour="rental-escrow-card"
+                className="glass-card p-5 border border-border-subtle space-y-4"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-accent-teal/10 border border-accent-teal/25 flex items-center justify-center text-accent-teal shrink-0">
@@ -920,7 +927,10 @@ export default function Home() {
         </div>
 
         {/* PANEL DERECHO (5 COLUMNAS): Tesorería, Rendimientos DeFi y Conversión */}
-        <div className="lg:col-span-5 space-y-4 min-w-0">
+        <div
+          data-tour="treasury-swap-panel"
+          className="lg:col-span-5 space-y-4 min-w-0"
+        >
           {/* Barra de pestañas derecha */}
           <div className="flex items-center justify-between gap-2 border-b border-border-subtle pb-2.5">
             <div className="flex items-center gap-1 p-1 bg-card rounded-lg border border-border-subtle w-full">
@@ -1347,6 +1357,24 @@ export default function Home() {
         onClose={() => setIsSolanaEscrowOpen(false)}
       />
 
+      {/* Tour Interactivo para Jurados & Evaluadores */}
+      <InteractiveTour
+        onOpenOperations={() => {
+          window.dispatchEvent(new CustomEvent("rework:open-operations"));
+        }}
+        onOpenRentalEscrow={() => {
+          setIsRentalEscrowOpen(true);
+        }}
+        onOpenSwap={() => {
+          setActiveTreasuryTab("swap");
+        }}
+        onOpenSquadGoals={() => {
+          router.push("/app/squad-goals");
+        }}
+        onActivateJuror={() => {
+          activateJurorPass("guided_tour");
+        }}
+      />
     </div>
   );
 }

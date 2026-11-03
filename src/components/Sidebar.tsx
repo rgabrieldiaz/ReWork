@@ -326,6 +326,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     {/* Plan / Juror Pass Indicator Button */}
                     <button
                         type="button"
+                        data-tour="juror-plan-badge"
                         onClick={() => openUpgradeModal()}
                         title={
                             isJuror

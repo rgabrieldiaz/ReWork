@@ -18,6 +18,7 @@ import {
   Lock,
   Bot,
   ShieldCheck,
+  Compass,
 } from "lucide-react";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { QRPaymentsModal } from "@/components/QRPaymentsModal";
@@ -25,7 +26,7 @@ import { BankTransferModal } from "@/components/BankTransferModal";
 import { SolanaEscrowModal } from "@/components/SolanaEscrowModal";
 import { CeloAgentHubModal } from "@/components/CeloAgentHubModal";
 import { SmartRentalEscrowModal } from "@/components/SmartRentalEscrowModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useCeloWallet } from "@/hooks/useCeloWallet";
@@ -60,6 +61,18 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isRentalEscrowOpen, setIsRentalEscrowOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isFinanceDetailOpen, setIsFinanceDetailOpen] = useState(false);
+
+  // Allow external triggers (like InteractiveTour) to control operations dropdown
+  useEffect(() => {
+    const handleToggleOps = () => setIsQuickActionsOpen((prev) => !prev);
+    const handleOpenOps = () => setIsQuickActionsOpen(true);
+    window.addEventListener("rework:open-operations", handleOpenOps);
+    window.addEventListener("rework:toggle-operations", handleToggleOps);
+    return () => {
+      window.removeEventListener("rework:open-operations", handleOpenOps);
+      window.removeEventListener("rework:toggle-operations", handleToggleOps);
+    };
+  }, []);
 
   const {
     connected: solConnected,
@@ -248,11 +261,24 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex items-center gap-3">
         {isLoggedIn && (
           <div className="flex items-center gap-2 relative">
+            {/* 🧭 BOTÓN DE ACCESO RÁPIDO AL TOUR DE EVALUACIÓN / JURADOS */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("rework:start-tour"))}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-muted hover:text-foreground text-xs font-semibold transition-all group cursor-pointer"
+              title="Tour Interactivo para Jurados y Evaluadores (90s)"
+              data-tour="tour-launcher-btn"
+            >
+              <Compass className="w-3.5 h-3.5 text-accent-teal group-hover:rotate-45 transition-transform" />
+              <span className="hidden xl:inline">Tour Jurado</span>
+            </button>
+
             {/* ⚡ MENÚ UNIFICADO DE ACCIONES RÁPIDAS (Reemplaza los 5 botones sueltos) */}
             <div className="relative">
               <button
+                data-tour="header-operations"
                 onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-accent-teal/15 hover:bg-accent-teal/25 border border-accent-teal/40 text-accent-teal text-xs font-bold transition-all shadow-sm group"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-accent-teal/15 hover:bg-accent-teal/25 border border-accent-teal/40 text-accent-teal text-xs font-bold transition-all shadow-sm group cursor-pointer"
                 title="Acciones y Operaciones Web3"
               >
                 <ShieldCheck className="w-4 h-4" />
