@@ -538,6 +538,15 @@ export default function ColectasPage() {
                         const isOrganizer = camp.organizer === publicKey;
                         const isProcessing = processingId === camp.id;
 
+                        const curUpper = (camp.currency || 'USDC').toUpperCase();
+                        const campNet = ['WARS', 'WBRL', 'WCOP', 'WMXN', 'WPEN', 'WCLP', 'CELO', 'USAT'].includes(curUpper)
+                            ? { name: 'Celo Mainnet', tag: '🌱 Celo', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' }
+                            : ['SOL'].includes(curUpper)
+                            ? { name: 'Solana Devnet', tag: '⚡ Solana', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' }
+                            : ['XLM'].includes(curUpper)
+                            ? { name: 'Stellar Testnet', tag: '🚀 Stellar', cls: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' }
+                            : { name: 'Multirail USDC', tag: '🌐 Multiriel', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+
                         const organizerName = camp.organizer_profile 
                             ? `${camp.organizer_profile.first_name} ${camp.organizer_profile.last_name || ''}`.trim()
                             : truncateKey(camp.organizer);
@@ -586,6 +595,9 @@ export default function ColectasPage() {
                                         </h3>
                                         
                                         <div className="shrink-0 flex flex-col items-end gap-1">
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${campNet.cls}`}>
+                                                {campNet.tag}
+                                            </span>
                                             {isGoalMet ? (
                                                 <span className="px-2 py-0.5 bg-accent-teal/10 border border-accent-teal/30 rounded-full text-[9px] font-bold text-accent-teal uppercase tracking-widest flex items-center gap-1 shadow-[0_0_10px_rgba(0,242,255,0.1)]">
                                                     <CheckCircle className="w-2.5 h-2.5" /> Meta

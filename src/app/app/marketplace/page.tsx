@@ -713,6 +713,20 @@ function AuctionCard({ item, currentAddress, onSelect, onClaim, t, language }: a
     const isCancelled = item.status === 'cancelled';
     const currency = item.currency || 'USDC';
 
+    const networkMeta = useMemo(() => {
+        const c = (currency || 'USDC').toUpperCase();
+        if (['WARS', 'WBRL', 'WCOP', 'WMXN', 'WPEN', 'WCLP', 'CELO', 'USAT'].includes(c)) {
+            return { name: 'Celo Mainnet', tag: '🌱 Celo', cls: 'bg-emerald-500/90 text-slate-950 border-emerald-400 font-black' };
+        }
+        if (['SOL'].includes(c)) {
+            return { name: 'Solana Devnet', tag: '⚡ Solana', cls: 'bg-purple-600/90 text-white border-purple-400 font-black' };
+        }
+        if (['XLM'].includes(c)) {
+            return { name: 'Stellar Testnet', tag: '🚀 Stellar', cls: 'bg-accent-teal/90 text-slate-950 border-accent-teal font-black' };
+        }
+        return { name: 'Multirail USDC', tag: '🌐 Multiriel', cls: 'bg-blue-600/90 text-white border-blue-400 font-black' };
+    }, [currency]);
+
     // Theme logic: Auction = Violet, Direct Buy = Cyan
     const themeColor = item.is_direct_buy ? 'accent-teal' : 'purple-500';
     const themeBorder = item.is_direct_buy ? 'hover:border-accent-teal/30' : 'hover:border-purple-500/30';
@@ -742,7 +756,11 @@ function AuctionCard({ item, currentAddress, onSelect, onClaim, t, language }: a
                 )}
 
                 <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
-                    <div className="flex-1" />
+                    <div className="flex items-center gap-1.5 pointer-events-auto">
+                        <span className={`px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider rounded-md border shadow-md backdrop-blur-md ${networkMeta.cls}`}>
+                            {networkMeta.tag}
+                        </span>
+                    </div>
                     {isCancelled ? (
                         <div className="bg-red-500/10 text-red-500 border border-red-500/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_10px_rgba(239,68,68,0.2)]">
                             <XCircle className="w-3.5 h-3.5" /> {t.marketplace.cancelledByUser}

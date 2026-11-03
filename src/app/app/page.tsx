@@ -653,6 +653,9 @@ export default function Home() {
                         <h3 className="text-sm font-semibold text-foreground">
                           Garantía de Alquiler Comercial #104 (50/50 Yield)
                         </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                          🌱 Celo Mainnet
+                        </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal border border-accent-teal/20">
                           Activo
                         </span>
@@ -706,6 +709,9 @@ export default function Home() {
                         <h3 className="text-sm font-semibold text-foreground">
                           Hito de Equipo: Entregables y Cierre Operativo
                         </h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          🚀 Stellar Soroban
+                        </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-foreground/5 text-muted border border-border-subtle">
                           85% completado
                         </span>

@@ -88,6 +88,20 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
     const minBid = Math.max(auction.current_bid + 1, auction.base_price);
     const isLoading = loadingBids[auction.id];
 
+    const networkMeta = (() => {
+        const c = (currency || 'USDC').toUpperCase();
+        if (['WARS', 'WBRL', 'WCOP', 'WMXN', 'WPEN', 'WCLP', 'CELO', 'USAT'].includes(c)) {
+            return { name: 'Celo Mainnet', tag: '🌱 Celo Mainnet (42220)', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-bold' };
+        }
+        if (['SOL'].includes(c)) {
+            return { name: 'Solana Devnet', tag: '⚡ Solana Devnet', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30 font-bold' };
+        }
+        if (['XLM'].includes(c)) {
+            return { name: 'Stellar Testnet', tag: '🚀 Stellar Testnet (Soroban)', cls: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 font-bold' };
+        }
+        return { name: 'Multirail USDC', tag: '🌐 Multiriel USDC', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30 font-bold' };
+    })();
+
     const handleStep = (step: number) => {
         let nextVal = bidAmount + step;
         if (nextVal < minBid) nextVal = minBid;
@@ -142,7 +156,10 @@ export function AuctionDetailModal({ isOpen, onClose, auction, currentAddress, o
                     </button>
 
                     <div className="mb-6 pr-12">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <span className={`px-2.5 py-1 text-xs rounded-lg border flex items-center gap-1.5 backdrop-blur-md ${networkMeta.cls}`}>
+                                {networkMeta.tag}
+                            </span>
                             {auction.is_direct_buy ? (
                                 <span className="bg-accent-teal/10 text-accent-teal border border-accent-teal/20 px-2.5 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 backdrop-blur-md">
                                     🛍️ {t?.marketplace?.itemDirectBuy || (language === 'es' ? 'Compra Directa' : 'Direct Buy')}

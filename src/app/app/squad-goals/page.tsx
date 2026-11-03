@@ -82,6 +82,20 @@ export default function SquadGoalsPage() {
         proposedGoals = proposedGoals.filter(g => g.title.toLowerCase().includes(q) || g.description.toLowerCase().includes(q));
     }
 
+    const getGoalNetwork = (currency?: string) => {
+        const c = (currency || 'USDC').toUpperCase();
+        if (['WARS', 'WBRL', 'WCOP', 'WMXN', 'WPEN', 'WCLP', 'CELO', 'USAT'].includes(c)) {
+            return { name: 'Celo Mainnet', tag: '🌱 Celo', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
+        }
+        if (['SOL'].includes(c)) {
+            return { name: 'Solana Devnet', tag: '⚡ Solana', cls: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
+        }
+        if (['XLM'].includes(c)) {
+            return { name: 'Stellar Testnet', tag: '🚀 Stellar', cls: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' };
+        }
+        return { name: 'Multirail USDC', tag: '🌐 Multiriel', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+    };
+
     const getGoalVotes = (goalId: string) => votes.filter(v => v.goal_id === goalId);
     const hasVoted = (goalId: string) => votes.some(v => v.goal_id === goalId && (
         (effectiveVoter && v.wallet_address === effectiveVoter) ||
@@ -480,11 +494,18 @@ export default function SquadGoalsPage() {
                             return { id: v.wallet_address, avatar_url: user?.avatar_url, initials: user?.first_name?.[0] || '?' };
                         });
 
+                        const goalNet = getGoalNetwork(goal.currency);
+
                         return (
                             <div key={goal.id} className="bg-card rounded-2xl border border-accent-teal/20 overflow-hidden flex flex-col shadow-[0_0_15px_rgba(0,242,255,0.05)] p-6 relative">
-                                <span className="absolute top-4 right-4 text-xs font-bold px-3 py-1 bg-foreground/5 rounded-full text-muted flex items-center gap-1">
-                                    {goal.amount} {goal.currency || "USDC"}
-                                </span>
+                                <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${goalNet.cls}`}>
+                                        {goalNet.tag}
+                                    </span>
+                                    <span className="text-xs font-bold px-3 py-1 bg-foreground/5 rounded-full text-muted flex items-center gap-1">
+                                        {goal.amount} {goal.currency || "USDC"}
+                                    </span>
+                                </div>
 
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="w-12 h-12 flex items-center justify-center text-4xl bg-foreground/5 rounded-2xl border border-border-subtle shadow-inner">
@@ -521,7 +542,10 @@ export default function SquadGoalsPage() {
                                 )}
 
                                 <div className="p-4 bg-background border border-border-subtle rounded-xl mb-6 flex items-center justify-between">
-                                    <div className="text-xs text-muted font-medium">{t.squadGoals.trustlessReward}</div>
+                                    <div>
+                                        <div className="text-xs text-muted font-medium">{t.squadGoals.trustlessReward}</div>
+                                        <div className="text-[10px] text-muted/70 font-mono">Liquidación: {goalNet.name}</div>
+                                    </div>
                                     <div className="font-bold text-accent-teal text-lg">{goal.amount} {goal.currency || "USDC"}</div>
                                 </div>
 

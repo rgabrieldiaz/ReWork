@@ -39,7 +39,7 @@ import {
 import { ReWorkIcon } from "@/components/ReWorkLogo";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-  const { connected, address, network, isMobile } = useWallet();
+  const { connected, connect, address, network, isMobile } = useWallet();
   const { profile, loading: profileLoading } = useProfile();
   const { authenticated } = usePrivy();
   const { t, language } = useSettings();
@@ -80,6 +80,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     walletName: solWalletName,
     usdcBalance: solUsdcBalance,
     solBalance,
+    connectSolana,
   } = useSolanaWallet();
 
   const {
@@ -89,6 +90,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     balances: celoBalances,
     totalUsdValue: celoTotalUsd,
     attributionTag,
+    connectCelo,
   } = useCeloWallet();
 
   const isLoggedIn =
@@ -285,6 +287,99 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex items-center gap-3">
         {isLoggedIn && (
           <div className="flex items-center gap-2 relative">
+            {/* 🌐 MULTIRAIL STATUS BADGE (Celo Mainnet · Solana Devnet · Stellar Testnet) */}
+            <div className="hidden lg:flex items-center gap-1 p-1 bg-foreground/5 rounded-xl border border-border-subtle" title="Redes de Liquidación Multiriel Activas">
+              {/* Celo Mainnet */}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!celoConnected) {
+                    try {
+                      await connectCelo();
+                    } catch {}
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all ${
+                  celoConnected
+                    ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold"
+                    : "text-muted hover:text-foreground hover:bg-foreground/5 border border-transparent"
+                }`}
+                title={
+                  celoConnected
+                    ? `Celo Mainnet (42220) Conectada: ${celoAddress}`
+                    : "Hacé click para conectar wallet en Celo Mainnet (MetaMask / MiniPay / Rabby)"
+                }
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    celoConnected ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)] animate-pulse" : "bg-neutral-600"
+                  }`}
+                />
+                <span className="font-sans font-bold">🌱 Celo</span>
+                <span className="text-[9px] opacity-75 font-mono">Mainnet</span>
+              </button>
+
+              {/* Solana Devnet */}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!solConnected) {
+                    try {
+                      await connectSolana("auto");
+                    } catch {}
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all ${
+                  solConnected
+                    ? "bg-purple-600/20 border border-purple-500/30 text-purple-200 font-bold"
+                    : "text-muted hover:text-foreground hover:bg-foreground/5 border border-transparent"
+                }`}
+                title={
+                  solConnected
+                    ? `Solana Devnet Conectada: ${solAddress}`
+                    : "Hacé click para conectar wallet en Solana Devnet (Phantom / Solflare)"
+                }
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    solConnected ? "bg-[#14F195] shadow-[0_0_6px_rgba(20,241,149,0.9)] animate-pulse" : "bg-neutral-600"
+                  }`}
+                />
+                <span className="font-sans font-bold">⚡ Solana</span>
+                <span className="text-[9px] opacity-75 font-mono">Devnet</span>
+              </button>
+
+              {/* Stellar Testnet */}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!connected) {
+                    try {
+                      await connect();
+                    } catch {}
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all ${
+                  connected
+                    ? "bg-accent-teal/15 border border-accent-teal/30 text-accent-teal font-bold"
+                    : "text-muted hover:text-foreground hover:bg-foreground/5 border border-transparent"
+                }`}
+                title={
+                  connected
+                    ? `Stellar Testnet Conectada: ${address}`
+                    : "Hacé click para conectar wallet en Stellar (Freighter / Lobstr)"
+                }
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    connected ? "bg-accent-teal shadow-[0_0_6px_rgba(0,242,255,0.9)] animate-pulse" : "bg-neutral-600"
+                  }`}
+                />
+                <span className="font-sans font-bold">🚀 Stellar</span>
+                <span className="text-[9px] opacity-75 font-mono">Testnet</span>
+              </button>
+            </div>
+
             {/* 🧭 BOTÓN DE ACCESO RÁPIDO AL TOUR DE EVALUACIÓN / JURADOS */}
             <button
               type="button"
