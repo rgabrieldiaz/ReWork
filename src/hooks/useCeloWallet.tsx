@@ -4,12 +4,14 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   createContext,
   useContext,
   ReactNode,
 } from "react";
 import { parseUnits } from "viem";
 import { toast } from "sonner";
+import { usePrivy, useWallets, useCreateWallet } from "@privy-io/react-auth";
 import {
   CELO_ASSETS,
   CELO_MAINNET_CHAIN_ID,
@@ -26,8 +28,10 @@ import {
   getCeloAttributionTag,
   getCeloPublicClient,
   getWindowEthereum,
+  setActiveCeloProvider,
   setCeloAttributionTag,
   verifyCeloTransactionTag,
+  type CeloEthereumProvider,
   type CeloTokenBalance,
   type ERC8004AgentStatus,
 } from "@/lib/chains/celo";
@@ -102,7 +106,17 @@ export function formatCeloAddress(addr: string | null | undefined): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
+function getRawBrowserEthereum(): CeloEthereumProvider | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as unknown as { ethereum?: CeloEthereumProvider }).ethereum;
+}
+
 export function CeloWalletProvider({ children }: { children: ReactNode }) {
+  const { ready: privyReady, authenticated, user: privyUser } = usePrivy();
+  const { wallets: privyWallets } = useWallets();
+  const { createWallet } = useCreateWallet();
+  const attemptedEmbeddedCreateRef = useRef(false);
+
   const [connected, setConnected] = useState(false);
   const [address, setAddress] = useState<`0x${string}` | null>(null);
   const [walletName, setWalletName] = useState<string | null>(null);
@@ -111,13 +125,12 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
   const [balances, setBalances] =
     useState<Record<CeloAssetSymbol, CeloTokenBalance>>(DEFAULT_BALANCES);
   const [totalUsdValue, setTotalUsdValue] = useState(0);
-  const [selectedAsset, setSelectedAsset] = useState<CeloAssetSymbol>("wARS");
+  const [selectedAsset, setSelectedAsset] = useState<CeloAssetSymbol>("USDC");
   const [attributionTag, setAttributionTagState] = useState<string>(
     "rework_celo_latam"
   );
-  const [erc8004Status, setErc8004Status] = useState<ERC8004AgentStatus | null>(
-    null
-  );
+  const [erc8004Status, setErc8004Status] =
+    useState<ERC8004AgentStatus | null>(null);
 
   const loadAddressData = useCallback(async (addr: `0x${string}`) => {
     try {
@@ -134,6 +147,7 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // 1. Restore saved external EVM wallet (MetaMask / MiniPay / Rabby)
   useEffect(() => {
     if (typeof window === "undefined") return;
     setAttributionTagState(getCeloAttributionTag());
@@ -145,10 +159,12 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
       setAddress(typedAddr);
       setWalletName(savedWallet || "Celo EVM Wallet");
       setConnected(true);
+      const rawEth = getRawBrowserEthereum();
+      if (rawEth) setActiveCeloProvider(rawEth);
       loadAddressData(typedAddr);
     }
 
-    const eth = getWindowEthereum();
+    const eth = getRawBrowserEthereum();
     if (eth) {
       eth
         .request({ method: "eth_chainId" })
@@ -158,10 +174,13 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
         .catch(() => {});
 
       const handleAccountsChanged = (accounts: string[]) => {
+        const manualSaved = localStorage.getItem("rework_celo_address");
+        if (!manualSaved) return; // Don't hijack Privy Google session unless external wallet was explicitly connected
         if (accounts && accounts.length > 0 && accounts[0].startsWith("0x")) {
           const nextAddr = accounts[0] as `0x${string}`;
           setAddress(nextAddr);
           setConnected(true);
+          setActiveCeloProvider(eth);
           localStorage.setItem("rework_celo_address", nextAddr);
           loadAddressData(nextAddr);
         } else {
@@ -185,6 +204,103 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
     }
   }, [loadAddressData]);
 
+  // 2. Sync Privy Google / Email Embedded EVM Wallet directly onto Celo Mainnet (42220)
+  useEffect(() => {
+    if (!privyReady) return;
+
+    const manualExternalAddr =
+      typeof window !== "undefined"
+        ? localStorage.getItem("rework_celo_address")
+        : null;
+
+    if (!authenticated) {
+      attemptedEmbeddedCreateRef.current = false;
+      if (!manualExternalAddr && walletName?.includes("Google")) {
+        setConnected(false);
+        setAddress(null);
+        setWalletName(null);
+        setBalances(DEFAULT_BALANCES);
+        setTotalUsdValue(0);
+        setActiveCeloProvider(undefined);
+      }
+      return;
+    }
+
+    // If user manually connected MetaMask/MiniPay, keep prioritizing their external wallet
+    if (manualExternalAddr && manualExternalAddr.startsWith("0x")) {
+      return;
+    }
+
+    const evmWallets = (privyWallets || []).filter(
+      (w) => w.address && w.address.startsWith("0x")
+    );
+    const embeddedWallet =
+      evmWallets.find((w) => w.walletClientType === "privy") || evmWallets[0];
+
+    if (embeddedWallet) {
+      const targetAddr = embeddedWallet.address as `0x${string}`;
+      let cancelled = false;
+
+      const bindPrivyWallet = async () => {
+        try {
+          if (typeof embeddedWallet.switchChain === "function") {
+            await embeddedWallet
+              .switchChain(CELO_MAINNET_CHAIN_ID)
+              .catch(() => {});
+          }
+          if (typeof embeddedWallet.getEthereumProvider === "function") {
+            const prov = await embeddedWallet.getEthereumProvider();
+            if (!cancelled && prov) {
+              setActiveCeloProvider(prov as unknown as CeloEthereumProvider);
+            }
+          }
+        } catch (err) {
+          console.warn("[useCeloWallet] Privy provider setup warning:", err);
+        }
+
+        if (!cancelled) {
+          setAddress(targetAddr);
+          setWalletName("Google · Celo Mainnet");
+          setChainId(CELO_MAINNET_CHAIN_ID);
+          setConnected(true);
+          loadAddressData(targetAddr);
+        }
+      };
+
+      bindPrivyWallet();
+      return () => {
+        cancelled = true;
+      };
+    } else if (
+      privyUser?.wallet?.address &&
+      privyUser.wallet.address.startsWith("0x")
+    ) {
+      const fallbackAddr = privyUser.wallet.address as `0x${string}`;
+      setAddress(fallbackAddr);
+      setWalletName("Google · Celo Mainnet");
+      setChainId(CELO_MAINNET_CHAIN_ID);
+      setConnected(true);
+      loadAddressData(fallbackAddr);
+    } else if (!attemptedEmbeddedCreateRef.current) {
+      // Existing Google user who logged in before embedded wallets were turned on: create one automatically
+      attemptedEmbeddedCreateRef.current = true;
+      createWallet().catch((err) => {
+        console.warn(
+          "[useCeloWallet] Auto embedded wallet creation skipped:",
+          err?.message || err
+        );
+      });
+    }
+  }, [
+    privyReady,
+    authenticated,
+    privyWallets,
+    privyUser,
+    createWallet,
+    loadAddressData,
+    walletName,
+  ]);
+
   const updateAttributionTag = useCallback((tag: string) => {
     const clean = tag.trim();
     if (!clean) return;
@@ -194,6 +310,30 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const ensureCeloMainnet = useCallback(async (): Promise<boolean> => {
+    // If using Privy embedded wallet, switch via Privy API
+    const manualExternalAddr =
+      typeof window !== "undefined"
+        ? localStorage.getItem("rework_celo_address")
+        : null;
+    if (!manualExternalAddr && authenticated) {
+      const embedded = (privyWallets || []).find(
+        (w) => w.address && w.address.startsWith("0x")
+      );
+      if (embedded && typeof embedded.switchChain === "function") {
+        try {
+          await embedded.switchChain(CELO_MAINNET_CHAIN_ID);
+          const prov = await embedded.getEthereumProvider();
+          if (prov) {
+            setActiveCeloProvider(prov as unknown as CeloEthereumProvider);
+          }
+          setChainId(CELO_MAINNET_CHAIN_ID);
+          return true;
+        } catch {
+          // Fall through to EIP-1193 switch
+        }
+      }
+    }
+
     const eth = getWindowEthereum();
     if (!eth) return false;
     const targetHex = `0x${CELO_MAINNET_CHAIN_ID.toString(16)}`; // 0xa4ec (42220)
@@ -239,28 +379,29 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
       }
       return false;
     }
-  }, []);
+  }, [authenticated, privyWallets]);
 
   const connectCelo = useCallback(async (): Promise<`0x${string}`> => {
     setLoading(true);
     try {
-      const eth = getWindowEthereum();
-      if (eth) {
-        const accounts: string[] = await eth.request({
+      const rawEth = getRawBrowserEthereum();
+      if (rawEth) {
+        const accounts: string[] = await rawEth.request({
           method: "eth_requestAccounts",
         });
         if (!accounts || accounts.length === 0) {
           throw new Error("No se seleccionó ninguna cuenta EVM.");
         }
+        setActiveCeloProvider(rawEth);
         await ensureCeloMainnet();
         const addr = accounts[0] as `0x${string}`;
-        const detectedName = eth.isMiniPay
+        const detectedName = rawEth.isMiniPay
           ? "MiniPay (Celo)"
-          : eth.isValora
+          : rawEth.isValora
           ? "Valora"
-          : eth.isRabby
+          : rawEth.isRabby
           ? "Rabby Wallet"
-          : eth.isMetaMask
+          : rawEth.isMetaMask
           ? "MetaMask (Celo Mainnet)"
           : "Celo EVM Wallet";
 
@@ -274,18 +415,54 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
           `Conectado a Celo Mainnet (42220): ${formatCeloAddress(addr)}`
         );
         return addr;
-      } else {
-        throw new Error(
-          "No se detectó una wallet EVM (MetaMask, MiniPay, Rabby o Valora) en el navegador."
-        );
       }
+
+      // Fallback: if authenticated via Google/Privy without browser extension, use or create Privy embedded wallet
+      if (authenticated) {
+        const existing = (privyWallets || []).find(
+          (w) => w.address && w.address.startsWith("0x")
+        );
+        if (existing) {
+          const addr = existing.address as `0x${string}`;
+          const prov = await existing.getEthereumProvider();
+          setActiveCeloProvider(prov as unknown as CeloEthereumProvider);
+          await existing.switchChain(CELO_MAINNET_CHAIN_ID).catch(() => {});
+          setAddress(addr);
+          setWalletName("Google · Celo Mainnet");
+          setChainId(CELO_MAINNET_CHAIN_ID);
+          setConnected(true);
+          await loadAddressData(addr);
+          toast.success(
+            `Wallet embebida activa en Celo Mainnet: ${formatCeloAddress(addr)}`
+          );
+          return addr;
+        }
+
+        const created = await createWallet();
+        if (created?.address && created.address.startsWith("0x")) {
+          const addr = created.address as `0x${string}`;
+          setAddress(addr);
+          setWalletName("Google · Celo Mainnet");
+          setChainId(CELO_MAINNET_CHAIN_ID);
+          setConnected(true);
+          await loadAddressData(addr);
+          toast.success(
+            `Wallet Celo Mainnet creada con tu cuenta: ${formatCeloAddress(addr)}`
+          );
+          return addr;
+        }
+      }
+
+      throw new Error(
+        "Instalá MetaMask, MiniPay o Rabby, o iniciá sesión con Google para operar en Celo Mainnet."
+      );
     } catch (err: any) {
       toast.error(err?.message || "Error al conectar wallet Celo");
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [ensureCeloMainnet, loadAddressData]);
+  }, [authenticated, privyWallets, createWallet, ensureCeloMainnet, loadAddressData]);
 
   const disconnectCelo = useCallback(() => {
     setConnected(false);
@@ -293,6 +470,7 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
     setWalletName(null);
     setBalances(DEFAULT_BALANCES);
     setTotalUsdValue(0);
+    setActiveCeloProvider(undefined);
     if (typeof window !== "undefined") {
       localStorage.removeItem("rework_celo_address");
       localStorage.removeItem("rework_celo_wallet");
@@ -318,7 +496,7 @@ export function CeloWalletProvider({ children }: { children: ReactNode }) {
       const eth = getWindowEthereum();
       if (!eth) {
         throw new Error(
-          "Se requiere una wallet EVM activa (MetaMask/Rabby/MiniPay) para firmar en Celo Mainnet."
+          "Se requiere una wallet activa en Celo Mainnet (Google Login o MetaMask/MiniPay)."
         );
       }
 

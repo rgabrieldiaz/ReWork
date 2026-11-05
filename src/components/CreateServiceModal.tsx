@@ -5,6 +5,8 @@ import { X, Globe, Sparkles, ShieldCheck, CheckCircle2, ArrowRight, Loader2 } fr
 import { supabase } from "@/lib/supabase";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { toast } from "sonner";
 
@@ -16,7 +18,10 @@ interface CreateServiceModalProps {
 
 export function CreateServiceModal({ isOpen, onClose, onSuccess }: CreateServiceModalProps) {
   const { profile } = useProfile();
-  const { connected, address } = useWallet();
+  const { address: stellarAddress } = useWallet();
+  const { address: celoAddress } = useCeloWallet();
+  const testnetRailsEnabled = useTestnetRails();
+  const address = celoAddress || profile?.wallet_address || (testnetRailsEnabled ? stellarAddress : null) || profile?.id;
   const { activeWorkspace } = useWorkspace();
 
   const [title, setTitle] = useState("");
@@ -107,7 +112,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess }: CreateService
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ej. Auditoría de Smart Contracts Soroban / Anchor"
+                placeholder="Ej. Desarrollo Frontend, Auditoría Smart Contracts o Diseño UI/UX"
                 className="w-full bg-foreground/[0.04] border border-border-subtle rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent-teal"
               />
             </div>
@@ -162,11 +167,11 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess }: CreateService
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-full bg-card border border-border-subtle rounded-xl px-3 py-2 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal cursor-pointer font-mono"
                 >
-                  <option value="USDC">USDC (Dólar Digital)</option>
+                  <option value="USDC">USDC (Circle Celo Mainnet)</option>
                   <option value="USA₮">USA₮ (x402 Celo)</option>
                   <option value="CELO">CELO (Celo Mainnet)</option>
-                  <option value="SOL">SOL (Solana)</option>
-                  <option value="XLM">XLM (Stellar)</option>
+                  {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                  {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                   <option value="wARS">wARS (Peso Digital)</option>
                   <option value="wBRL">wBRL (Real Digital)</option>
                   <option value="wCOP">wCOP (Peso Digital)</option>

@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { useSettings } from "@/hooks/useSettings";
 import { useProfile } from "@/hooks/useProfile";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { usePrivy } from "@privy-io/react-auth";
 import { Loader2 } from "lucide-react";
 
@@ -15,12 +16,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const { profile, loading: profileLoading } = useProfile();
+    const { connected: celoConnected } = useCeloWallet();
     const { ready, authenticated } = usePrivy();
 
     const isAppRoute = pathname.startsWith("/app");
     const isDeckRoute = pathname.startsWith("/deck");
 
-    const isAuthenticated = authenticated || !!profile;
+    const isAuthenticated = authenticated || celoConnected || !!profile;
     const isLoading = !ready || profileLoading;
 
     useEffect(() => {

@@ -94,7 +94,20 @@ export interface CeloEthereumProvider {
   removeListener?: (event: string, handler: (...args: any[]) => void) => void;
 }
 
+let activeCeloProvider: CeloEthereumProvider | undefined;
+
+/**
+ * Registers an active EIP-1193 provider (e.g. Privy Embedded Wallet from Google Login
+ * or browser-injected MetaMask/MiniPay) so all Celo modules (x402, Textile FX, transfers) use it seamlessly.
+ */
+export function setActiveCeloProvider(
+  provider?: CeloEthereumProvider
+): void {
+  activeCeloProvider = provider;
+}
+
 export function getWindowEthereum(): CeloEthereumProvider | undefined {
+  if (activeCeloProvider) return activeCeloProvider;
   if (typeof window === 'undefined') return undefined;
   return (window as unknown as { ethereum?: CeloEthereumProvider }).ethereum;
 }

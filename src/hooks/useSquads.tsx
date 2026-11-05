@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from '@/hooks/useWallet';
+import { useCeloWallet } from '@/hooks/useCeloWallet';
+import { useProfile } from '@/hooks/useProfile';
 import { useWorkspace } from '@/hooks/useWorkspace';
 
 export interface Squad {
@@ -21,7 +23,6 @@ export interface SquadMember {
     user_id: string;
     role: 'leader' | 'member' | 'pending';
     joined_at: string;
-    // Relationships
     users?: {
         avatar_url: string | null;
         first_name: string | null;
@@ -31,7 +32,10 @@ export interface SquadMember {
 }
 
 export function useSquads() {
-    const { address: walletAddress } = useWallet();
+    const { address: stellarAddress } = useWallet();
+    const { address: celoAddress } = useCeloWallet();
+    const { profile } = useProfile();
+    const walletAddress = celoAddress || profile?.wallet_address || stellarAddress;
     const { activeWorkspace } = useWorkspace();
     const [squads, setSquads] = useState<Squad[]>([]);
     const [squadMembers, setSquadMembers] = useState<Record<string, SquadMember[]>>({});
@@ -48,7 +52,6 @@ export function useSquads() {
                 return;
             }
 
-            // First fetch all squads for current workspace
             const { data: squadsData, error: squadsError } = await supabase
                 .from('squads')
                 .select('*')
@@ -59,7 +62,6 @@ export function useSquads() {
 
             setSquads(squadsData || []);
 
-            // Then fetch all active members to display avatars
             const { data: membersData, error: membersError } = await supabase
                 .from('squad_members')
                 .select(`
@@ -77,7 +79,6 @@ export function useSquads() {
 
             if (membersError) throw membersError;
 
-            // Group members by squad_id
             const groupedMembers: Record<string, SquadMember[]> = {};
             (membersData || []).forEach((member: any) => {
                 if (!groupedMembers[member.squad_id]) {
@@ -87,7 +88,6 @@ export function useSquads() {
             });
 
             setSquadMembers(groupedMembers);
-
         } catch (err: any) {
             console.error('Error fetching squads:', err);
             setError(err.message);
@@ -100,26 +100,32 @@ export function useSquads() {
         fetchSquads();
     }, [fetchSquads, activeWorkspace?.id]);
 
-    const createSquad = async (squadData: Partial<Squad>) => {
-        if (!walletAddress) throw new Error("Wallet not connected");
+    const resolveCurrentUserId = async (): Promise<string> => {
+        if (profile?.id) return profile.id;
+        if (!walletAddress) throw new Error("Conectá tu cuenta para operar con equipos.");
+        const { data: user } = await supabase
+            .from('users')
+            .select('id')
+            .eq('wallet_address', walletAddress)
+            .maybeSingle();
+        if (!user?.id) throw new Error("Perfil de usuario en sincronización. Intentá en unos segundos.");
+        return user.id;
+    };
 
-        // We assume walletAddress maps to users.id as it does in ProfileContext. 
-        // We fetch the internal user id first.
-        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
-        if (!user) throw new Error("User profile not found");
+    const createSquad = async (squadData: Partial<Squad>) => {
+        const userId = await resolveCurrentUserId();
 
         const { data: newSquad, error: squadError } = await supabase
             .from('squads')
-            .insert([{ ...squadData, leader_id: user.id, workspace_id: activeWorkspace?.id }])
+            .insert([{ ...squadData, leader_id: userId, workspace_id: activeWorkspace?.id }])
             .select()
             .single();
 
         if (squadError) throw squadError;
 
-        // Add leader to members
         const { error: memberError } = await supabase
             .from('squad_members')
-            .insert([{ squad_id: newSquad.id, user_id: user.id, role: 'leader' }]);
+            .insert([{ squad_id: newSquad.id, user_id: userId, role: 'leader' }]);
 
         if (memberError) throw memberError;
 
@@ -128,28 +134,22 @@ export function useSquads() {
     };
 
     const joinSquad = async (squadId: string) => {
-        if (!walletAddress) throw new Error("Wallet not connected");
+        const userId = await resolveCurrentUserId();
 
-        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
-        if (!user) throw new Error("User profile not found");
-
-        // Check if squad is open
         const { data: squad } = await supabase.from('squads').select('is_open').eq('id', squadId).single();
         const role = squad?.is_open ? 'member' : 'pending';
 
         const { data: newMember, error } = await supabase
             .from('squad_members')
-            .insert([{ squad_id: squadId, user_id: user.id, role }])
+            .insert([{ squad_id: squadId, user_id: userId, role }])
             .select()
             .single();
 
         if (error) {
-            // Already requested or member?
-            if (error.code === '23505') throw new Error("Already joined or requested.");
+            if (error.code === '23505') throw new Error("Ya sos miembro o solicitaste unirte a este equipo.");
             throw error;
         }
 
-        // If private, notify the leader
         if (role === 'pending') {
             const { data: squadData } = await supabase.from('squads').select('name, leader_id').eq('id', squadId).single();
             if (!squadData) {
@@ -157,7 +157,7 @@ export function useSquads() {
                 return newMember;
             }
             const { data: leaderProfile } = await supabase.from('users').select('wallet_address').eq('id', squadData.leader_id).single();
-            const { data: requesterProfile } = await supabase.from('users').select('first_name, last_name').eq('id', user.id).single();
+            const { data: requesterProfile } = await supabase.from('users').select('first_name, last_name').eq('id', userId).single();
 
             if (leaderProfile?.wallet_address) {
                 await supabase.from('notifications').insert([{
@@ -166,12 +166,12 @@ export function useSquads() {
                     message: `${requesterProfile?.first_name || 'Alguien'} quiere unirse a tu equipo ${squadData.name}.`,
                     type: 'community',
                     icon: 'UserPlus',
-                    payload: { 
-                        type: 'join_request', 
-                        squadId: squadId, 
+                    payload: {
+                        type: 'join_request',
+                        squadId: squadId,
                         squadName: squadData.name,
-                        userId: user.id,
-                        requesterName: `${requesterProfile?.first_name} ${requesterProfile?.last_name}`
+                        userId: userId,
+                        requesterName: `${requesterProfile?.first_name || ''} ${requesterProfile?.last_name || ''}`.trim()
                     },
                     action_status: 'pending'
                 }]);
@@ -183,45 +183,36 @@ export function useSquads() {
     };
 
     const leaveSquad = async (squadId: string) => {
-        if (!walletAddress) throw new Error("Wallet not connected");
-
-        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
-        if (!user) throw new Error("User profile not found");
+        const userId = await resolveCurrentUserId();
 
         const { error } = await supabase
             .from('squad_members')
             .delete()
             .eq('squad_id', squadId)
-            .eq('user_id', user.id);
+            .eq('user_id', userId);
 
         if (error) throw error;
         await fetchSquads();
     };
 
     const disbandSquad = async (squadId: string) => {
-        if (!walletAddress) throw new Error("Wallet not connected");
+        const userId = await resolveCurrentUserId();
 
-        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
-        if (!user) throw new Error("User profile not found");
-
-        // Verify leadership logic relies on RLS or we check manually
-        // Delete all members
         await supabase.from('squad_members').delete().eq('squad_id', squadId);
 
         const { error } = await supabase
             .from('squads')
             .delete()
             .eq('id', squadId)
-            .eq('leader_id', user.id); // extra security
+            .eq('leader_id', userId);
 
         if (error) throw error;
         await fetchSquads();
     };
 
     const transferLeadership = async (squadId: string, newLeaderId: string) => {
-        if (!walletAddress) throw new Error("Wallet not connected");
+        const userId = await resolveCurrentUserId();
 
-        // 1. Update squad leader_id
         const { error: squadError } = await supabase
             .from('squads')
             .update({ leader_id: newLeaderId })
@@ -229,17 +220,12 @@ export function useSquads() {
 
         if (squadError) throw squadError;
 
-        // 2. Update current leader to 'member'
-        const { data: user } = await supabase.from('users').select('id').eq('wallet_address', walletAddress).single();
-        if (user) {
-            await supabase
-                .from('squad_members')
-                .update({ role: 'member' })
-                .eq('squad_id', squadId)
-                .eq('user_id', user.id);
-        }
+        await supabase
+            .from('squad_members')
+            .update({ role: 'member' })
+            .eq('squad_id', squadId)
+            .eq('user_id', userId);
 
-        // 3. Update new leader to 'leader'
         const { error: memberError } = await supabase
             .from('squad_members')
             .update({ role: 'leader' })
@@ -254,7 +240,6 @@ export function useSquads() {
     const respondToJoinRequest = async (notificationId: string, squadId: string, requesterId: string, action: 'accept' | 'reject') => {
         try {
             if (action === 'accept') {
-                // Update squad_members role
                 const { error: memberError } = await supabase
                     .from('squad_members')
                     .update({ role: 'member' })
@@ -263,10 +248,9 @@ export function useSquads() {
 
                 if (memberError) throw memberError;
 
-                // Notify requester
                 const { data: requester } = await supabase.from('users').select('wallet_address').eq('id', requesterId).single();
                 const { data: squad } = await supabase.from('squads').select('name').eq('id', squadId).single();
-                
+
                 if (requester?.wallet_address && squad) {
                     await supabase.from('notifications').insert([{
                         user_profile_id: requester.wallet_address,
@@ -277,7 +261,6 @@ export function useSquads() {
                     }]);
                 }
             } else {
-                // Remove pending member
                 const { error: deleteError } = await supabase
                     .from('squad_members')
                     .delete()
@@ -286,10 +269,9 @@ export function useSquads() {
 
                 if (deleteError) throw deleteError;
 
-                // Notify requester
                 const { data: requester } = await supabase.from('users').select('wallet_address').eq('id', requesterId).single();
                 const { data: squad } = await supabase.from('squads').select('name').eq('id', squadId).single();
-                
+
                 if (requester?.wallet_address && squad) {
                     await supabase.from('notifications').insert([{
                         user_profile_id: requester.wallet_address,
@@ -301,12 +283,10 @@ export function useSquads() {
                 }
             }
 
-            // Update notification status
             await supabase
                 .from('notifications')
                 .update({ action_status: action === 'accept' ? 'accepted' : 'rejected' })
                 .eq('id', notificationId);
-
         } catch (err) {
             console.error('Error responding to join request:', err);
             throw err;
@@ -318,14 +298,12 @@ export function useSquads() {
     const respondToMissionProposal = async (notificationId: string, squadId: string, userId: string, action: 'accept' | 'reject') => {
         try {
             if (action === 'accept') {
-                // 1. Join the squad (as member)
                 const { error: memberError } = await supabase
                     .from('squad_members')
                     .upsert([{ squad_id: squadId, user_id: userId, role: 'member' }], { onConflict: 'squad_id,user_id' });
 
                 if (memberError) throw memberError;
 
-                // 2. Notify leader
                 const { data: squad } = await supabase.from('squads').select('name, leader_id').eq('id', squadId).single();
                 if (squad) {
                     const { data: leader } = await supabase.from('users').select('wallet_address').eq('id', squad.leader_id).single();
@@ -341,12 +319,10 @@ export function useSquads() {
                 }
             }
 
-            // Update notification status
             await supabase
                 .from('notifications')
                 .update({ action_status: action === 'accept' ? 'accepted' : 'rejected' })
                 .eq('id', notificationId);
-
         } catch (err) {
             console.error('Error responding to mission proposal:', err);
             throw err;

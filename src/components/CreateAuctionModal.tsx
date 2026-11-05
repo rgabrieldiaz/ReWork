@@ -5,7 +5,9 @@ import { X, Image as ImageIcon, ShieldCheck, Smile, Lock, Globe, Users, ChevronD
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { useProfile } from "@/hooks/useProfile";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSettings } from "@/hooks/useSettings";
 import { toast } from "sonner";
@@ -22,8 +24,12 @@ interface Squad {
 }
 
 export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuctionModalProps) {
-    const { connected, address } = useWallet();
-    const { addPoints } = useProfile();
+    const { address: stellarAddress } = useWallet();
+    const { address: celoAddress, connected: celoConnected } = useCeloWallet();
+    const { profile, addPoints } = useProfile();
+    const testnetRailsEnabled = useTestnetRails();
+    const address = celoAddress || profile?.wallet_address || (testnetRailsEnabled ? stellarAddress : null) || profile?.id || null;
+    const connected = Boolean(address || celoConnected);
     const { activeWorkspace } = useWorkspace();
     const { t, language } = useSettings();
     const [loading, setLoading] = useState(false);
@@ -142,7 +148,7 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                 currency: currency,
                 condition: condition,
                 workspace_id: activeWorkspace?.id,
-                squad_id: privacy === "private" ? selectedSquadId : null
+                squad_id: privacy === "private" && selectedSquadId ? selectedSquadId : null
             });
 
             if (error) throw error;
@@ -364,13 +370,13 @@ export function CreateAuctionModal({ isOpen, onClose, onCreated }: CreateAuction
                                     className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-4 py-3 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal font-mono cursor-pointer"
                                 >
                                     <optgroup label="Dólar Digital & Stablecoins">
-                                        <option value="USDC">USDC (Circle Multi-red)</option>
+                                        <option value="USDC">USDC (Circle Celo Mainnet)</option>
                                         <option value="USAT">USA₮ (Gasless x402 en Celo)</option>
                                     </optgroup>
                                     <optgroup label="Cripto Nativas">
                                         <option value="CELO">CELO (Celo Mainnet)</option>
-                                        <option value="SOL">SOL (Solana Devnet)</option>
-                                        <option value="XLM">XLM (Stellar Testnet)</option>
+                                        {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                                        {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                                     </optgroup>
                                     <optgroup label="Tokens Digitales LatAm (1:1 en Celo)">
                                         <option value="wARS">🇦🇷 wARS (Peso Digital)</option>

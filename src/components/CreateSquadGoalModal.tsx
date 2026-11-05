@@ -5,6 +5,9 @@ import { X, Loader2, Smile, ShieldCheck, Target, Image as ImageIcon } from "luci
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useProfile } from "@/hooks/useProfile";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useSettings } from "@/hooks/useSettings";
 
 interface CreateSquadGoalModalProps {
@@ -15,7 +18,11 @@ interface CreateSquadGoalModalProps {
 
 export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: CreateSquadGoalModalProps) {
     const { t, language } = useSettings();
-    const { address: publicKey } = useWallet();
+    const { address: stellarAddress } = useWallet();
+    const { address: celoAddress } = useCeloWallet();
+    const { profile } = useProfile();
+    const testnetRailsEnabled = useTestnetRails();
+    const publicKey = celoAddress || profile?.wallet_address || (testnetRailsEnabled ? stellarAddress : null) || profile?.id || null;
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
@@ -212,8 +219,10 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                             </h4>
                             <p className="text-xs text-blue-200/70 mt-1 mb-2 leading-relaxed">
                                 {language === 'es'
-                                    ? <>Al aprobarse, <strong>Trustless Work</strong> distribuirá el pago automáticamente entre los miembros del equipo usando la lógica Multi-Release.</>
-                                    : <>Upon approval, <strong>Trustless Work</strong> will automatically distribute payout among team members using Multi-Release logic.</>}
+                                    ? testnetRailsEnabled
+                                        ? <>Al aprobarse, <strong>Trustless Work</strong> distribuirá el pago automáticamente entre los miembros del equipo usando la lógica Multi-Release.</>
+                                        : <>Al aprobarse, el acuerdo en <strong>Celo Mainnet (42220)</strong> liquidará el pago en <strong>USDC, USA₮ o wFIAT</strong> al validarse los entregables.</>
+                                    : <>Upon approval, the smart escrow settles payout automatically upon deliverable validation.</>}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-blue-400 bg-blue-500/10 inline-flex px-2 py-1 rounded-md border border-blue-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -305,13 +314,13 @@ export default function CreateSquadGoalModal({ isOpen, onClose, onCreated }: Cre
                                     className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-4 py-3.5 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal font-mono cursor-pointer"
                                 >
                                     <optgroup label="Dólar Digital & Stablecoins">
-                                        <option value="USDC">USDC (Circle Multi-red)</option>
+                                        <option value="USDC">USDC (Circle Celo Mainnet)</option>
                                         <option value="USAT">USA₮ (Gasless x402 en Celo)</option>
                                     </optgroup>
                                     <optgroup label="Cripto Nativas">
                                         <option value="CELO">CELO (Celo Mainnet)</option>
-                                        <option value="SOL">SOL (Solana Devnet)</option>
-                                        <option value="XLM">XLM (Stellar Testnet)</option>
+                                        {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                                        {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                                     </optgroup>
                                     <optgroup label="Tokens Digitales LatAm (1:1 en Celo)">
                                         <option value="wARS">🇦🇷 wARS (Peso Digital)</option>

@@ -1,6 +1,10 @@
+"use client";
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useWallet } from './useWallet';
+import { useCeloWallet } from './useCeloWallet';
+import { useProfile } from './useProfile';
 
 export type NotificationType = 'activity' | 'community';
 
@@ -20,7 +24,10 @@ export interface AppNotification {
 }
 
 export function useNotifications() {
-    const { address } = useWallet();
+    const { address: stellarAddress } = useWallet();
+    const { address: celoAddress } = useCeloWallet();
+    const { profile } = useProfile();
+    const address = celoAddress || profile?.wallet_address || stellarAddress;
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -51,10 +58,9 @@ export function useNotifications() {
     useEffect(() => {
         fetchNotifications();
 
-        // Subscripción a cambios en realtime
         if (address) {
             const channel = supabase
-                .channel('schema-db-changes')
+                .channel(`notifications-${address}`)
                 .on(
                     'postgres_changes',
                     {
@@ -63,8 +69,7 @@ export function useNotifications() {
                         table: 'notifications',
                         filter: `user_profile_id=eq.${address}`
                     },
-                    (payload) => {
-                        console.log('Realtime notification event:', payload);
+                    () => {
                         fetchNotifications();
                     }
                 )
@@ -85,7 +90,6 @@ export function useNotifications() {
 
             if (error) throw error;
 
-            // Local fallback update for faster UI response
             setNotifications(prev =>
                 prev.map(notif => notif.id === id ? { ...notif, is_read: true } : notif)
             );
@@ -120,7 +124,6 @@ export function useNotifications() {
                 .insert([data]);
 
             if (error) throw error;
-            // No fetch needed as realtime subscription handles it
         } catch (err) {
             console.error('Error creating notification:', err);
         }

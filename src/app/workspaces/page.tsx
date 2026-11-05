@@ -31,10 +31,12 @@ import {
 import { toast } from "sonner";
 import { useSettings } from "@/hooks/useSettings";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useBalances } from "@/hooks/useBalances";
 import { useWorkspace, Workspace as HookWorkspace } from "@/hooks/useWorkspace";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { supabase } from "@/lib/supabase";
 
 interface GlobalBounty {
@@ -52,8 +54,21 @@ export default function WorkspacesPage() {
   const { t, language, setLanguage } = useSettings();
   const router = useRouter();
   const { address, connected } = useWallet();
+  const {
+    address: celoAddress,
+    connected: celoConnected,
+    totalUsdValue: celoTotalUsd,
+    balances: celoBalances,
+  } = useCeloWallet();
+  const testnetRailsEnabled = useTestnetRails();
   const { profile } = useProfile();
-  const { xlmBalance, usdcBalance } = useBalances(address);
+  const { xlmBalance, usdcBalance } = useBalances(
+    testnetRailsEnabled ? address : null
+  );
+  const primaryAddress =
+    celoAddress ||
+    profile?.wallet_address ||
+    (testnetRailsEnabled ? address : null);
   const {
     workspaces,
     loading: loadingWorkspaces,
@@ -269,7 +284,12 @@ export default function WorkspacesPage() {
         Date.now().toString(36).slice(-4);
 
       const ownerWallet =
-        address || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || null;
+        celoAddress ||
+        profile?.wallet_address ||
+        (testnetRailsEnabled
+          ? address || profile?.stellar_address || profile?.solana_address
+          : null) ||
+        null;
 
       const { data: createdWs, error } = await supabase
         .from("workspaces")
@@ -329,8 +349,8 @@ export default function WorkspacesPage() {
   };
 
   const handleCopyAddress = () => {
-    if (!address) return;
-    navigator.clipboard.writeText(address);
+    if (!primaryAddress) return;
+    navigator.clipboard.writeText(primaryAddress);
     setAddressCopied(true);
     setTimeout(() => setAddressCopied(false), 2000);
   };
@@ -380,7 +400,7 @@ export default function WorkspacesPage() {
         </div>
 
         {/* Identidad + Patrimonio */}
-        {connected && (
+        {(celoConnected || !!primaryAddress || (testnetRailsEnabled && connected)) && (
           <div className="flex items-center gap-2.5 flex-wrap justify-center">
             {/* AURA Score */}
             <div className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 border border-border-subtle rounded-xl backdrop-blur-sm">
@@ -392,27 +412,46 @@ export default function WorkspacesPage() {
             </div>
 
             {/* Balances */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 border border-border-subtle rounded-xl backdrop-blur-sm">
-              <span className="text-xs font-mono text-muted">XLM</span>
-              <span className="text-xs font-bold">{xlmBalance ?? "—"}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/25 rounded-xl backdrop-blur-sm">
+              <span className="text-xs font-mono text-emerald-300 font-semibold">
+                🌱 Celo Mainnet
+              </span>
               <span className="text-border-subtle">|</span>
-              <span className="text-xs font-mono text-muted">USDC</span>
-              <span className="text-xs font-bold text-accent-teal">{usdcBalance ?? "—"}</span>
+              <span className="text-xs font-mono text-muted">CELO</span>
+              <span className="text-xs font-bold">
+                {celoBalances.CELO?.numeric?.toFixed(2) ?? "0.00"}
+              </span>
+              <span className="text-border-subtle">|</span>
+              <span className="text-xs font-mono text-muted">USD</span>
+              <span className="text-xs font-bold text-emerald-300">
+                ${(celoTotalUsd || 0).toFixed(2)}
+              </span>
+              {testnetRailsEnabled && connected && (
+                <>
+                  <span className="text-border-subtle">|</span>
+                  <span className="text-xs font-mono text-muted">XLM</span>
+                  <span className="text-xs font-bold">{xlmBalance ?? "—"}</span>
+                </>
+              )}
             </div>
 
             {/* Wallet address */}
-            <button
-              onClick={handleCopyAddress}
-              className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 border border-border-subtle rounded-xl hover:bg-foreground/10 transition-colors backdrop-blur-sm"
-              title="Copiar dirección"
-            >
-              {addressCopied ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              ) : (
-                <Copy className="w-3.5 h-3.5 text-muted" />
-              )}
-              <span className="text-xs font-mono text-muted">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-            </button>
+            {primaryAddress && (
+              <button
+                onClick={handleCopyAddress}
+                className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 border border-border-subtle rounded-xl hover:bg-foreground/10 transition-colors backdrop-blur-sm cursor-pointer"
+                title="Copiar dirección Celo Mainnet"
+              >
+                {addressCopied ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 text-muted" />
+                )}
+                <span className="text-xs font-mono text-muted">
+                  {primaryAddress.slice(0, 6)}...{primaryAddress.slice(-4)}
+                </span>
+              </button>
+            )}
           </div>
         )}
 

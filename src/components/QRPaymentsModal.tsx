@@ -20,6 +20,7 @@ import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useSettings } from "@/hooks/useSettings";
 import { getTripleValues, SupportedCurrency } from "@/lib/currency";
 import { CELO_ASSETS, type CeloAssetSymbol } from "@/lib/celo-assets";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { toast } from "sonner";
 
 interface QRPaymentsModalProps {
@@ -44,9 +45,18 @@ export function QRPaymentsModal({
   } = useCeloWallet();
   const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
   const { t, language } = useSettings();
+  const testnetRailsEnabled = useTestnetRails();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [qrChain, setQrChain] = useState<"celo" | "stellar">("celo");
+
+  useEffect(() => {
+    if (!testnetRailsEnabled && qrChain !== "celo") {
+      setQrChain("celo");
+      setCurrency("wARS");
+      setPayCurrency("USAT");
+    }
+  }, [testnetRailsEnabled, qrChain]);
   const [activeTab, setActiveTab] = useState<"receive" | "pay">(defaultTab);
   const [currency, setCurrency] = useState<SupportedCurrency>("wARS");
   const [amount, setAmount] = useState<string>("12000");
@@ -248,8 +258,9 @@ export function QRPaymentsModal({
                 {t.qrModal.title}
               </h2>
               <p className="text-[11px] text-muted hidden sm:block">
-                Cobros y Pagos QR en Celo Mainnet (wFIAT / USA₮) & Stellar
-                (SEP-0007)
+                {testnetRailsEnabled
+                  ? "Cobros y Pagos QR en Celo Mainnet (wFIAT / USA₮) & Stellar (SEP-0007)"
+                  : "Cobros y Pagos QR instantáneos en Celo Mainnet (wARS, wBRL, USA₮, USDC)"}
               </p>
             </div>
           </div>
@@ -261,41 +272,43 @@ export function QRPaymentsModal({
           </button>
         </div>
 
-        {/* Network Selector */}
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 mb-3 flex-shrink-0">
-          <button
-            onClick={() => {
-              setQrChain("celo");
-              setCurrency("wARS");
-              setPayCurrency("USAT");
-              setRecipient("0x465e642387d3d73a57CDc1368fFA53A800bA5D47");
-            }}
-            className={`py-2 rounded-xl text-xs font-bold transition-all ${
-              qrChain === "celo"
-                ? "bg-emerald-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            🌱 Celo Mainnet (wFIAT / USA₮)
-          </button>
-          <button
-            onClick={() => {
-              setQrChain("stellar");
-              setCurrency("ARS");
-              setPayCurrency("USDC");
-              setRecipient(
-                "GDWVAT3G6VUCW325JDN47S7YKILQGIMHXDBUBSFTY4EAOMCA2PO6LWNA"
-              );
-            }}
-            className={`py-2 rounded-xl text-xs font-bold transition-all ${
-              qrChain === "stellar"
-                ? "bg-accent-teal text-slate-950 shadow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            🌐 Stellar (SEP-0007)
-          </button>
-        </div>
+        {/* Network Selector (only when testnet rails enabled) */}
+        {testnetRailsEnabled && (
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 mb-3 flex-shrink-0">
+            <button
+              onClick={() => {
+                setQrChain("celo");
+                setCurrency("wARS");
+                setPayCurrency("USAT");
+                setRecipient("0x465e642387d3d73a57CDc1368fFA53A800bA5D47");
+              }}
+              className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                qrChain === "celo"
+                  ? "bg-emerald-500 text-slate-950 shadow"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🌱 Celo Mainnet (wFIAT / USA₮)
+            </button>
+            <button
+              onClick={() => {
+                setQrChain("stellar");
+                setCurrency("ARS");
+                setPayCurrency("USDC");
+                setRecipient(
+                  "GDWVAT3G6VUCW325JDN47S7YKILQGIMHXDBUBSFTY4EAOMCA2PO6LWNA"
+                );
+              }}
+              className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                qrChain === "stellar"
+                  ? "bg-accent-teal text-slate-950 shadow"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🌐 Stellar (SEP-0007)
+            </button>
+          </div>
+        )}
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto custom-scrollbar pr-1 space-y-4 flex-1">

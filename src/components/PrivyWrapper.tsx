@@ -1,6 +1,7 @@
 "use client";
 
 import { PrivyProvider } from "@privy-io/react-auth";
+import { celo } from "viem/chains";
 import { ReactNode } from "react";
 
 export function PrivyWrapper({ children }: { children: ReactNode }) {
@@ -29,6 +30,8 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
         <PrivyProvider
             appId={appId}
             config={{
+                defaultChain: celo,
+                supportedChains: [celo],
                 appearance: {
                     theme: "dark",
                     accentColor: "#00F2FF",
@@ -36,8 +39,13 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
                 },
                 loginMethods: ["google", "email"],
                 embeddedWallets: {
-                    createOnLogin: "off"
-                } as any
+                    ethereum: {
+                        createOnLogin: "users-without-wallets",
+                    },
+                    solana: {
+                        createOnLogin: "off",
+                    },
+                },
             }}
         >
             {children}

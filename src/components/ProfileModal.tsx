@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useWallet } from "@/hooks/useWallet";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useSettings } from "@/hooks/useSettings";
-import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2, Zap, Globe, Landmark } from "lucide-react";
+import { X, Check, Upload, Loader2, Moon, Sun, Monitor, Copy, CheckCircle2, Building2, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -17,14 +19,17 @@ interface ProfileModalProps {
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { address: stellarAddress } = useWallet();
     const { address: solanaWalletAddress } = useSolanaWallet();
-    const { profile, updateProfile, loading } = useProfile();
+    const { address: celoWalletAddress } = useCeloWallet();
+    const testnetRailsEnabled = useTestnetRails();
+    const { profile, updateProfile } = useProfile();
     const { language, setLanguage, theme, setTheme, t } = useSettings();
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [birthDate, setBirthDate] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-    const [preferredRail, setPreferredRail] = useState<'solana' | 'stellar' | 'bank'>('solana');
+    const [preferredRail, setPreferredRail] = useState<'celo' | 'solana' | 'stellar' | 'bank'>('celo');
+    const [celoAddrInput, setCeloAddrInput] = useState("");
     const [solanaAddress, setSolanaAddress] = useState("");
     const [stellarAddrInput, setStellarAddrInput] = useState("");
     const [bankAlias, setBankAlias] = useState("");
@@ -38,6 +43,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isAdmin = profile?.role?.toLowerCase() === 'admin';
+    const address = celoWalletAddress || profile?.wallet_address || (testnetRailsEnabled ? stellarAddress : null);
 
     const handleCopyAddress = () => {
         if (!address) return;
@@ -53,8 +59,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setSavingWs(false);
     };
 
-    const address = stellarAddress;
-
     // Sync state when profile loads
     useEffect(() => {
         if (profile) {
@@ -62,12 +66,23 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             setLastName(profile.last_name || "");
             setBirthDate(profile.birth_date || "");
             setAvatarUrl(profile.avatar_url || null);
-            setPreferredRail(profile.preferred_rail || 'solana');
+
+            const savedRail = profile.preferred_rail;
+            if (!testnetRailsEnabled && (savedRail === 'solana' || savedRail === 'stellar' || !savedRail)) {
+                setPreferredRail('celo');
+            } else {
+                setPreferredRail(savedRail || 'celo');
+            }
+
+            const primaryEvm =
+                celoWalletAddress ||
+                (profile.wallet_address?.startsWith("0x") ? profile.wallet_address : "");
+            setCeloAddrInput(primaryEvm || "");
             setSolanaAddress(profile.solana_address || solanaWalletAddress || '');
-            setStellarAddrInput(profile.stellar_address || profile.wallet_address || stellarAddress || '');
+            setStellarAddrInput(profile.stellar_address || stellarAddress || '');
             setBankAlias(profile.bank_alias || '');
         }
-    }, [profile, solanaWalletAddress, stellarAddress]);
+    }, [profile, celoWalletAddress, solanaWalletAddress, stellarAddress, testnetRailsEnabled]);
 
     // Load workspace for admin users
     useEffect(() => {
@@ -85,7 +100,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             last_name: field === 'last_name' ? value : lastName,
             birth_date: field === 'birth_date' ? value : birthDate,
             avatar_url: field === 'avatar_url' ? value : avatarUrl,
-            preferred_rail: field === 'preferred_rail' ? (value as any) : preferredRail,
+            preferred_rail: field === 'preferred_rail' ? (value as 'celo' | 'solana' | 'stellar' | 'bank') : preferredRail,
+            wallet_address: field === 'wallet_address' ? (value || undefined) : (celoAddrInput || profile?.wallet_address),
             solana_address: field === 'solana_address' ? value : solanaAddress,
             stellar_address: field === 'stellar_address' ? value : stellarAddrInput,
             bank_alias: field === 'bank_alias' ? value : bankAlias,
@@ -99,19 +115,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         try {
             setIsUploading(true);
 
-            // Create a unique file name
             const fileExt = file.name.split('.').pop();
             const fileName = `${address}-${Math.random()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // Upload to Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
-            // Get the public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath);
@@ -259,79 +272,132 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <div className="p-4 rounded-2xl bg-foreground/[0.03] border border-border-subtle space-y-3">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                                    <Zap className="w-4 h-4 text-accent-teal" />
+                                    <Zap className="w-4 h-4 text-emerald-400" />
                                     {language === 'es' ? "Riel de Cobro Preferido" : "Preferred Settlement Rail"}
                                 </h3>
-                                <span className="text-[10px] font-mono font-bold text-accent-teal bg-accent-teal/10 px-2 py-0.5 rounded border border-accent-teal/20">
-                                    Chain-Agnostic
+                                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">
+                                    {testnetRailsEnabled ? "Multiriel Labs" : "Celo Mainnet"}
                                 </span>
                             </div>
                             <p className="text-xs text-muted leading-relaxed">
                                 {language === 'es'
-                                    ? "Tus clientes o empleadores te transferirán o bloquearán fondos automáticamente en este riel al contratarte."
-                                    : "Clients or employers will automatically settle milestones through this rail upon hiring you."}
+                                    ? "Tus clientes o colaboradores liquidarán acuerdos, pagos QR y rendimientos directamente en este riel."
+                                    : "Clients or collaborators will settle agreements, QR payments, and yields directly through this rail."}
                             </p>
 
                             {/* Selector de Riel */}
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className={`grid ${testnetRailsEnabled ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2"} gap-2`}>
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setPreferredRail('solana');
-                                        handleAutoSave('preferred_rail', 'solana');
-                                        toast.success(language === 'es' ? 'Riel preferido: Solana USDC' : 'Preferred rail: Solana USDC');
+                                        setPreferredRail('celo');
+                                        handleAutoSave('preferred_rail', 'celo');
+                                        toast.success(language === 'es' ? 'Riel preferido: Celo Mainnet (USDC / wFIAT)' : 'Preferred rail: Celo Mainnet');
                                     }}
                                     className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                                        preferredRail === 'solana'
-                                            ? 'bg-purple-500/15 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(153,69,255,0.2)]'
+                                        preferredRail === 'celo'
+                                            ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
                                             : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
                                     }`}
                                 >
-                                    <span className="text-base block mb-0.5">⚡</span>
-                                    <span className="text-xs font-bold block">Solana</span>
-                                    <span className="text-[9px] font-mono text-muted block">USDC ~400ms</span>
+                                    <span className="text-base block mb-0.5">🌱</span>
+                                    <span className="text-xs font-bold block">Celo Mainnet</span>
+                                    <span className="text-[9px] font-mono text-muted block">USDC · USA₮ · wFIAT</span>
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPreferredRail('stellar');
-                                        handleAutoSave('preferred_rail', 'stellar');
-                                        toast.success(language === 'es' ? 'Riel preferido: Stellar USDC' : 'Preferred rail: Stellar USDC');
-                                    }}
-                                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                                        preferredRail === 'stellar'
-                                            ? 'bg-accent-teal/15 border-accent-teal/50 text-accent-teal shadow-[0_0_12px_rgba(0,242,255,0.2)]'
-                                            : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <span className="text-base block mb-0.5">🌐</span>
-                                    <span className="text-xs font-bold block">Stellar</span>
-                                    <span className="text-[9px] font-mono text-muted block">USDC QR ~3s</span>
-                                </button>
+                                {testnetRailsEnabled && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPreferredRail('solana');
+                                            handleAutoSave('preferred_rail', 'solana');
+                                            toast.success(language === 'es' ? 'Riel preferido: Solana Devnet' : 'Preferred rail: Solana Devnet');
+                                        }}
+                                        className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                            preferredRail === 'solana'
+                                                ? 'bg-purple-500/15 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(153,69,255,0.2)]'
+                                                : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        <span className="text-base block mb-0.5">⚡</span>
+                                        <span className="text-xs font-bold block">Solana</span>
+                                        <span className="text-[9px] font-mono text-muted block">Devnet SPL</span>
+                                    </button>
+                                )}
+
+                                {testnetRailsEnabled && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPreferredRail('stellar');
+                                            handleAutoSave('preferred_rail', 'stellar');
+                                            toast.success(language === 'es' ? 'Riel preferido: Stellar Testnet' : 'Preferred rail: Stellar Testnet');
+                                        }}
+                                        className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                            preferredRail === 'stellar'
+                                                ? 'bg-accent-teal/15 border-accent-teal/50 text-accent-teal shadow-[0_0_12px_rgba(0,242,255,0.2)]'
+                                                : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        <span className="text-base block mb-0.5">🌐</span>
+                                        <span className="text-xs font-bold block">Stellar</span>
+                                        <span className="text-[9px] font-mono text-muted block">Testnet QR</span>
+                                    </button>
+                                )}
 
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setPreferredRail('bank');
                                         handleAutoSave('preferred_rail', 'bank');
-                                        toast.success(language === 'es' ? 'Riel preferido: Banco Local ARS' : 'Preferred rail: Local Bank ARS');
+                                        toast.success(language === 'es' ? 'Riel preferido: Banco Local (Ripio Ramp)' : 'Preferred rail: Local Bank');
                                     }}
                                     className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                                         preferredRail === 'bank'
-                                            ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                                            ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
                                             : 'bg-muted/10 border-border-subtle text-muted hover:text-foreground'
                                     }`}
                                 >
                                     <span className="text-base block mb-0.5">🏦</span>
-                                    <span className="text-xs font-bold block">Banco ARS</span>
-                                    <span className="text-[9px] font-mono text-muted block">CBU / CVU</span>
+                                    <span className="text-xs font-bold block">Banco Local</span>
+                                    <span className="text-[9px] font-mono text-muted block">CBU / CVU / PIX</span>
                                 </button>
                             </div>
 
                             {/* Inputs dinámicos */}
                             <div className="pt-1">
-                                {preferredRail === 'solana' && (
+                                {preferredRail === 'celo' && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-[11px] font-semibold text-muted uppercase tracking-wider">
+                                                Dirección Celo Mainnet (0x...)
+                                            </label>
+                                            {celoWalletAddress && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCeloAddrInput(celoWalletAddress);
+                                                        handleAutoSave('wallet_address', celoWalletAddress);
+                                                        toast.success("Dirección Celo Mainnet vinculada");
+                                                    }}
+                                                    className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-mono cursor-pointer"
+                                                >
+                                                    Usar Billetera Activa
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={celoAddrInput}
+                                            onChange={(e) => setCeloAddrInput(e.target.value)}
+                                            onBlur={(e) => handleAutoSave('wallet_address', e.target.value)}
+                                            placeholder="0x... (Privy Embedded / MetaMask / MiniPay)"
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-emerald-400 transition-all"
+                                        />
+                                    </div>
+                                )}
+
+                                {testnetRailsEnabled && preferredRail === 'solana' && (
                                     <div>
                                         <div className="flex items-center justify-between mb-1">
                                             <label className="text-[11px] font-semibold text-muted uppercase tracking-wider">
@@ -362,18 +428,18 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     </div>
                                 )}
 
-                                {preferredRail === 'stellar' && (
+                                {testnetRailsEnabled && preferredRail === 'stellar' && (
                                     <div>
                                         <div className="flex items-center justify-between mb-1">
                                             <label className="text-[11px] font-semibold text-muted uppercase tracking-wider">
                                                 Dirección Stellar (G...)
                                             </label>
-                                            {address && (
+                                            {stellarAddress && (
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        setStellarAddrInput(address);
-                                                        handleAutoSave('stellar_address', address);
+                                                        setStellarAddrInput(stellarAddress);
+                                                        handleAutoSave('stellar_address', stellarAddress);
                                                         toast.success("Dirección de Stellar vinculada");
                                                     }}
                                                     className="text-[10px] text-accent-teal hover:text-accent-teal/80 underline font-mono cursor-pointer"
@@ -396,15 +462,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 {preferredRail === 'bank' && (
                                     <div>
                                         <label className="block text-[11px] font-semibold text-muted mb-1 uppercase tracking-wider">
-                                            Alias o CBU/CVU Bancario (ARS)
+                                            Alias, CBU/CVU o Chave PIX (Ripio Ramp)
                                         </label>
                                         <input
                                             type="text"
                                             value={bankAlias}
                                             onChange={(e) => setBankAlias(e.target.value)}
                                             onBlur={(e) => handleAutoSave('bank_alias', e.target.value)}
-                                            placeholder="ej: nombre.trabajo.mp o 00000031000..."
-                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-emerald-400 transition-all"
+                                            placeholder="ej: nombre.trabajo.mp, CBU o PIX..."
+                                            className="w-full bg-muted/10 border border-border-subtle rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-cyan-400 transition-all"
                                         />
                                     </div>
                                 )}
@@ -424,7 +490,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">{t.profile.language}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {['es', 'en'].map(lang => (
-                                        <div key={lang} onClick={() => setLanguage(lang as any)}
+                                        <div key={lang} onClick={() => setLanguage(lang as 'es' | 'en')}
                                             className={`relative cursor-pointer rounded-xl border p-2.5 flex items-center gap-2 transition-colors ${
                                                 language === lang ? 'bg-accent-teal/10 border-accent-teal' : 'bg-muted/10 border-border-subtle hover:border-foreground/30'
                                             }`}>
@@ -448,7 +514,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                         const Icon = tOption.icon;
                                         const isActive = theme === tOption.id;
                                         return (
-                                            <button key={tOption.id} type="button" onClick={() => setTheme(tOption.id as any)}
+                                            <button key={tOption.id} type="button" onClick={() => setTheme(tOption.id as 'light' | 'dark' | 'system')}
                                                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-lg transition-all ${
                                                     isActive ? 'bg-foreground/10 text-foreground shadow-sm' : 'text-muted hover:text-foreground'
                                                 }`}>

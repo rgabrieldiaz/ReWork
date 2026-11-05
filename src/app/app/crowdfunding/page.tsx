@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER } from "@/lib/stellar";
 import { useWallet } from "@/hooks/useWallet";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import CreateCrowdfundModal from "@/components/CreateCrowdfundModal";
@@ -19,12 +21,20 @@ const truncateKey = (key: string) => `${key.substring(0, 5)}...${key.substring(k
 
 export default function ColectasPage() {
     const { t, language } = useSettings();
-    const { connected, address: publicKey, sign } = useWallet();
+    const { connected, address: stellarAddress, sign } = useWallet();
     const { address: solAddress, connected: solConnected } = useSolanaWallet();
+    const { address: celoAddress, connected: celoConnected } = useCeloWallet();
+    const testnetRailsEnabled = useTestnetRails();
     const { profile, addPoints } = useProfile();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
-    const effectiveDonor = publicKey || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
+    const effectiveDonor =
+        celoAddress ||
+        profile?.wallet_address ||
+        (testnetRailsEnabled ? stellarAddress || solAddress : null) ||
+        profile?.id ||
+        null;
+    const publicKey = effectiveDonor;
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [donations, setDonations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -233,13 +243,13 @@ export default function ColectasPage() {
         try {
             let newEscrowId = "";
 
-            if (connected && publicKey) {
+            if (testnetRailsEnabled && connected && stellarAddress) {
                 // 1. Deploy escrow via server proxy (same pattern as Marketplace)
                 const USDC_CONTRACT = "CAV77QB3YSS6GUK4X54N7H2N5L2F3X2I2D6MNCXNC6R74ZZVNDP4N7F2";
                 const PLATFORM_ADDR = "GCGBYBS7UWLYRUQLOV4Y6Z7NWFEOOUE6KHHP476HZ6RFRZHQ64SOYEPI";
 
                 const payload: any = {
-                    signer: publicKey,
+                    signer: stellarAddress,
                     engagementId: `rework-crowdfund-${camp.id}-${Date.now()}`,
                     title: `Donación: ${camp.title}`,
                     description: `Aporte de ${amountToDonate} USDC para la colecta de ${camp.title}`,
@@ -294,8 +304,12 @@ export default function ColectasPage() {
 
                 newEscrowId = sendData.contractId || sendData.id || `escrow-cf-${Date.now()}`;
             } else {
-                // Multi-rail Evaluator / Jury Mode
-                newEscrowId = solConnected ? `solana-cf-${Date.now()}` : `jury-cf-${Date.now()}`;
+                // Celo Mainnet Crowdfund Contribution
+                newEscrowId = celoConnected || !testnetRailsEnabled
+                    ? `celo-cf-${Date.now()}`
+                    : solConnected
+                    ? `solana-cf-${Date.now()}`
+                    : `celo-cf-${Date.now()}`;
             }
 
             // 4. Persist donation

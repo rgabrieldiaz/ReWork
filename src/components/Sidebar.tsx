@@ -9,7 +9,6 @@ import {
     ShoppingBag,
     Users,
     LifeBuoy,
-    Target,
     ChevronLeft,
     ChevronRight,
     ShieldCheck,
@@ -20,8 +19,11 @@ import {
     Plus,
     Sparkles,
     Award,
+    Bot,
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -34,13 +36,19 @@ import { ReWorkIcon } from "@/components/ReWorkLogo";
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const pathname = usePathname();
     const { connected, connect } = useWallet();
+    const { connected: celoConnected } = useCeloWallet();
+    const { connected: solConnected } = useSolanaWallet();
     const { authenticated, user: privyUser, login: privyLogin } = usePrivy();
     const { profile, loading } = useProfile();
     const { t, language, isSidebarCollapsed, toggleSidebar } = useSettings();
-    const { plan, isPro, isJuror, escrowFeePercent, openUpgradeModal } = useSubscription();
+    const { isPro, isJuror, escrowFeePercent, openUpgradeModal } = useSubscription();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [showSupportLinks, setShowSupportLinks] = useState(
+        pathname === "/app/learn" || pathname === "/app/help-desk"
+    );
 
-    const isUserAuthenticated = connected || authenticated || !!profile?.first_name;
+    const isUserAuthenticated =
+        celoConnected || authenticated || connected || solConnected || !!profile?.first_name;
 
     const firstName =
         profile?.first_name ||
@@ -54,30 +62,65 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
     const navGroups = [
         {
-            label: language === "es" ? "Operaciones" : "Operations",
+            label: language === "es" ? "Tesorería y Acuerdos" : "Treasury & Escrows",
             items: [
-                { name: language === "es" ? "Resumen del Espacio" : t.nav.dashboard, href: "/app", icon: Home },
-                { name: t.nav.squadGoals, href: "/app/squad-goals", icon: Target },
-                { name: language === "es" ? "Objetivos y DeFi" : (t.nav.goals || "Goals"), href: "/app/goals", icon: Compass },
-                { name: t.nav.crowdfunding, href: "/app/crowdfunding", icon: TrendingUp },
+                {
+                    name: language === "es" ? "Panel Principal" : t.nav.dashboard,
+                    href: "/app",
+                    icon: Home,
+                },
+                {
+                    name: language === "es" ? "Acuerdos y Garantías" : t.nav.squadGoals,
+                    href: "/app/squad-goals",
+                    icon: ShieldCheck,
+                },
+                {
+                    name: language === "es" ? "Rendimientos y FX" : (t.nav.goals || "Yields & FX"),
+                    href: "/app/goals",
+                    icon: TrendingUp,
+                },
             ],
         },
         {
-            label: language === "es" ? "Red y Mercado" : "Network & Market",
+            label: language === "es" ? "Comunidad y Mercado" : "Community & Market",
             items: [
-                { name: t.nav.servicesNetwork || "Red de Servicios", href: "/app/global-network", icon: Briefcase },
-                { name: t.nav.marketplace, href: "/app/marketplace", icon: ShoppingBag },
-                { name: t.nav.people, href: "/app/teams", icon: Users },
+                {
+                    name: language === "es" ? "Mercado P2P" : t.nav.marketplace,
+                    href: "/app/marketplace",
+                    icon: ShoppingBag,
+                },
+                {
+                    name: language === "es" ? "Red de Servicios" : (t.nav.servicesNetwork || "Services"),
+                    href: "/app/global-network",
+                    icon: Briefcase,
+                },
+                {
+                    name: language === "es" ? "Colectas" : t.nav.crowdfunding,
+                    href: "/app/crowdfunding",
+                    icon: Compass,
+                },
             ],
         },
         {
-            label: language === "es" ? "Cuenta" : "Account",
+            label: language === "es" ? "Agente IA y Espacio" : "AI Agent & Space",
             items: [
-                { name: t.nav.web3Identity || (language === "es" ? "Identidad y Wallets" : "Identity"), href: "/app/web3-identity", icon: ShieldCheck },
-                { name: t.nav.learning, href: "/app/learn", icon: Lightbulb },
-                { name: t.nav.helpDesk, href: "/app/help-desk", icon: LifeBuoy },
+                {
+                    name: language === "es" ? "Agente IA e Identidad" : "AI Agent & Identity",
+                    href: "/app/web3-identity",
+                    icon: Bot,
+                },
+                {
+                    name: language === "es" ? "Equipos" : t.nav.people,
+                    href: "/app/teams",
+                    icon: Users,
+                },
             ],
         },
+    ];
+
+    const secondaryItems = [
+        { name: t.nav.learning, href: "/app/learn", icon: Lightbulb },
+        { name: t.nav.helpDesk, href: "/app/help-desk", icon: LifeBuoy },
     ];
 
     const { workspaces, activeWorkspace, setActiveWorkspaceId } = useWorkspace();
@@ -315,6 +358,61 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                             })}
                         </div>
                     ))}
+
+                    {/* Subtle Collapsible Resources & Support */}
+                    <div className="pt-1 border-t border-border-subtle/50">
+                        {!isSidebarCollapsed ? (
+                            <button
+                                type="button"
+                                onClick={() => setShowSupportLinks((prev) => !prev)}
+                                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-semibold text-muted/70 hover:text-muted uppercase tracking-wider cursor-pointer"
+                            >
+                                <span>{language === "es" ? "Recursos y Ayuda" : "Resources & Help"}</span>
+                                <ChevronDown
+                                    className={`w-3 h-3 transition-transform ${
+                                        showSupportLinks ? "rotate-180" : ""
+                                    }`}
+                                />
+                            </button>
+                        ) : null}
+
+                        {(showSupportLinks || isSidebarCollapsed) && (
+                            <div className="space-y-0.5 mt-0.5">
+                                {secondaryItems.map((item) => {
+                                    const isActive = pathname === item.href;
+                                    const Icon = item.icon;
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            onClick={onClose}
+                                            title={isSidebarCollapsed ? item.name : undefined}
+                                            className={`flex items-center rounded-lg text-xs transition-all group ${
+                                                isActive
+                                                    ? "text-foreground font-semibold bg-foreground/[0.06] border border-border-subtle"
+                                                    : "text-muted/80 font-medium hover:text-foreground hover:bg-foreground/[0.03] border border-transparent"
+                                            } ${
+                                                isSidebarCollapsed
+                                                    ? "p-2.5 lg:justify-center"
+                                                    : "px-3 py-1.5 gap-2.5"
+                                            }`}
+                                        >
+                                            <Icon
+                                                className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                                    isActive
+                                                        ? "text-accent-teal"
+                                                        : "text-muted/80 group-hover:text-foreground"
+                                                }`}
+                                            />
+                                            {!isSidebarCollapsed && (
+                                                <span className="truncate">{item.name}</span>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </nav>
 
                 {/* Bottom User / Auth Card */}

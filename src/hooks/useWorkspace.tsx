@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { isSuperAdmin } from "@/lib/admins";
@@ -57,6 +58,7 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const { address: walletAddress } = useWallet();
+    const { address: celoAddress } = useCeloWallet();
     const { address: solAddress } = useSolanaWallet();
     const { profile } = useProfile();
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -66,7 +68,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     const fetchWorkspaces = async () => {
         // If no identity is present at all, reset
-        if (!walletAddress && !profile?.email && !profile?.id && !solAddress) {
+        if (!celoAddress && !walletAddress && !profile?.email && !profile?.id && !solAddress) {
             setWorkspaces([]);
             setJoinRequests([]);
             setActiveWorkspace(null);
@@ -78,7 +80,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         try {
             const userIsSuperAdmin = isSuperAdmin(
                 profile?.email,
-                walletAddress || profile?.wallet_address || solAddress,
+                celoAddress || walletAddress || profile?.wallet_address || solAddress,
                 profile?.role
             );
 
@@ -117,6 +119,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             // Collect all user IDs matching current identity
             const userIds: string[] = [];
             if (profile?.id) userIds.push(profile.id);
+
+            if (celoAddress) {
+                const { data: usersCeloData } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('wallet_address', celoAddress);
+                usersCeloData?.forEach(u => {
+                    if (!userIds.includes(u.id)) userIds.push(u.id);
+                });
+            }
 
             if (walletAddress) {
                 const { data: usersData } = await supabase
@@ -170,7 +182,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
             // Fetch workspaces owned directly by wallet address
             let ownedWorkspaces: Workspace[] = [];
-            const effectiveOwnerWallet = walletAddress || solAddress || profile?.wallet_address;
+            const effectiveOwnerWallet = celoAddress || profile?.wallet_address || walletAddress || solAddress;
             if (effectiveOwnerWallet) {
                 const { data: ownedData } = await supabase
                     .from('workspaces')
@@ -209,7 +221,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
                     .maybeSingle();
 
                 if (flagshipData) {
-                    const isOwner = userIsSuperAdmin || flagshipData.owner_wallet === walletAddress || flagshipData.owner_wallet === solAddress;
+                    const isOwner = userIsSuperAdmin || flagshipData.owner_wallet === celoAddress || flagshipData.owner_wallet === walletAddress || flagshipData.owner_wallet === solAddress;
                     const assignedRole = isOwner ? 'owner' : 'member';
 
                     if (!workspaceMap.has(flagshipData.id)) {
@@ -284,7 +296,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         fetchWorkspaces();
-    }, [walletAddress, solAddress, profile?.id, profile?.email, profile?.role]);
+    }, [celoAddress, walletAddress, solAddress, profile?.id, profile?.email, profile?.role]);
 
     const setActiveWorkspaceId = (id: string) => {
         const found = workspaces.find(w => w.id === id);

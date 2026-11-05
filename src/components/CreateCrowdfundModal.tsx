@@ -5,6 +5,9 @@ import { X, Loader2, Smile, ShieldCheck, Image as ImageIcon, UserCircle, Wallet,
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useProfile } from "@/hooks/useProfile";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useSettings } from "@/hooks/useSettings";
 
 interface CreateCrowdfundModalProps {
@@ -20,7 +23,11 @@ interface Squad {
 }
 
 export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, workspaceId }: CreateCrowdfundModalProps) {
-    const { address: publicKey } = useWallet();
+    const { address: stellarAddress } = useWallet();
+    const { address: celoAddress } = useCeloWallet();
+    const { profile } = useProfile();
+    const testnetRailsEnabled = useTestnetRails();
+    const publicKey = celoAddress || profile?.wallet_address || (testnetRailsEnabled ? stellarAddress : null) || profile?.id || null;
     const { t, language } = useSettings();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -162,11 +169,6 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
             return;
         }
 
-        if (privacy === "private" && !selectedSquadId) {
-            setError("Por favor selecciona un equipo para la colecta privada.");
-            return;
-        }
-
         setLoading(true);
 
         try {
@@ -185,7 +187,7 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                 deadline: deadline.toISOString(),
                 status: "active",
                 privacy: privacy,
-                squad_id: privacy === "private" ? selectedSquadId : null,
+                squad_id: privacy === "private" && selectedSquadId ? selectedSquadId : null,
                 currency: currency,
                 workspace_id: workspaceId
             }]);
@@ -442,13 +444,13 @@ export default function CreateCrowdfundModal({ isOpen, onClose, onSuccess, works
                                     className="w-full bg-neutral-900/50 border border-border-subtle rounded-2xl px-4 py-3.5 text-xs font-semibold text-foreground focus:outline-none focus:border-accent-teal font-mono cursor-pointer"
                                 >
                                     <optgroup label="Dólar Digital & Stablecoins">
-                                        <option value="USDC">USDC (Circle Multi-red)</option>
+                                        <option value="USDC">USDC (Circle Celo Mainnet)</option>
                                         <option value="USAT">USA₮ (Gasless x402 en Celo)</option>
                                     </optgroup>
                                     <optgroup label="Cripto Nativas">
                                         <option value="CELO">CELO (Celo Mainnet)</option>
-                                        <option value="SOL">SOL (Solana Devnet)</option>
-                                        <option value="XLM">XLM (Stellar Testnet)</option>
+                                        {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                                        {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                                     </optgroup>
                                     <optgroup label="Tokens Digitales LatAm (1:1 en Celo)">
                                         <option value="wARS">🇦🇷 wARS (Peso Digital)</option>

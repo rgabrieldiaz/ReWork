@@ -4,6 +4,8 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "@/hooks/useSettings";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { usePrivy } from "@privy-io/react-auth";
 import { LogOut, ShieldCheck } from "lucide-react";
 
@@ -11,34 +13,37 @@ export default function LogoutPage() {
   const { t } = useSettings();
   const router = useRouter();
   const { disconnect } = useWallet();
+  const { disconnectCelo } = useCeloWallet();
+  const { disconnectSolana } = useSolanaWallet();
   const { logout: privyLogout } = usePrivy();
 
   useEffect(() => {
     const logout = async () => {
-      // 1. Disconnect wallet
+      // 1. Disconnect all Web3 wallets
+      disconnectCelo();
+      disconnectSolana();
       disconnect();
-      
+
       // 2. Logout from Privy
       try {
         await privyLogout();
       } catch (e) {
-        // Privy may throw if not authenticated, that's fine
         console.warn("Privy logout:", e);
       }
 
-      // 3. Clear local storage
+      // 3. Clear local workspace selection
       localStorage.removeItem("rework_current_workspace");
-      
+
       // 4. Redirect to auth
       router.push("/auth");
     };
 
     const timer = setTimeout(() => {
       logout();
-    }, 2500);
+    }, 1800);
 
     return () => clearTimeout(timer);
-  }, [disconnect, privyLogout, router]);
+  }, [disconnect, disconnectCelo, disconnectSolana, privyLogout, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 relative overflow-hidden">
@@ -49,19 +54,19 @@ export default function LogoutPage() {
         <div className="w-20 h-20 bg-foreground/5 border border-border-subtle rounded-2xl flex items-center justify-center mx-auto mb-6 relative">
           <LogOut className="w-10 h-10 text-foreground" />
           <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-1">
-             <ShieldCheck className="w-6 h-6 text-accent-teal" />
+            <ShieldCheck className="w-6 h-6 text-accent-teal" />
           </div>
         </div>
-        
+
         <h1 className="text-3xl font-bold mb-3">{t.logoutPage.title}</h1>
-        
+
         <p className="text-muted mb-8 leading-relaxed max-w-sm">
-            {t.logoutPage.desc}
+          {t.logoutPage.desc}
         </p>
 
         <div className="flex flex-col items-center gap-4">
-            <div className="w-6 h-6 border-2 border-accent-teal border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-muted font-mono">{t.logoutPage.redirecting}</p>
+          <div className="w-6 h-6 border-2 border-accent-teal border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-muted font-mono">{t.logoutPage.redirecting}</p>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
+import { isTestnetRailsEnabled } from "@/lib/feature-flags";
 
 // ── Detect mobile at module level ──
 const getIsMobile = () => {
@@ -30,17 +31,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const [isMobile, setIsMobile] = useState(false);
     const [kit, setKit] = useState<any>(null);
 
-    useEffect(() => {
-        setIsMobile(getIsMobile());
-        initKit();
-    }, []);
+    const initKit = useCallback(async () => {
+        if (!isTestnetRailsEnabled()) {
+            setConnected(false);
+            setAddress(null);
+            setNetwork(null);
+            setLoading(false);
+            return;
+        }
 
-    const initKit = async () => {
         try {
             const { StellarWalletsKit, Networks } = await import("@creit.tech/stellar-wallets-kit");
             const { defaultModules } = await import("@creit.tech/stellar-wallets-kit/modules/utils");
             const { WalletConnectModule } = await import("@creit.tech/stellar-wallets-kit/modules/wallet-connect");
-            
+
             StellarWalletsKit.init({
                 network: Networks.TESTNET,
                 modules: [
@@ -58,42 +62,37 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             });
             setKit(() => StellarWalletsKit);
 
-            // Attempt to restore session silently
             try {
                 const result = await StellarWalletsKit.getAddress();
                 if (result && result.address) {
                     setAddress(result.address);
                     setConnected(true);
                     setNetwork("TESTNET");
-                } else if (typeof window !== "undefined") {
-                    const demoAddr = localStorage.getItem("rework_demo_wallet");
-                    if (demoAddr) {
-                        setAddress(demoAddr);
-                        setConnected(true);
-                        setNetwork("TESTNET");
-                    }
                 }
-            } catch (e) {
-                // Not previously authorized or locked, check demo mode fallback
-                if (typeof window !== "undefined") {
-                    const demoAddr = localStorage.getItem("rework_demo_wallet");
-                    if (demoAddr) {
-                        setAddress(demoAddr);
-                        setConnected(true);
-                        setNetwork("TESTNET");
-                    }
-                }
+            } catch {
+                // Not previously authorized
             }
         } catch (err) {
             console.error("Error initializing StellarWalletsKit:", err);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        setIsMobile(getIsMobile());
+        initKit();
+
+        const handleFlagChange = () => {
+            initKit();
+        };
+        window.addEventListener("rework:testnet-rails-changed", handleFlagChange);
+        return () => window.removeEventListener("rework:testnet-rails-changed", handleFlagChange);
+    }, [initKit]);
 
     const connect = useCallback(async (): Promise<string> => {
         if (!kit) {
-            throw new Error("Wallet kit not initialized. Please try again.");
+            throw new Error("El riel experimental de Stellar Testnet está desactivado en Modo Mainnet.");
         }
 
         try {
@@ -106,7 +105,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             console.error("Wallet connection error:", err);
             throw err;
         }
-    }, [kit, isMobile]);
+    }, [kit]);
 
     const disconnect = useCallback(() => {
         setConnected(false);
@@ -116,7 +115,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const sign = useCallback(
         async (xdr: string, networkPassphrase: string) => {
-            if (!connected || !kit) throw new Error("Wallet not connected");
+            if (!connected || !kit) throw new Error("Wallet Stellar no conectada");
             const { signedTxXdr } = await kit.signTransaction(xdr, {
                 networkPassphrase,
             });
@@ -126,6 +125,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     );
 
     const injectAddress = useCallback((addr: string) => {
+        if (!isTestnetRailsEnabled()) return;
         setAddress(addr);
         setConnected(true);
         setNetwork("TESTNET");

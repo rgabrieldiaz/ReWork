@@ -23,6 +23,7 @@ import { useCeloWallet } from "@/hooks/useCeloWallet";
 import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 import { fetchCeloYieldPools, type CeloDeFiLlamaPool } from "@/lib/defillama";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { toast } from "sonner";
 
 export interface DeFiPool {
@@ -177,11 +178,18 @@ export function MultichainPoolsAgent({
   const { totalUsdValue: celoTotalUsd } = useCeloWallet();
   const { addPoints } = useProfile();
   const { t, language } = useSettings();
+  const testnetRailsEnabled = useTestnetRails();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [activeChainTab, setActiveChainTab] = useState<
     "celo" | "solana" | "stellar"
   >("celo");
+
+  useEffect(() => {
+    if (!testnetRailsEnabled && activeChainTab !== "celo") {
+      setActiveChainTab("celo");
+    }
+  }, [testnetRailsEnabled, activeChainTab]);
   const [selectedPool, setSelectedPool] = useState<DeFiPool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<string>("50");
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
@@ -432,44 +440,51 @@ export function MultichainPoolsAgent({
         </div>
 
         {/* Chain selector pills */}
-        <div className="flex items-center gap-1 p-1 bg-background rounded-lg border border-border-subtle">
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("celo")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-              activeChainTab === "celo"
-                ? "bg-accent-teal text-slate-950 font-semibold"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
+        {testnetRailsEnabled ? (
+          <div className="flex items-center gap-1 p-1 bg-background rounded-lg border border-border-subtle">
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("celo")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activeChainTab === "celo"
+                  ? "bg-accent-teal text-slate-950 font-semibold"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Sprout className="w-3.5 h-3.5" />
+              <span>Celo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("solana")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activeChainTab === "solana"
+                  ? "bg-accent-teal text-slate-950 font-semibold"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Solana</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("stellar")}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activeChainTab === "stellar"
+                  ? "bg-accent-teal text-slate-950 font-semibold"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Stellar</span>
+            </button>
+          </div>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-semibold">
             <Sprout className="w-3.5 h-3.5" />
-            <span>Celo</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("solana")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-              activeChainTab === "solana"
-                ? "bg-accent-teal text-slate-950 font-semibold"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Solana</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("stellar")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-              activeChainTab === "stellar"
-                ? "bg-accent-teal text-slate-950 font-semibold"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>Stellar</span>
-          </button>
-        </div>
+            <span>Celo Mainnet · DeFiLlama</span>
+          </span>
+        )}
       </div>
 
       {/* Celo DeFiLlama Controls Bar */}
@@ -671,45 +686,54 @@ export function MultichainPoolsAgent({
           </span>
         </div>
 
-        {/* Full-width 3-column Chain Tabs (Zero horizontal overflow) */}
-        <div className="grid grid-cols-3 gap-1 p-1 bg-background rounded-lg border border-border-subtle w-full">
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("celo")}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
-              activeChainTab === "celo"
-                ? "bg-card text-foreground border border-border-subtle shadow-sm"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Sprout className="w-3 h-3 text-accent-teal shrink-0" />
-            <span className="truncate">Celo</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("solana")}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
-              activeChainTab === "solana"
-                ? "bg-card text-foreground border border-border-subtle shadow-sm"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Zap className="w-3 h-3 text-accent-teal shrink-0" />
-            <span className="truncate">Solana</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveChainTab("stellar")}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
-              activeChainTab === "stellar"
-                ? "bg-card text-foreground border border-border-subtle shadow-sm"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <Globe className="w-3 h-3 text-accent-teal shrink-0" />
-            <span className="truncate">Stellar</span>
-          </button>
-        </div>
+        {/* Chain Tabs in compact mode (only when testnet rails enabled) */}
+        {testnetRailsEnabled ? (
+          <div className="grid grid-cols-3 gap-1 p-1 bg-background rounded-lg border border-border-subtle w-full">
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("celo")}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
+                activeChainTab === "celo"
+                  ? "bg-card text-foreground border border-border-subtle shadow-sm"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Sprout className="w-3 h-3 text-accent-teal shrink-0" />
+              <span className="truncate">Celo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("solana")}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
+                activeChainTab === "solana"
+                  ? "bg-card text-foreground border border-border-subtle shadow-sm"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Zap className="w-3 h-3 text-accent-teal shrink-0" />
+              <span className="truncate">Solana</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChainTab("stellar")}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-all truncate ${
+                activeChainTab === "stellar"
+                  ? "bg-card text-foreground border border-border-subtle shadow-sm"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Globe className="w-3 h-3 text-accent-teal shrink-0" />
+              <span className="truncate">Stellar</span>
+            </button>
+          </div>
+        ) : (
+          <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-[11px] font-mono text-emerald-300">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <Sprout className="w-3 h-3" /> Celo Mainnet (42220)
+            </span>
+            <span className="text-emerald-300/80">DeFiLlama Live</span>
+          </div>
+        )}
 
         {/* Compact Celo Filter Row */}
         {activeChainTab === "celo" && (

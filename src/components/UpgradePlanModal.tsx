@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Check,
@@ -23,6 +23,7 @@ import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useWallet } from "@/hooks/useWallet";
 import { solanaClient } from "@/lib/solana";
 import { REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { toast } from "sonner";
 
 const PRO_PRICE_USD = 49;
@@ -48,11 +49,21 @@ export function UpgradePlanModal() {
   const { address: celoAddress, connected: celoConnected, connectCelo } = useCeloWallet();
   const { address: solAddress, connected: solConnected, connectSolana } = useSolanaWallet();
   const { address: stellarAddress, connected: stellarConnected } = useWallet();
+  const testnetRailsEnabled = useTestnetRails();
 
   const [selectedChain, setSelectedChain] = useState<BillingChain>("celo");
   const [isProcessing, setIsProcessing] = useState(false);
   const [copiedAlias, setCopiedAlias] = useState(false);
   const [arsRefInput, setArsRefInput] = useState("");
+
+  useEffect(() => {
+    if (
+      !testnetRailsEnabled &&
+      (selectedChain === "solana" || selectedChain === "stellar")
+    ) {
+      setSelectedChain("celo");
+    }
+  }, [testnetRailsEnabled, selectedChain]);
 
   if (!isUpgradeModalOpen) return null;
 
@@ -328,7 +339,15 @@ export function UpgradePlanModal() {
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-accent-teal shrink-0" />
                     <span>
-                      <strong>Misiones y Squads ilimitados</strong> con hitos Soroban/Solana
+                      {testnetRailsEnabled ? (
+                        <>
+                          <strong>Misiones y Squads ilimitados</strong> con hitos Soroban/Solana
+                        </>
+                      ) : (
+                        <>
+                          <strong>Acuerdos y equipos ilimitados</strong> con liquidación x402 en Celo Mainnet
+                        </>
+                      )}
                     </span>
                   </li>
                   <li className="flex items-center gap-2">
@@ -374,7 +393,11 @@ export function UpgradePlanModal() {
             </div>
 
             {/* Selector de Riel de Pago */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div
+              className={`grid gap-2 ${
+                testnetRailsEnabled ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2"
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => setSelectedChain("celo")}
@@ -388,40 +411,46 @@ export function UpgradePlanModal() {
                   <Sprout className="w-3.5 h-3.5 text-accent-teal" />
                   <span>Celo Mainnet</span>
                 </div>
-                <p className="text-[10px] font-mono text-muted mt-1">49 USDC / cUSD</p>
+                <p className="text-[10px] font-mono text-muted mt-1">
+                  49 USDC / USA₮
+                </p>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setSelectedChain("solana")}
-                className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
-                  selectedChain === "solana"
-                    ? "bg-card border-accent-teal text-foreground"
-                    : "bg-card/40 border-border-subtle text-muted hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <Zap className="w-3.5 h-3.5 text-accent-teal" />
-                  <span>Solana</span>
-                </div>
-                <p className="text-[10px] font-mono text-muted mt-1">49 USDC (SPL)</p>
-              </button>
+              {testnetRailsEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain("solana")}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedChain === "solana"
+                      ? "bg-card border-accent-teal text-foreground"
+                      : "bg-card/40 border-border-subtle text-muted hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    <Zap className="w-3.5 h-3.5 text-accent-teal" />
+                    <span>Solana</span>
+                  </div>
+                  <p className="text-[10px] font-mono text-muted mt-1">49 USDC (SPL)</p>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setSelectedChain("stellar")}
-                className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
-                  selectedChain === "stellar"
-                    ? "bg-card border-accent-teal text-foreground"
-                    : "bg-card/40 border-border-subtle text-muted hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <Globe className="w-3.5 h-3.5 text-accent-teal" />
-                  <span>Stellar</span>
-                </div>
-                <p className="text-[10px] font-mono text-muted mt-1">49 USDC (SAC)</p>
-              </button>
+              {testnetRailsEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain("stellar")}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    selectedChain === "stellar"
+                      ? "bg-card border-accent-teal text-foreground"
+                      : "bg-card/40 border-border-subtle text-muted hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    <Globe className="w-3.5 h-3.5 text-accent-teal" />
+                    <span>Stellar</span>
+                  </div>
+                  <p className="text-[10px] font-mono text-muted mt-1">49 USDC (SAC)</p>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -434,10 +463,10 @@ export function UpgradePlanModal() {
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold">
                   <Landmark className="w-3.5 h-3.5 text-accent-teal" />
-                  <span>Pesos (ARS)</span>
+                  <span>Pesos / Rampa Local</span>
                 </div>
                 <p className="text-[10px] font-mono text-muted mt-1">
-                  ${PRO_PRICE_ARS.toLocaleString("es-AR")} ARS
+                  ${PRO_PRICE_ARS.toLocaleString("es-AR")} ARS (Ripio CBU)
                 </p>
               </button>
             </div>

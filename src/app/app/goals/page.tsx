@@ -16,6 +16,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useSharedBalances } from "@/hooks/useSharedBalances";
 import { useStaking } from "@/hooks/useStaking";
 import { useSettings } from "@/hooks/useSettings";
@@ -30,7 +32,13 @@ import { toast } from "sonner";
 
 export default function GoalsPage() {
   const { connected, address } = useWallet();
-  const { usdcBalance, xlmBalance, refresh } = useSharedBalances();
+  const { balances: celoBalances } = useCeloWallet();
+  const testnetRailsEnabled = useTestnetRails();
+  const { usdcBalance, refresh } = useSharedBalances();
+  const availableUsdc =
+    (celoBalances?.USDC?.numeric || 0) +
+    (celoBalances?.USAT?.numeric || 0) +
+    (testnetRailsEnabled ? usdcBalance || 0 : 0);
   const { stakedAmount, activeApy, accruedYield, stake, unstakePosition, positions } = useStaking();
   const { t } = useSettings();
 
@@ -121,7 +129,7 @@ export default function GoalsPage() {
   const handleExecuteStake = async () => {
     const amt = parseFloat(newStakeAmount) || 0;
     if (amt <= 0) return;
-    await stake(amt, durationMonths, "Stellar Yield Vault");
+    await stake(amt, durationMonths, testnetRailsEnabled ? "Stellar Yield Vault" : "Celo Mainnet DeFi Vault");
     setStakeSuccess(true);
     setTimeout(() => {
       setStakeSuccess(false);
@@ -165,19 +173,23 @@ export default function GoalsPage() {
         </div>
 
         {/* Currency Selector */}
-        <div className="flex items-center gap-2 p-1.5 bg-foreground/5 rounded-2xl border border-border-subtle shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-foreground/5 rounded-2xl border border-border-subtle shrink-0">
           <span className="text-xs text-muted font-bold px-2">{t.goalsPage.currencyLabel}</span>
-          {(["USDC", "CELO", "SOL", "XLM", "ARS", "BRL", "COP", "MXN", "PEN", "CLP"] as SupportedCurrency[]).map((c) => (
+          {(
+            (testnetRailsEnabled
+              ? ["USDC", "USAT", "CELO", "SOL", "XLM", "ARS", "BRL", "COP", "MXN", "PEN", "CLP"]
+              : ["USDC", "USAT", "CELO", "ARS", "BRL", "COP", "MXN", "PEN", "CLP"]) as SupportedCurrency[]
+          ).map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
                 currency === c
                   ? "bg-accent-teal text-background shadow-md shadow-accent-teal/20"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              {c}
+              {c === "USAT" ? "USA₮" : c}
             </button>
           ))}
         </div>
@@ -587,21 +599,43 @@ export default function GoalsPage() {
                 <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
-                <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardXlm}</span>
-                <span className="text-base font-bold font-mono text-indigo-400 block">
-                  {tripleProfit.formatted.xlm}
-                </span>
-                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
-              </div>
+              {testnetRailsEnabled ? (
+                <>
+                  <div className="p-3.5 rounded-2xl bg-foreground/5 border border-border-subtle">
+                    <span className="text-[10px] text-muted uppercase font-bold block mb-1">{t.goalsPage.cardXlm}</span>
+                    <span className="text-base font-bold font-mono text-indigo-400 block">
+                      {tripleProfit.formatted.xlm}
+                    </span>
+                    <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
+                  </div>
 
-              <div className="p-3.5 rounded-2xl bg-foreground/5 border border-purple-500/20 bg-purple-500/[0.03]">
-                <span className="text-[10px] text-purple-400 uppercase font-bold block mb-1">⚡ SOL (Solana)</span>
-                <span className="text-base font-bold font-mono text-purple-300 block">
-                  {tripleProfit.formatted.sol}
-                </span>
-                <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
-              </div>
+                  <div className="p-3.5 rounded-2xl bg-foreground/5 border border-purple-500/20 bg-purple-500/[0.03]">
+                    <span className="text-[10px] text-purple-400 uppercase font-bold block mb-1">⚡ SOL (Solana)</span>
+                    <span className="text-base font-bold font-mono text-purple-300 block">
+                      {tripleProfit.formatted.sol}
+                    </span>
+                    <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3.5 rounded-2xl bg-foreground/5 border border-amber-500/20">
+                    <span className="text-[10px] text-amber-300 uppercase font-bold block mb-1">🇧🇷 Real Digital (wBRL)</span>
+                    <span className="text-base font-bold font-mono text-amber-300 block">
+                      {tripleProfit.formatted.brl}
+                    </span>
+                    <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-foreground/5 border border-emerald-500/20 bg-emerald-500/[0.03]">
+                    <span className="text-[10px] text-emerald-400 uppercase font-bold block mb-1">🌱 CELO (Mainnet)</span>
+                    <span className="text-base font-bold font-mono text-emerald-300 block">
+                      {tripleProfit.formatted.celo}
+                    </span>
+                    <span className="text-[10px] text-muted">{t.goalsPage.projectedProfitLabel}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -734,7 +768,7 @@ export default function GoalsPage() {
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
                   <div className="flex justify-between text-xs text-muted">
                     <span>{t.goalsPage.stakeAmountLabel}</span>
-                    <span>{t.goalsPage.available} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                    <span>{t.goalsPage.available} {availableUsdc.toFixed(2)} USDC</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -814,7 +848,7 @@ export default function GoalsPage() {
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border-subtle space-y-2">
                   <div className="flex justify-between text-xs text-muted">
                     <span>{t.goalsPage.transferAmountLabel}</span>
-                    <span>{t.goalsPage.available} {usdcBalance?.toFixed(2) || "0.00"} USDC</span>
+                    <span>{t.goalsPage.available} {availableUsdc.toFixed(2)} USDC</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input

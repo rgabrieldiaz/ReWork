@@ -17,6 +17,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER, REWORK_PLATFORM_ADDRESS } from "@/lib/stellar";
 import * as StellarSdk from "@stellar/stellar-sdk";
@@ -61,10 +62,12 @@ export default function Home() {
     refreshBalances: refreshSolanaBalances,
   } = useSolanaWallet();
   const {
+    address: celoAddress,
     connected: celoConnected,
     balances: celoBalances,
     connectCelo,
   } = useCeloWallet();
+  const testnetRailsEnabled = useTestnetRails();
   const { profile, addPoints } = useProfile();
   const { xlmBalance, usdcBalance, refresh: refreshBalances } = useSharedBalances();
   const { activeWorkspace } = useWorkspace();
@@ -82,12 +85,19 @@ export default function Home() {
     teams: 43
   });
 
-  // Swap Widget State with LatAm Fiat & Multi-Chain support
-  type SwapCurrency = "USDC" | "SOL" | "XLM" | "CELO" | "ARS" | "BRL" | "COP" | "MXN" | "PEN" | "CLP";
+  // Swap Widget State with LatAm Fiat & Celo Mainnet support
+  type SwapCurrency = "USDC" | "USAT" | "SOL" | "XLM" | "CELO" | "ARS" | "BRL" | "COP" | "MXN" | "PEN" | "CLP";
   const [fromToken, setFromToken] = useState<SwapCurrency>("USDC");
   const [toToken, setToToken] = useState<SwapCurrency>("ARS");
   const [swapAmount, setSwapAmount] = useState<string>("100");
   const [isSwapping, setIsSwapping] = useState(false);
+
+  useEffect(() => {
+    if (!testnetRailsEnabled) {
+      if (fromToken === "SOL" || fromToken === "XLM") setFromToken("USDC");
+      if (toToken === "SOL" || toToken === "XLM") setToToken("ARS");
+    }
+  }, [testnetRailsEnabled, fromToken, toToken]);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [bankInitialToken, setBankInitialToken] = useState<string>("wARS");
   const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
@@ -167,7 +177,11 @@ export default function Home() {
   // Bug 2 fix: accept optional direct amount param to avoid async setState race
   const handleBid = async (directAmount?: number) => {
     if (!selectedAuction) return;
-    const effectiveAddress = address || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
+    const effectiveAddress =
+      celoAddress ||
+      profile?.wallet_address ||
+      (testnetRailsEnabled ? address || solAddress : null) ||
+      profile?.id;
     if (!effectiveAddress) {
       toast.error(t.alerts.connectWalletFirst || "Por favor, conecta tu wallet o inicia sesión con Google.");
       return;
@@ -184,7 +198,7 @@ export default function Home() {
       const assetSymbol = selectedAuction.currency || "USDC";
       let newEscrowId = "";
 
-      if (connected && address) {
+      if (testnetRailsEnabled && connected && address) {
         const payload: any = {
           signer: address,
           engagementId: `rework-auction-${selectedAuction.id}-${Date.now()}`,
@@ -231,8 +245,12 @@ export default function Home() {
 
         newEscrowId = (result as any).contractId || (result as any).id || (result as any).hash || `escrow-tw-${Date.now()}`;
       } else {
-        // Multi-rail Evaluator / Jury mode
-        newEscrowId = solConnected ? `solana-bid-${Date.now()}` : `jury-bid-${Date.now()}`;
+        // Celo Mainnet Escrow / Offer Registration
+        newEscrowId = celoConnected
+          ? `celo-mainnet-${Date.now()}`
+          : testnetRailsEnabled && solConnected
+          ? `solana-bid-${Date.now()}`
+          : `celo-offer-${Date.now()}`;
       }
 
       const { error: sbError } = await supabase
@@ -267,8 +285,12 @@ export default function Home() {
     if (token === "SOL") {
       return (solBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
     }
+    if (token === "USAT") {
+      return (celoBalances?.USAT?.numeric || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    const extraTestnetUsdc = testnetRailsEnabled ? (usdcBalance || 0) + (solUsdcBalance || 0) : 0;
     if (token === "USDC") {
-      const total = (usdcBalance || 0) + (solUsdcBalance || 0) + (celoBalances?.USDC?.numeric || 0);
+      const total = (celoBalances?.USDC?.numeric || 0) + extraTestnetUsdc;
       return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     if (token === "XLM") {
@@ -277,7 +299,7 @@ export default function Home() {
     if (token === "CELO") {
       return (celoBalances?.CELO?.numeric || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-    const totalUsdc = (usdcBalance || 0) + (solUsdcBalance || 0) + (celoBalances?.USDC?.numeric || 0);
+    const totalUsdc = (celoBalances?.USDC?.numeric || 0) + (celoBalances?.USAT?.numeric || 0) + extraTestnetUsdc;
     if (token === "ARS") {
       const celoArs = celoBalances?.wARS?.numeric || 0;
       return (celoArs > 0 ? celoArs : totalUsdc * DEFAULT_RATES.USDC_TO_ARS).toLocaleString('es-AR', { maximumFractionDigits: 0 });
@@ -329,13 +351,19 @@ export default function Home() {
       return;
     }
 
-    // Celo Native Swap Route
-    if (fromToken === "CELO" || toToken === "CELO") {
+    // Celo Mainnet Swap Route (Default in Production Mode)
+    if (
+      fromToken === "CELO" ||
+      toToken === "CELO" ||
+      fromToken === "USAT" ||
+      toToken === "USAT" ||
+      !testnetRailsEnabled
+    ) {
       if (!celoConnected) {
         try {
           await connectCelo();
         } catch {
-          toast.error("Por favor conecta tu wallet de Celo.");
+          toast.error("Por favor iniciá sesión o conectá tu wallet en Celo Mainnet.");
           return;
         }
       }
@@ -495,7 +523,9 @@ export default function Home() {
             </button>
           </div>
           <p className="text-xs text-muted mt-1">
-            Panel operativo de contratos en garantía, misiones de equipo y tesorería multiriel.
+            {testnetRailsEnabled
+              ? "Panel operativo de contratos en garantía, misiones de equipo y tesorería multiriel."
+              : "Panel operativo de acuerdos en garantía, misiones de equipo y tesorería en Celo Mainnet."}
           </p>
         </div>
 
@@ -566,7 +596,7 @@ export default function Home() {
             <span className="text-[11px] font-mono text-muted">APY prom.</span>
           </div>
           <div className="mt-2.5 pt-2 border-t border-border-subtle flex items-center justify-between text-[11px] text-muted">
-            <span>Celo, Solana y Stellar</span>
+            <span>{testnetRailsEnabled ? "Celo, Solana y Stellar" : "Celo Mainnet (DeFiLlama)"}</span>
             <span className="font-mono text-foreground">+$25.24 USD</span>
           </div>
         </div>
@@ -608,7 +638,7 @@ export default function Home() {
                     : "text-muted hover:text-foreground"
                 }`}
               >
-                Custodias y Garantías (2)
+                Acuerdos y Garantías (2)
               </button>
               <button
                 type="button"
@@ -620,17 +650,6 @@ export default function Home() {
                 }`}
               >
                 Mercado P2P ({auctions.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveMainTab("modulos")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                  activeMainTab === "modulos"
-                    ? "bg-foreground/[0.08] text-foreground font-semibold"
-                    : "text-muted hover:text-foreground"
-                }`}
-              >
-                Módulos
               </button>
             </div>
           </div>
@@ -709,15 +728,23 @@ export default function Home() {
                         <h3 className="text-sm font-semibold text-foreground">
                           Hito de Equipo: Entregables y Cierre Operativo
                         </h3>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                          🚀 Stellar Soroban
-                        </span>
+                        {testnetRailsEnabled ? (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                            🚀 Stellar Soroban
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            🌱 Celo Mainnet · x402
+                          </span>
+                        )}
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-foreground/5 text-muted border border-border-subtle">
                           85% completado
                         </span>
                       </div>
                       <p className="text-xs text-muted font-mono mt-0.5">
-                        Custodia multifirma Soroban • 24 colaboradores vinculados
+                        {testnetRailsEnabled
+                          ? "Custodia multifirma Soroban • 24 colaboradores vinculados"
+                          : "Acuerdo por hitos en USDC / USA₮ • 24 colaboradores vinculados"}
                       </p>
                     </div>
                   </div>
@@ -753,19 +780,28 @@ export default function Home() {
               {/* Barra inferior para crear nuevos contratos */}
               <div className="p-4 rounded-xl bg-card border border-border-subtle flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-muted">
-                  <strong className="text-foreground font-medium">¿Necesitás abrir una nueva custodia?</strong>{" "}
-                  Desplegá un contrato de alquiler 50/50 o un pago por hitos.
+                  <strong className="text-foreground font-medium">¿Necesitás abrir un nuevo acuerdo?</strong>{" "}
+                  Desplegá una garantía de alquiler 50/50 o un acuerdo por hitos.
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsSolanaEscrowOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors cursor-pointer"
-                  >
-                    + Escrow en Solana
-                  </button>
+                  {testnetRailsEnabled ? (
+                    <button
+                      onClick={() => setIsSolanaEscrowOpen(true)}
+                      className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors cursor-pointer"
+                    >
+                      + Escrow en Solana
+                    </button>
+                  ) : (
+                    <Link
+                      href="/app/squad-goals"
+                      className="px-3 py-1.5 rounded-lg bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-border-subtle text-xs font-medium text-foreground transition-colors"
+                    >
+                      + Acuerdo por Hitos
+                    </Link>
+                  )}
                   <button
                     onClick={() => setIsRentalEscrowOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-accent-teal/15 hover:bg-accent-teal/25 border border-accent-teal/30 text-xs font-semibold text-accent-teal transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-xs font-semibold text-emerald-300 transition-colors cursor-pointer"
                   >
                     + Garantía 50/50 en Celo
                   </button>
@@ -999,7 +1035,9 @@ export default function Home() {
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">{t.dashboard.swapTitle}</h2>
                   <p className="text-[11px] text-muted">
-                    Liquidez multiriel: USDC, SOL, XLM, CELO y Monedas LatAm (ARS, BRL, COP, MXN, PEN, CLP)
+                    {testnetRailsEnabled
+                      ? "Liquidez multiriel: USDC, SOL, XLM, CELO y Monedas LatAm (ARS, BRL, COP, MXN, PEN, CLP)"
+                      : "Celo Mainnet & Rampa Ripio: USDC, USA₮, CELO y Monedas LatAm (wARS, wBRL, COP, MXN, PEN, CLP)"}
                   </p>
                 </div>
                 <button
@@ -1066,11 +1104,12 @@ export default function Home() {
                       }}
                       className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <optgroup label="Tokens y Dólar Digital">
-                        <option value="USDC">USDC (Dólar Digital)</option>
-                        <option value="CELO">CELO (Nativo Celo)</option>
-                        <option value="SOL">SOL (Solana)</option>
-                        <option value="XLM">XLM (Stellar)</option>
+                      <optgroup label="Tokens Celo Mainnet">
+                        <option value="USDC">USDC (Circle Celo)</option>
+                        <option value="USAT">USA₮ (Tether x402)</option>
+                        <option value="CELO">CELO (Nativo)</option>
+                        {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                        {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                       </optgroup>
                       <optgroup label="Rampas Bancarias (CBU / PIX / SPEI)">
                         <option value="ARS">🇦🇷 ARS (Banco CBU/CVU)</option>
@@ -1116,11 +1155,12 @@ export default function Home() {
                       }}
                       className="bg-card hover:bg-foreground/5 text-foreground px-3 py-2 rounded-lg border border-border-subtle font-mono font-semibold text-xs cursor-pointer outline-none max-w-[135px] truncate"
                     >
-                      <optgroup label="Tokens y Dólar Digital">
-                        <option value="USDC">USDC (Dólar Digital)</option>
-                        <option value="CELO">CELO (Nativo Celo)</option>
-                        <option value="SOL">SOL (Solana)</option>
-                        <option value="XLM">XLM (Stellar)</option>
+                      <optgroup label="Tokens Celo Mainnet">
+                        <option value="USDC">USDC (Circle Celo)</option>
+                        <option value="USAT">USA₮ (Tether x402)</option>
+                        <option value="CELO">CELO (Nativo)</option>
+                        {testnetRailsEnabled && <option value="SOL">SOL (Solana Devnet)</option>}
+                        {testnetRailsEnabled && <option value="XLM">XLM (Stellar Testnet)</option>}
                       </optgroup>
                       <optgroup label="Rampas Bancarias (CBU / PIX / SPEI)">
                         <option value="ARS">🇦🇷 ARS (Banco CBU/CVU)</option>
@@ -1140,8 +1180,10 @@ export default function Home() {
                 <span>
                   {isLatamFiat(fromToken) || isLatamFiat(toToken)
                     ? "0% (Rampa Bancaria Ripio)"
-                    : fromToken === "CELO" || toToken === "CELO"
-                    ? "~0.001 CELO"
+                    : fromToken === "USAT" || toToken === "USAT"
+                    ? "0% (Gasless EIP-3009 x402)"
+                    : !testnetRailsEnabled || fromToken === "CELO" || toToken === "CELO"
+                    ? "~0.001 CELO (Celo Mainnet)"
                     : fromToken === "SOL" || toToken === "SOL"
                     ? "~0.000005 SOL"
                     : "0.00001 XLM"}
@@ -1151,7 +1193,7 @@ export default function Home() {
               <button
                 onClick={executeSwap}
                 disabled={
-                  (!connected && !solConnected && !celoConnected && !isLatamFiat(fromToken) && !isLatamFiat(toToken)) ||
+                  (!celoConnected && !connected && !solConnected && !isLatamFiat(fromToken) && !isLatamFiat(toToken)) ||
                   Number(swapAmount) <= 0 ||
                   isSwapping
                 }
@@ -1160,11 +1202,11 @@ export default function Home() {
                 {isSwapping
                   ? "Procesando..."
                   : isLatamFiat(fromToken) || isLatamFiat(toToken)
-                  ? `Operar en Banco / Rampa LatAm (${isLatamFiat(toToken) ? toToken : fromToken})`
-                  : fromToken === "CELO" || toToken === "CELO"
+                  ? `Operar en Banco / Rampa Ripio (${isLatamFiat(toToken) ? toToken : fromToken})`
+                  : !testnetRailsEnabled || fromToken === "CELO" || toToken === "CELO" || fromToken === "USAT" || toToken === "USAT"
                   ? celoConnected
                     ? `Abrir Corredor Celo Textile FX (${fromToken} → ${toToken})`
-                    : "Conectar Wallet Celo"
+                    : "Conectar Wallet Celo Mainnet"
                   : fromToken === "SOL" || toToken === "SOL"
                   ? solConnected
                     ? `Convertir ${fromToken} a ${toToken}`
@@ -1294,38 +1336,64 @@ export default function Home() {
           <div className="bg-background border border-border-subtle rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center p-4 border-b border-border-subtle bg-card/40">
               <h3 className="text-sm font-mono font-bold text-muted flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent-teal" />
-                stellar_escrow_contract.rs
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                {testnetRailsEnabled ? "stellar_escrow_contract.rs" : "ReWorkMilestoneEscrowCelo.sol (Chain 42220)"}
               </h3>
               <button onClick={() => setIsContractModalOpen(false)} className="text-muted hover:text-foreground bg-foreground/5 p-1 rounded-full transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto font-mono text-sm leading-relaxed space-y-2 bg-background">
-              <p><span className="text-purple-400">#![no_std]</span></p>
-              <p><span className="text-purple-400">use</span> <span className="text-cyan-300">soroban_sdk</span>::{'{'}<span className="text-cyan-300">contract</span>, <span className="text-cyan-300">contractimpl</span>, <span className="text-cyan-300">Env</span>, <span className="text-cyan-300">Address</span>, <span className="text-cyan-300">Symbol</span>{'}'};</p>
-              <br />
-              <p><span className="text-muted">/// Contrato inteligente de colecta descentralizada</span></p>
-              <p><span className="text-purple-400">pub struct</span> <span className="text-yellow-300">CrowdfundEscrow</span>;</p>
-              <br />
-              <p><span className="text-blue-400">#[contractimpl]</span></p>
-              <p><span className="text-purple-400">impl</span> <span className="text-yellow-300">CrowdfundEscrow</span> {'{'}</p>
-              <p className="pl-4"><span className="text-purple-400">pub fn</span> <span className="text-yellow-300">release_funds</span>(env: Env, target_reached: <span className="text-cyan-300">u64</span>, community_votes: <span className="text-cyan-300">u32</span>) {'{'}</p>
-              <p className="pl-8 text-muted">// Validación criptográfica de hitos (Trustless Work)</p>
-              <p className="pl-8"><span className="text-pink-400">if</span> (target_reached &gt;= <span className="text-orange-400">150</span>) &amp;&amp;</p>
-              <p className="pl-8">(community_votes &gt; <span className="text-orange-400">90</span>) {'{'}</p>
-              <p className="pl-12 text-muted">// Transfiriendo USDC a la cuenta destino</p>
-              <p className="pl-12"><span className="text-cyan-400">unlock_escrow_funds</span>(&env);</p>
-              <p className="pl-8">{'}'} <span className="text-pink-400">else</span> {'{'}</p>
-              <p className="pl-12"><span className="text-cyan-400">panic!</span>(<span className="text-green-300">"Condiciones de colecta no cumplidas"</span>);</p>
-              <p className="pl-8">{'}'}</p>
-              <p className="pl-4">{'}'}</p>
-              <p>{'}'}</p>
-            </div>
-            <div className="p-4 bg-accent-teal/5 border-t border-accent-teal/10 flex items-center justify-between">
-              <span className="text-xs text-accent-teal/70">{t.marketplace.verifiedEscrow}</span>
-              <a href="https://docs.trustlesswork.com/" target="_blank" rel="noreferrer" className="text-xs font-bold text-accent-teal hover:underline flex items-center gap-1">
-                {t.marketplace.verifyAudit}
+            {testnetRailsEnabled ? (
+              <div className="p-6 overflow-y-auto font-mono text-sm leading-relaxed space-y-2 bg-background">
+                <p><span className="text-purple-400">#![no_std]</span></p>
+                <p><span className="text-purple-400">use</span> <span className="text-cyan-300">soroban_sdk</span>::{'{'}<span className="text-cyan-300">contract</span>, <span className="text-cyan-300">contractimpl</span>, <span className="text-cyan-300">Env</span>, <span className="text-cyan-300">Address</span>, <span className="text-cyan-300">Symbol</span>{'}'};</p>
+                <br />
+                <p><span className="text-muted">/// Contrato inteligente de colecta descentralizada</span></p>
+                <p><span className="text-purple-400">pub struct</span> <span className="text-yellow-300">CrowdfundEscrow</span>;</p>
+                <br />
+                <p><span className="text-blue-400">#[contractimpl]</span></p>
+                <p><span className="text-purple-400">impl</span> <span className="text-yellow-300">CrowdfundEscrow</span> {'{'}</p>
+                <p className="pl-4"><span className="text-purple-400">pub fn</span> <span className="text-yellow-300">release_funds</span>(env: Env, target_reached: <span className="text-cyan-300">u64</span>, community_votes: <span className="text-cyan-300">u32</span>) {'{'}</p>
+                <p className="pl-8 text-muted">// Validación criptográfica de hitos (Trustless Work)</p>
+                <p className="pl-8"><span className="text-pink-400">if</span> (target_reached &gt;= <span className="text-orange-400">150</span>) &amp;&amp;</p>
+                <p className="pl-8">(community_votes &gt; <span className="text-orange-400">90</span>) {'{'}</p>
+                <p className="pl-12 text-muted">// Transfiriendo USDC a la cuenta destino</p>
+                <p className="pl-12"><span className="text-cyan-400">unlock_escrow_funds</span>(&env);</p>
+                <p className="pl-8">{'}'} <span className="text-pink-400">else</span> {'{'}</p>
+                <p className="pl-12"><span className="text-cyan-400">panic!</span>(<span className="text-green-300">&quot;Condiciones de colecta no cumplidas&quot;</span>);</p>
+                <p className="pl-8">{'}'}</p>
+                <p className="pl-4">{'}'}</p>
+                <p>{'}'}</p>
+              </div>
+            ) : (
+              <div className="p-6 overflow-y-auto font-mono text-sm leading-relaxed space-y-2 bg-background">
+                <p><span className="text-purple-400">// SPDX-License-Identifier: MIT</span></p>
+                <p><span className="text-purple-400">pragma solidity</span> <span className="text-cyan-300">^0.8.24</span>;</p>
+                <br />
+                <p><span className="text-muted">/// @notice Custodia por hitos y garantía 50/50 en Celo Mainnet (42220) con ERC-8004 Arbitrator</span></p>
+                <p><span className="text-purple-400">contract</span> <span className="text-emerald-300">ReWorkMilestoneEscrow</span> {'{'}</p>
+                <p className="pl-4"><span className="text-cyan-300">address</span> <span className="text-purple-400">public immutable</span> erc8004Registry = <span className="text-amber-300">0x8004A169FB4a3325136EB29fA0ceB6D2e539a432</span>;</p>
+                <p className="pl-4"><span className="text-cyan-300">address</span> <span className="text-purple-400">public immutable</span> usatToken = <span className="text-amber-300">0x015DF4473097E0A322CE3398D113B8B9497F6680</span>;</p>
+                <br />
+                <p className="pl-4"><span className="text-purple-400">function</span> <span className="text-yellow-300">releaseMilestone</span>(<span className="text-cyan-300">uint256</span> agreementId, <span className="text-cyan-300">uint256</span> yieldEarned) <span className="text-purple-400">external</span> {'{'}</p>
+                <p className="pl-8 text-muted">// Reparto automático 50/50 de rendimiento + liquidación con atribución ERC-8021</p>
+                <p className="pl-8"><span className="text-cyan-300">uint256</span> split = yieldEarned / <span className="text-orange-400">2</span>;</p>
+                <p className="pl-8">_settleWithAttribution(agreementId, split);</p>
+                <p className="pl-4">{'}'}</p>
+                <p>{'}'}</p>
+              </div>
+            )}
+            <div className="p-4 bg-emerald-500/5 border-t border-emerald-500/15 flex items-center justify-between">
+              <span className="text-xs text-emerald-300/80">
+                {testnetRailsEnabled ? t.marketplace.verifiedEscrow : "Verificado en Celo Mainnet (42220) • Tag ERC-8021: rework_celo_latam"}
+              </span>
+              <a
+                href={testnetRailsEnabled ? "https://docs.trustlesswork.com/" : "https://celoscan.io/address/0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1"
+              >
+                {testnetRailsEnabled ? t.marketplace.verifyAudit : "Ver en Celoscan Mainnet"}
               </a>
             </div>
           </div>

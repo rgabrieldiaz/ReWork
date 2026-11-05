@@ -16,6 +16,7 @@ import {
   getSolanaExplorerUrl,
 } from "@/lib/solana";
 import { toast } from "sonner";
+import { isTestnetRailsEnabled } from "@/lib/feature-flags";
 
 declare global {
   interface Window {
@@ -57,9 +58,19 @@ export function SolanaWalletProvider({ children }: { children: ReactNode }) {
   const [isPhantomInstalled, setIsPhantomInstalled] = useState(false);
   const [isSolflareInstalled, setIsSolflareInstalled] = useState(false);
 
-  // Check available extensions on mount
+  // Check available extensions on mount (only restore Devnet session if experimental Testnet rails are enabled)
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const syncSolanaSession = () => {
+      if (typeof window === "undefined") return;
+      if (!isTestnetRailsEnabled()) {
+        setConnected(false);
+        setAddress(null);
+        setWalletName(null);
+        setSolBalance(0);
+        setUsdcBalance(0);
+        return;
+      }
+
       const hasPhantom = !!(window.phantom?.solana?.isPhantom || window.solana?.isPhantom);
       const hasSolflare = !!window.solflare?.isSolflare;
       setIsPhantomInstalled(hasPhantom);
@@ -74,7 +85,11 @@ export function SolanaWalletProvider({ children }: { children: ReactNode }) {
         setConnected(true);
         fetchBalancesForAddress(savedAddr);
       }
-    }
+    };
+
+    syncSolanaSession();
+    window.addEventListener("rework:testnet-rails-changed", syncSolanaSession);
+    return () => window.removeEventListener("rework:testnet-rails-changed", syncSolanaSession);
   }, []);
 
   const fetchBalancesForAddress = async (addrStr: string) => {

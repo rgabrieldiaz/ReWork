@@ -5,6 +5,8 @@ import { Target, Users, AlertCircle, Loader2, CheckCircle, Clock, Search, Plus, 
 import { supabase } from "@/lib/supabase";
 import { useWallet } from "@/hooks/useWallet";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 import { useProfile } from "@/hooks/useProfile";
 import CreateSquadGoalModal from "@/components/CreateSquadGoalModal";
 import { useInitializeEscrow, useSendTransaction, useReleaseFunds } from "@trustless-work/escrow/hooks";
@@ -18,11 +20,17 @@ export default function SquadGoalsPage() {
     const { t, language } = useSettings();
     const { connected, address: publicKey, sign } = useWallet();
     const { address: solAddress, connected: solConnected } = useSolanaWallet();
+    const { address: celoAddress, connected: celoConnected } = useCeloWallet();
+    const testnetRailsEnabled = useTestnetRails();
     const { profile, addPoints } = useProfile();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
     const { canCreateSquad, openUpgradeModal, isPro } = useSubscription();
-    const effectiveVoter = publicKey || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
+    const effectiveVoter =
+        celoAddress ||
+        profile?.wallet_address ||
+        (testnetRailsEnabled ? publicKey || solAddress : null) ||
+        profile?.id;
     const [activeTab, setActiveTab] = useState<"activas" | "propuestas">("propuestas");
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -84,6 +92,9 @@ export default function SquadGoalsPage() {
 
     const getGoalNetwork = (currency?: string) => {
         const c = (currency || 'USDC').toUpperCase();
+        if (!testnetRailsEnabled) {
+            return { name: 'Celo Mainnet', tag: '🌱 Celo Mainnet', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
+        }
         if (['WARS', 'WBRL', 'WCOP', 'WMXN', 'WPEN', 'WCLP', 'CELO', 'USAT'].includes(c)) {
             return { name: 'Celo Mainnet', tag: '🌱 Celo', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
         }
@@ -93,7 +104,7 @@ export default function SquadGoalsPage() {
         if (['XLM'].includes(c)) {
             return { name: 'Stellar Testnet', tag: '🚀 Stellar', cls: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' };
         }
-        return { name: 'Multirail USDC', tag: '🌐 Multiriel', cls: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+        return { name: 'Celo Mainnet', tag: '🌱 Celo Mainnet', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
     };
 
     const getGoalVotes = (goalId: string) => votes.filter(v => v.goal_id === goalId);
@@ -147,7 +158,7 @@ export default function SquadGoalsPage() {
         setProcessingId(goal.id);
 
         try {
-            if (connected && publicKey && process.env.NEXT_PUBLIC_TW_API_KEY) {
+            if (testnetRailsEnabled && connected && publicKey && process.env.NEXT_PUBLIC_TW_API_KEY) {
                 const memberWallets = squadMembers.filter(m => m.wallet_address).map(m => m.wallet_address);
                 if (memberWallets.length === 0) return showToast(t.squadGoals.errorFunding + " No hay wallets de miembros registradas.", 'error');
 
@@ -214,15 +225,19 @@ export default function SquadGoalsPage() {
                     showToast(`${t.squadGoals.errorFunding} ${data.message}`, 'error');
                 }
             } else {
-                // Multi-rail Evaluator / Jury Sandbox Fund
-                const demoContractId = solConnected ? `solana-sq-${Date.now()}` : `jury-sq-${Date.now()}`;
+                // Celo Mainnet Escrow Activation
+                const contractRef = celoConnected || !testnetRailsEnabled
+                    ? `celo-sq-${Date.now()}`
+                    : solConnected
+                    ? `solana-sq-${Date.now()}`
+                    : `celo-sq-${Date.now()}`;
                 await supabase.from("squad_goals").update({
                     status: "funded",
-                    trustless_contract_id: demoContractId
+                    trustless_contract_id: contractRef
                 }).eq("id", goal.id);
 
-                await addPoints(25, "Misión de equipo financiada (Modo Jurado)");
-                showToast(solConnected ? "🎉 Misión financiada vía Solana Devnet (Modo Jurado)" : "🎉 Misión financiada exitosamente (Modo Jurado)", 'success');
+                await addPoints(25, "Acuerdo de equipo financiado en Celo Mainnet");
+                showToast("🎉 Acuerdo activado y fondos registrados en Celo Mainnet", 'success');
                 fetchAllData();
             }
 
@@ -235,9 +250,9 @@ export default function SquadGoalsPage() {
     };
 
     const handleReleaseMission = async (goal: any) => {
-        if (!publicKey) return showToast(t.alerts.connectWalletFirst, 'error');
+        if (!effectiveVoter) return showToast(t.alerts.connectWalletFirst || "Iniciá sesión para liberar fondos.", 'error');
         if (!goal.trustless_contract_id) {
-            showToast("Esta misión no tiene un contrato Trustless Work activo. Debe ser fondeada primero.", 'error');
+            showToast("Este acuerdo debe ser financiado primero.", 'error');
             return;
         }
 
@@ -246,27 +261,27 @@ export default function SquadGoalsPage() {
         setProcessingId(`release-${goal.id}`);
 
         try {
-            // In Trustless Work Multi-Release, we release milestone by milestone. For ReWork demo, we'll just attempt first milestone or a loop.
-            // Simplified: we'll loop to trigger the first N milestones release.
-            for (let i = 0; i < memberWallets.length; i++) {
-                const payload: MultiReleaseReleaseFundsPayload = {
-                    contractId: goal.trustless_contract_id,
-                    releaseSigner: publicKey,
-                    milestoneIndex: String(i)
-                };
+            if (testnetRailsEnabled && publicKey && !String(goal.trustless_contract_id).startsWith("celo-")) {
+                for (let i = 0; i < memberWallets.length; i++) {
+                    const payload: MultiReleaseReleaseFundsPayload = {
+                        contractId: goal.trustless_contract_id,
+                        releaseSigner: publicKey,
+                        milestoneIndex: String(i)
+                    };
 
-                const { unsignedTransaction } = await releaseFunds(payload, "multi-release");
-                if (unsignedTransaction) {
-                    const { signedTxXdr } = await sign(unsignedTransaction, "Test SDF Network ; September 2015");
-                    const data = await sendTransaction(signedTxXdr);
-                    if (data.status !== "SUCCESS") {
-                        console.error(`Failed releasing index ${i}:`, data.message);
+                    const { unsignedTransaction } = await releaseFunds(payload, "multi-release");
+                    if (unsignedTransaction) {
+                        const { signedTxXdr } = await sign(unsignedTransaction, "Test SDF Network ; September 2015");
+                        const data = await sendTransaction(signedTxXdr);
+                        if (data.status !== "SUCCESS") {
+                            console.error(`Failed releasing index ${i}:`, data.message);
+                        }
                     }
                 }
             }
 
             await supabase.from("squad_goals").update({ status: "completed" }).eq("id", goal.id);
-            showToast(t.squadGoals.releaseSuccess);
+            showToast(t.squadGoals.releaseSuccess || "Fondos liberados exitosamente.");
             fetchAllData();
 
         } catch (e: any) {

@@ -27,9 +27,9 @@ const jakarta = Plus_Jakarta_Sans({
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://rework.network"),
-  title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-  description: "Plataforma Multichain (Celo Mainnet · Solana · Stellar) de Custodia Inteligente, Agentes Autónomos ERC-8004, wFIAT LatAm, USA₮ x402 y Pagos QR.",
+  metadataBase: new URL("https://re-work-phi.vercel.app"),
+  title: "ReWork — Espacio Financiero Agéntico en Celo Mainnet",
+  description: "Custodia Inteligente 50/50, Agentes Autónomos ERC-8004, Atribución ERC-8021, Pagos sin Gas x402 en USA₮, Ripio wFIAT LatAm y Corredor Textile FX en Celo Mainnet (42220).",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -40,16 +40,16 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-    description: "Agentes en Celo Mainnet · wFIAT Ripio · USA₮ x402 · Textile FX · Solana · Stellar",
-    url: "https://rework.network",
+    title: "ReWork — Espacio Financiero Agéntico en Celo Mainnet",
+    description: "Agentes ERC-8004 · Garantía 50/50 con @celo/buy · USA₮ x402 Gasless · Ripio wFIAT · Textile FX",
+    url: "https://re-work-phi.vercel.app",
     siteName: "ReWork",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ReWork — Multichain Operating System",
+        alt: "ReWork — Agentic Financial Workspace on Celo Mainnet",
       },
     ],
     locale: "es_AR",
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ReWork — El Valor de la Confianza Garantizado por el Código",
-    description: "Agentes en Celo Mainnet · wFIAT Ripio · USA₮ x402 · Textile FX · Solana · Stellar",
+    title: "ReWork — Espacio Financiero Agéntico en Celo Mainnet",
+    description: "Agentes ERC-8004 · Garantía 50/50 con @celo/buy · USA₮ x402 Gasless · Ripio wFIAT · Textile FX",
     images: ["/og-image.png"],
   },
 };

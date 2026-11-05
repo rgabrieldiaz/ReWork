@@ -17,6 +17,7 @@ import {
   Layers,
   Bot
 } from "lucide-react";
+import { useTestnetRails } from "@/lib/feature-flags";
 
 export interface TourStep {
   id: string;
@@ -42,7 +43,96 @@ interface InteractiveTourProps {
 const STORAGE_TOUR_COMPLETED = "rework_juror_tour_completed_v1";
 const STORAGE_TOUR_DISMISSED = "rework_juror_tour_dismissed_v1";
 
-const TOUR_STEPS: TourStep[] = [
+const CELO_MAINNET_TOUR_STEPS: TourStep[] = [
+  {
+    id: "step-operations",
+    selector: '[data-tour="header-operations"]',
+    title: "1. Billetera Celo Mainnet & Hub de Agentes",
+    tag: "Celo Mainnet (42220) • ERC-8004 & ERC-8021",
+    tagColor: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+    description:
+      "Billetera embebida en Celo Mainnet (con Google/Email o MetaMask/MiniPay) con atribución on-chain ERC-8021 y acceso directo al Celo Agent Hub.",
+    bullets: [
+      "Identidad Agéntica ERC-8004 registrada en Celo Mainnet",
+      "Pagos sin gas (EIP-3009 / x402) en USA₮ y USDC",
+      "Garantía de Alquiler 50/50 (Yield Escrow + Árbitro IA @celo/buy)",
+      "Saldos en tiempo real y verificación en Celoscan",
+    ],
+    actionLabel: "🌱 Abrir Billetera & Hub Celo Mainnet",
+    actionId: "operations",
+    evaluatorNote: "Inspeccioná la dirección 0x..., el tag ERC-8021 y abrí el Celo Agent Hub en 1 clic.",
+  },
+  {
+    id: "step-rental-escrow",
+    selector: '[data-tour="rental-escrow-card"]',
+    title: "2. Garantía de Alquiler 50/50 (Yield Escrow)",
+    tag: "Innovación Celo Mainnet • Aave V3 + @celo/buy",
+    tagColor: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+    description:
+      "Primer contrato de depósito de garantía donde el capital bloqueado genera rendimiento en bóvedas DeFi de Celo Mainnet y reparte los beneficios 50% inquilino / 50% propietario.",
+    bullets: [
+      "Liquidación y retorno automatizado en Celo Mainnet (42220)",
+      "Soporte de monedas locales LatAm (wARS, wBRL, USA₮, USDC)",
+      "Resolución de disputas asistida por IA vía @celo/buy (x402)",
+    ],
+    actionLabel: "🔍 Inspeccionar Contrato Demo 50/50",
+    actionId: "rental-escrow",
+    evaluatorNote: "Probá crear un acuerdo o ejecutar una inspección IA sobre el contrato activo.",
+  },
+  {
+    id: "step-treasury-swap",
+    selector: '[data-tour="treasury-swap-panel"]',
+    title: "3. Tesorería Celo, Ripio wFIAT & Textile FX",
+    tag: "6 Monedas LatAm • Celo Mainnet DeFi",
+    tagColor: "border-cyan-500/40 bg-cyan-500/10 text-cyan-300",
+    description:
+      "Panel de tesorería con pools en vivo de DeFiLlama en Celo Mainnet, rampa Ripio wFIAT (wARS, wBRL, wMXN, wCOP) y corredor transfronterizo Textile FX.",
+    bullets: [
+      "Ingreso y retiro bancario local (CBU, PIX, SPEI ↔ wFIAT / USDC)",
+      "Conversión FX instantánea para tesorerías de comunidades y agencias",
+      "Cobros y pagos inmediatos con QR en Celo Mainnet",
+    ],
+    actionLabel: "💱 Abrir Rampa & Swap Celo",
+    actionId: "treasury-swap",
+    evaluatorNote: "Probá seleccionar cualquier moneda LatAm o inspeccionar los pools DeFi de Celo.",
+  },
+  {
+    id: "step-squad-missions",
+    selector: '[data-tour="squad-missions-card"]',
+    title: "4. Acuerdos y Garantías por Hitos",
+    tag: "Celo Mainnet • Liquidación x402 & Hitos",
+    tagColor: "border-purple-500/40 bg-purple-500/10 text-purple-300",
+    description:
+      "Acuerdos de trabajo y bounties colaborativos en Celo Mainnet donde los fondos en USDC, USA₮ o wFIAT se liberan al aprobar entregables verificados.",
+    bullets: [
+      "Custodia transparente con liberación por hitos",
+      "Liquidación sin gas mediante autorizaciones EIP-3009 / x402",
+      "Reputación verificable asociada a identidad ERC-8004",
+    ],
+    actionLabel: "🎯 Ver Acuerdos y Garantías",
+    actionId: "squad-missions",
+    evaluatorNote: "Revisá los hitos activos o publicá un acuerdo nuevo con tu cuenta de Google/Celo.",
+  },
+  {
+    id: "step-juror-plan",
+    selector: '[data-tour="juror-plan-badge"]',
+    title: "5. Pase de Jurado & Modo Evaluación",
+    tag: "Agents on Open Rails • 0% Protocol Fee",
+    tagColor: "border-amber-500/40 bg-amber-500/10 text-amber-300",
+    description:
+      "Desbloqueo completo e ilimitado para jurados y evaluadores: operá sin comisiones de protocolo (Fee 0%), con espacios y acuerdos ilimitados en Celo Mainnet.",
+    bullets: [
+      "Exención total de comisiones de plataforma (0% Fee)",
+      "Acceso irrestricto a todos los módulos agénticos y financieros",
+      "Activación instantánea en 1 clic durante tu evaluación",
+    ],
+    actionLabel: "⭐ Activar Pase de Jurado Ahora",
+    actionId: "juror-plan",
+    evaluatorNote: "Un solo clic para evaluar ReWork con permisos Pro completos.",
+  },
+];
+
+const MULTICHAIN_TOUR_STEPS: TourStep[] = [
   {
     id: "step-operations",
     selector: '[data-tour="header-operations"]',
@@ -138,6 +228,10 @@ export function InteractiveTour({
   onOpenSquadGoals,
   onActivateJuror,
 }: InteractiveTourProps) {
+  const testnetRailsEnabled = useTestnetRails();
+  const TOUR_STEPS = testnetRailsEnabled
+    ? MULTICHAIN_TOUR_STEPS
+    : CELO_MAINNET_TOUR_STEPS;
   const [isOpen, setIsOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
@@ -344,11 +438,15 @@ export function InteractiveTour({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             {
-              platform: "ReWork Multirail Workspace",
-              evaluationContext: "Superteam Argentina Colosseum & Celo Hackathon",
-              version: "1.0.0-production",
+              platform: testnetRailsEnabled
+                ? "ReWork Multirail Workspace"
+                : "ReWork — Agentic Financial Workspace on Celo Mainnet",
+              evaluationContext:
+                "Celo × Loops House — Agents on Open Rails Hackathon",
+              chainId: 42220,
+              version: "1.0.0-mainnet",
               description:
-                "Protocolo de custodia no permisionada, garantía de alquiler 50/50 con rendimiento DeFi en Celo, y tesorería multiriel con soporte directo de monedas LatAm.",
+                "Espacio financiero agéntico en Celo Mainnet (42220) con identidad ERC-8004, atribución ERC-8021, pagos sin gas x402 en USA₮, rampa Ripio wFIAT, corredor Textile FX y garantía de alquiler 50/50 con rendimiento DeFi.",
               quickRoutes: {
                 operations: '[data-tour="header-operations"]',
                 rentalEscrow5050: '[data-tour="rental-escrow-card"]',
@@ -356,24 +454,37 @@ export function InteractiveTour({
                 squadMissions: '[data-tour="squad-missions-card"]',
                 jurorSandboxPass: '[data-tour="juror-plan-badge"]',
               },
-              supportedCurrencies: [
-                "USDC",
-                "CELO",
-                "SOL",
-                "XLM",
-                "ARS",
-                "BRL",
-                "COP",
-                "MXN",
-                "PEN",
-                "CLP",
-              ],
+              supportedCurrencies: testnetRailsEnabled
+                ? [
+                    "USDC",
+                    "USAT",
+                    "CELO",
+                    "SOL",
+                    "XLM",
+                    "wARS",
+                    "wBRL",
+                    "COP",
+                    "MXN",
+                    "PEN",
+                    "CLP",
+                  ]
+                : [
+                    "USDC",
+                    "USAT",
+                    "CELO",
+                    "wARS",
+                    "wBRL",
+                    "wMXN",
+                    "wCOP",
+                    "PEN",
+                    "CLP",
+                  ],
               keyModules: [
-                "Garantía de Alquiler 50/50 (Yield Escrow)",
-                "Celo Agent Hub (ERC-8004, wFIAT, x402)",
-                "Swap y Rampa Multiriel LatAm",
-                "Squad Goals con Hitos Soroban",
-                "Pase de Jurado Sandbox 0% Fee",
+                "Garantía de Alquiler 50/50 (Yield Escrow + @celo/buy)",
+                "Celo Agent Hub (ERC-8004, ERC-8021, USA₮ x402, Textile FX)",
+                "Ripio wFIAT & Tesorería DeFiLlama Celo Mainnet",
+                "Acuerdos por Hitos con Liquidación x402",
+                "Pase de Jurado 0% Fee",
               ],
             },
             null,

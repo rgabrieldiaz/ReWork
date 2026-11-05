@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { USDC_ISSUER } from "@/lib/stellar";
 import { useWallet } from "@/hooks/useWallet";
 import { useSolanaWallet } from "@/hooks/useSolanaWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { useTestnetRails } from "@/lib/feature-flags";
 // signTransaction is handled by useWallet().sign
 import { CreateAuctionModal } from "@/components/CreateAuctionModal";
 import { AuctionDetailModal } from "@/components/AuctionDetailModal";
@@ -98,14 +100,22 @@ export default function MarketplacePage() {
     const [auctions, setAuctions] = useState<Auction[]>([]);
     const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
     const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
-    const { connected, address, sign } = useWallet();
+    const { connected, address: stellarAddress, sign } = useWallet();
     const { address: solAddress, connected: solConnected } = useSolanaWallet();
+    const { address: celoAddress, connected: celoConnected } = useCeloWallet();
+    const testnetRailsEnabled = useTestnetRails();
     const { profile, addPoints } = useProfile();
     const { t, language } = useSettings();
     const { createNotification } = useNotifications();
     const { activeWorkspace } = useWorkspace();
 
-    const effectiveAddress = address || solAddress || profile?.wallet_address || profile?.stellar_address || profile?.solana_address || profile?.id;
+    const effectiveAddress =
+        celoAddress ||
+        profile?.wallet_address ||
+        (testnetRailsEnabled ? stellarAddress || solAddress : null) ||
+        profile?.id ||
+        null;
+    const address = effectiveAddress;
 
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -300,20 +310,20 @@ export default function MarketplacePage() {
             const assetSymbol = auction.currency || "USDC";
             let newEscrowId = "";
 
-            if (connected && address) {
+            if (testnetRailsEnabled && connected && stellarAddress) {
                 // 1. Prepare Payload for Trustless Work Escrow
                 const sellerAddress = auction.seller.length > 20 ? auction.seller : REWORK_PLATFORM_ADDRESS;
                 
                 const payload: any = {
-                    signer: address,
+                    signer: stellarAddress,
                     engagementId: `rework-auction-${auction.id}-${Date.now()}`,
                     title: `Puja para ${auction.title}`,
                     description: `Bloqueando fondos para oferta de ${bidAmount} ${assetSymbol} en Marketplace ReWork.`,
                     roles: {
-                        approver: address,
+                        approver: stellarAddress,
                         serviceProvider: sellerAddress,
                         platformAddress: REWORK_PLATFORM_ADDRESS,
-                        releaseSigner: address,
+                        releaseSigner: stellarAddress,
                         disputeResolver: REWORK_PLATFORM_ADDRESS,
                         receiver: sellerAddress,
                     },
@@ -377,8 +387,12 @@ export default function MarketplacePage() {
 
                 newEscrowId = result.contractId || result.id || `escrow-tw-${Date.now()}`;
             } else {
-                // Multi-rail Evaluator / Jury Mode
-                newEscrowId = solConnected ? `solana-eval-bid-${Date.now()}` : `jury-bid-${Date.now()}`;
+                // Celo Mainnet Escrow / Offer Registration
+                newEscrowId = celoConnected
+                    ? `celo-mainnet-${Date.now()}`
+                    : testnetRailsEnabled && solConnected
+                    ? `solana-eval-bid-${Date.now()}`
+                    : `celo-offer-${Date.now()}`;
             }
 
             // 5. Update Supabase
@@ -405,11 +419,11 @@ export default function MarketplacePage() {
                 setSelectedAuction(updatedAuctions.find(a => a.id === auction.id) || null);
             }
 
-            await addPoints(10, "Oferta en Marketplace (Modo Evaluador)");
-            if (solConnected) {
-                toast.success("¡Oferta registrada con tu cuenta Solana! (Modo Jurado / Evaluador)");
-            } else if (!connected) {
-                toast.success("¡Oferta registrada con tu perfil! (Modo Jurado / Evaluador)");
+            await addPoints(10, "Oferta en Mercado P2P");
+            if (celoConnected || !testnetRailsEnabled) {
+                toast.success(`¡Oferta registrada en Celo Mainnet (${bidAmount} ${assetSymbol})!`);
+            } else if (solConnected) {
+                toast.success("¡Oferta registrada con tu cuenta Solana Devnet!");
             } else {
                 toast.success("¡Oferta enviada y confirmada en la blockchain!");
             }

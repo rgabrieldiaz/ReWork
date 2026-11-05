@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
+import { useCeloWallet } from "@/hooks/useCeloWallet";
+import { usePrivy } from "@privy-io/react-auth";
 import { useProfile } from "@/hooks/useProfile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +16,9 @@ interface Bounty {
     id: string;
     title: string;
     description: string;
-    reward_usdc: number;
+    reward_usdc?: number;
+    amount?: number;
+    currency?: string;
     status: string;
     creator_id: string;
     is_global_bounty: boolean;
@@ -22,8 +26,11 @@ interface Bounty {
 }
 
 export default function GlobalNetworkPage() {
-    const { connected, address } = useWallet();
+    const { connected: stellarConnected } = useWallet();
+    const { connected: celoConnected } = useCeloWallet();
+    const { authenticated } = usePrivy();
     const { profile } = useProfile();
+    const isAuthenticated = Boolean(celoConnected || authenticated || stellarConnected || profile);
     const { t, language } = useSettings();
     const [bounties, setBounties] = useState<Bounty[]>([]);
     const [loading, setLoading] = useState(true);
@@ -55,8 +62,8 @@ export default function GlobalNetworkPage() {
     }, []);
 
     const handleApply = async (bounty: Bounty) => {
-        if (!connected || !profile) {
-            toast.error(language === 'es' ? "Conectá tu wallet y perfil para postularte." : "Connect your wallet and profile to apply.");
+        if (!isAuthenticated || !profile) {
+            toast.error(language === 'es' ? "Iniciá sesión con Google o conectá tu wallet para postularte." : "Sign in or connect your wallet to apply.");
             return;
         }
 
@@ -147,8 +154,10 @@ export default function GlobalNetworkPage() {
                                     <Target className="w-5 h-5 text-accent-teal" />
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs text-muted uppercase tracking-widest font-bold">Reward</p>
-                                    <p className="text-lg font-black text-accent-teal">{bounty.reward_usdc} USDC</p>
+                                    <p className="text-xs text-muted uppercase tracking-widest font-bold">Honorario</p>
+                                    <p className="text-lg font-black text-accent-teal">
+                                        {bounty.reward_usdc ?? bounty.amount ?? 0} {bounty.currency || "USDC"}
+                                    </p>
                                 </div>
                             </div>
 

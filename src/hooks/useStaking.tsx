@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { SupportedCurrency } from "@/lib/currency";
+import { useTestnetRails } from "@/lib/feature-flags";
 
 export interface StakePosition {
   id: string;
@@ -31,13 +32,23 @@ const StakingContext = createContext<StakingContextType | undefined>(undefined);
 const DEFAULT_POSITIONS: StakePosition[] = [
   {
     id: "stake-pos-celo-1",
-    amount: 200,
+    amount: 250,
     currency: "USAT",
     apy: 11.4,
     chain: "celo",
     startDate: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
     durationMonths: 24,
     poolName: "Celo Aave V3 / Uniswap V3 Stable Yield (DeFiLlama Live)",
+  },
+  {
+    id: "stake-pos-celo-2",
+    amount: 150,
+    currency: "USDC",
+    apy: 13.2,
+    chain: "celo",
+    startDate: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+    durationMonths: 12,
+    poolName: "Celo Uniswap V3 (USDC / USA₮ · Chain 42220)",
   },
   {
     id: "stake-pos-sol-1",
@@ -62,11 +73,21 @@ const DEFAULT_POSITIONS: StakePosition[] = [
 ];
 
 export function StakingProvider({ children }: { children: ReactNode }) {
+  const testnetRailsEnabled = useTestnetRails();
   const [activeCurrency, setActiveCurrency] = useState<SupportedCurrency>("USDC");
   const [stakedAmount, setStakedAmount] = useState<number>(400);
-  const [activeApy, setActiveApy] = useState<number>(14.1);
+  const [activeApy, setActiveApy] = useState<number>(12.1);
   const [accruedYield, setAccruedYield] = useState<number>(6.84);
   const [positions, setPositions] = useState<StakePosition[]>(DEFAULT_POSITIONS);
+
+  const visiblePositions = useMemo(() => {
+    if (testnetRailsEnabled) return positions;
+    return positions.filter((p) => !p.chain || p.chain === "celo");
+  }, [positions, testnetRailsEnabled]);
+
+  const effectiveStakedAmount = useMemo(() => {
+    return visiblePositions.reduce((acc, p) => acc + (p.amount || 0), 0);
+  }, [visiblePositions]);
 
   useEffect(() => {
     const saved = localStorage.getItem("rework_staked_amount");
@@ -93,24 +114,24 @@ export function StakingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (positions.length === 0) {
-      setActiveApy(12.8);
+    if (visiblePositions.length === 0) {
+      setActiveApy(11.4);
       return;
     }
-    const totalAmount = positions.reduce((acc, p) => acc + (p.amount || 0), 0);
+    const totalAmount = visiblePositions.reduce((acc, p) => acc + (p.amount || 0), 0);
     if (totalAmount <= 0) {
-      setActiveApy(12.8);
+      setActiveApy(11.4);
       return;
     }
-    const weighted = positions.reduce((acc, p) => acc + (p.amount * (p.apy || 12.8)), 0) / totalAmount;
+    const weighted = visiblePositions.reduce((acc, p) => acc + (p.amount * (p.apy || 11.4)), 0) / totalAmount;
     setActiveApy(Number(weighted.toFixed(1)));
-  }, [positions]);
+  }, [visiblePositions]);
 
   useEffect(() => {
-    if (stakedAmount <= 0) return;
+    if (effectiveStakedAmount <= 0) return;
 
     const interval = setInterval(() => {
-      const yieldPerSec = (stakedAmount * (activeApy / 100)) / 31536000;
+      const yieldPerSec = (effectiveStakedAmount * (activeApy / 100)) / 31536000;
       setAccruedYield((prev) => {
         const next = prev + yieldPerSec;
         localStorage.setItem("rework_accrued_yield", next.toFixed(6));
@@ -119,7 +140,7 @@ export function StakingProvider({ children }: { children: ReactNode }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [stakedAmount, activeApy]);
+  }, [effectiveStakedAmount, activeApy]);
 
   const stake = async (
     amount: number,
@@ -173,7 +194,7 @@ export function StakingProvider({ children }: { children: ReactNode }) {
   return (
     <StakingContext.Provider
       value={{
-        stakedAmount,
+        stakedAmount: effectiveStakedAmount,
         activeApy,
         accruedYield,
         activeCurrency,
@@ -181,7 +202,7 @@ export function StakingProvider({ children }: { children: ReactNode }) {
         stake,
         unstake,
         unstakePosition,
-        positions,
+        positions: visiblePositions,
       }}
     >
       {children}

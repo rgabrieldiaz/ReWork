@@ -5,8 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@/hooks/useWallet';
 import { useSolanaWallet } from '@/hooks/useSolanaWallet';
+import { useCeloWallet } from '@/hooks/useCeloWallet';
 import { useGamification } from '@/hooks/useGamification';
 import { isSuperAdmin } from '@/lib/admins';
+import { isTestnetRailsEnabled } from '@/lib/feature-flags';
 
 export interface UserProfile {
     id: string;
@@ -14,7 +16,7 @@ export interface UserProfile {
     solana_address?: string | null;
     stellar_address?: string | null;
     bank_alias?: string | null;
-    preferred_rail?: 'solana' | 'stellar' | 'bank' | null;
+    preferred_rail?: 'celo' | 'solana' | 'stellar' | 'bank' | null;
     email: string | null;
     first_name: string | null;
     last_name: string | null;
@@ -36,29 +38,31 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
     const { ready, authenticated, user: privyUser } = usePrivy();
-    const { address: walletAddress, loading: walletLoading, injectAddress } = useWallet();
+    const { address: walletAddress, loading: walletLoading } = useWallet();
     const { address: solAddress, connected: solConnected } = useSolanaWallet();
+    const { address: celoAddress, connected: celoConnected } = useCeloWallet();
     const { notifyPointsEarned } = useGamification();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProfile = async () => {
-            // Wait for Privy to be ready AND wallet to finish loading
             if (!ready || walletLoading) return;
+
+            const testnetsOn = isTestnetRailsEnabled();
+            const privyEmail = privyUser?.email?.address || privyUser?.google?.email || null;
 
             setLoading(true);
             try {
-                // Determine identity: Privy user email, Stellar wallet, or Solana wallet
-                const privyEmail = privyUser?.email?.address || privyUser?.google?.email || null;
-
                 let query = supabase.from('users').select('*');
 
                 if (privyEmail) {
                     query = query.eq('email', privyEmail);
-                } else if (walletAddress) {
+                } else if (celoAddress) {
+                    query = query.ilike('wallet_address', celoAddress);
+                } else if (testnetsOn && walletAddress) {
                     query = query.eq('wallet_address', walletAddress);
-                } else if (solAddress) {
+                } else if (testnetsOn && solAddress) {
                     query = query.or(`solana_address.eq.${solAddress},wallet_address.eq.${solAddress}`);
                 } else {
                     setProfile(null);
@@ -69,79 +73,48 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 const { data, error } = await query.maybeSingle();
 
                 if (error && error.code !== 'PGRST116') {
-                    console.warn('Error fetching profile detail HTTP/DB:', JSON.stringify({
-                        message: error.message,
-                        details: error.details,
-                        hint: error.hint,
-                        code: error.code
-                    }, null, 2));
+                    console.warn('Error fetching profile detail HTTP/DB:', error.message);
                 }
+
+                const applyAdmin = (p: UserProfile): UserProfile => {
+                    if (isSuperAdmin(p.email, p.wallet_address || celoAddress || p.solana_address, p.role)) {
+                        return { ...p, role: 'Admin' };
+                    }
+                    return p;
+                };
 
                 if (data) {
                     const currentProfile = data as UserProfile;
-                    const applyAdmin = (p: UserProfile): UserProfile => {
-                        if (isSuperAdmin(p.email, p.wallet_address || p.solana_address, p.role)) {
-                            return { ...p, role: 'Admin' };
-                        }
-                        return p;
-                    };
 
-                    // Welcome points bonus for new evaluators / judges with 0 points
                     if ((!currentProfile.points || currentProfile.points === 0) && !isSuperAdmin(currentProfile.email, currentProfile.wallet_address, currentProfile.role)) {
                         currentProfile.points = 500;
                         supabase.from('users').update({ points: 500 }).eq('id', currentProfile.id).then();
                     }
 
-                    if (isSuperAdmin(currentProfile.email, currentProfile.wallet_address || currentProfile.solana_address, currentProfile.role) && currentProfile.role !== 'Admin') {
+                    if (isSuperAdmin(currentProfile.email, currentProfile.wallet_address || celoAddress || currentProfile.solana_address, currentProfile.role) && currentProfile.role !== 'Admin') {
                         currentProfile.role = 'Admin';
                         supabase.from('users').update({ role: 'Admin' }).eq('id', currentProfile.id).then();
                     }
 
-                    let assignWallet = walletAddress;
-
-                    // 1. Generate retroactively if user has no wallet and hasn't connected one
-                    if (!currentProfile.wallet_address && authenticated && !assignWallet && privyUser?.id) {
-                        const { generateDeterministicKeypair } = await import('@/lib/crypto');
-                        const keypair = await generateDeterministicKeypair(privyUser.id);
-                        assignWallet = keypair.publicKey();
-                        
+                    // Upgrade legacy Stellar Testnet wallet_address (G...) or null to real Celo Mainnet address (0x...)
+                    if (celoAddress && (!currentProfile.wallet_address || !currentProfile.wallet_address.startsWith('0x') || currentProfile.wallet_address.toLowerCase() !== celoAddress.toLowerCase())) {
                         const { data: updatedData } = await supabase
                             .from('users')
-                            .update({ 
-                                wallet_address: assignWallet, 
-                                stellar_address: assignWallet,
-                                solana_address: solAddress || currentProfile.solana_address,
-                                updated_at: new Date().toISOString() 
-                            })
-                            .eq('id', currentProfile.id)
-                            .select()
-                            .single();
-                            
-                        setProfile(applyAdmin((updatedData || { ...currentProfile, wallet_address: assignWallet }) as UserProfile));
-                        if (typeof injectAddress === 'function') injectAddress(assignWallet);
-                    } 
-                    // 2. Auto-link explicit visible wallet address if Privy user connects external wallet
-                    else if (authenticated && assignWallet && currentProfile.wallet_address !== assignWallet) {
-                        const { data: updatedData } = await supabase
-                            .from('users')
-                            .update({ 
-                                wallet_address: assignWallet, 
-                                stellar_address: assignWallet,
-                                solana_address: solAddress || currentProfile.solana_address,
-                                updated_at: new Date().toISOString() 
+                            .update({
+                                wallet_address: celoAddress,
+                                updated_at: new Date().toISOString()
                             })
                             .eq('id', currentProfile.id)
                             .select()
                             .single();
 
-                        setProfile(applyAdmin((updatedData || currentProfile) as UserProfile));
-                    } else if (solAddress && !currentProfile.solana_address) {
-                        // Link Solana address if user connects Phantom
+                        setProfile(applyAdmin((updatedData || { ...currentProfile, wallet_address: celoAddress }) as UserProfile));
+                    } else if (testnetsOn && solAddress && !currentProfile.solana_address) {
                         const { data: updatedData } = await supabase
                             .from('users')
-                            .update({ 
+                            .update({
                                 solana_address: solAddress,
-                                updated_at: new Date().toISOString() 
+                                updated_at: new Date().toISOString()
                             })
                             .eq('id', currentProfile.id)
                             .select()
@@ -149,22 +122,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
                         setProfile(applyAdmin((updatedData || { ...currentProfile, solana_address: solAddress }) as UserProfile));
                     } else {
-                        setProfile(applyAdmin(currentProfile));
+                        // Clean up display if legacy G... address is stored while testnets are disabled
+                        const cleanWallet = (!testnetsOn && currentProfile.wallet_address?.startsWith('G'))
+                            ? (celoAddress || null)
+                            : currentProfile.wallet_address;
+                        setProfile(applyAdmin({ ...currentProfile, wallet_address: cleanWallet }));
                     }
                 } else if (authenticated && privyEmail) {
-                    // Create new profile for Privy user
-                    const privyName = privyUser?.google?.name || privyUser?.email?.address?.split('@')[0] || 'Evaluador ReWork';
+                    // Create new profile for Google / Email Privy user operating on Celo Mainnet
+                    const privyName = privyUser?.google?.name || privyUser?.email?.address?.split('@')[0] || 'Usuario ReWork';
                     const privyAvatar = (privyUser as any)?.google?.picture || '';
-
-                    let assignWallet = walletAddress;
-                    if (!assignWallet && privyUser?.id) {
-                        const { generateDeterministicKeypair } = await import('@/lib/crypto');
-                        const keypair = await generateDeterministicKeypair(privyUser.id);
-                        assignWallet = keypair.publicKey();
-                        if (typeof injectAddress === 'function') injectAddress(assignWallet);
-                    }
-
-                    const initialRole = isSuperAdmin(privyEmail, assignWallet) ? 'Admin' : 'Colaborador';
+                    const initialRole = isSuperAdmin(privyEmail, celoAddress) ? 'Admin' : 'Colaborador';
 
                     const { data: newData } = await supabase
                         .from('users')
@@ -172,19 +140,64 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             email: privyEmail,
                             first_name: privyName,
                             avatar_url: privyAvatar,
-                            wallet_address: assignWallet || null,
-                            stellar_address: assignWallet || null,
-                            solana_address: solAddress || null,
-                            preferred_rail: solAddress ? 'solana' : 'stellar',
+                            wallet_address: celoAddress || null,
                             role: initialRole,
-                            points: 500 // Sandbox welcome bonus for judges & new users
+                            points: 500
                         })
                         .select()
                         .single();
 
-                    if (newData) setProfile(newData as UserProfile);
-                } else if (solConnected && solAddress) {
-                    // Create new profile for standalone Solana user
+                    if (newData) {
+                        setProfile(newData as UserProfile);
+                    } else {
+                        setProfile({
+                            id: privyUser?.id || `local-${Date.now()}`,
+                            email: privyEmail,
+                            first_name: privyName,
+                            last_name: null,
+                            avatar_url: privyAvatar,
+                            wallet_address: celoAddress || null,
+                            role: initialRole,
+                            birth_date: null,
+                            points: 500,
+                            updated_at: new Date().toISOString(),
+                        });
+                    }
+                } else if (celoConnected && celoAddress) {
+                    // Create new profile for standalone Celo Mainnet EVM user (MetaMask / MiniPay / Rabby / Valora)
+                    const initialRole = isSuperAdmin(null, celoAddress) ? 'Admin' : 'Colaborador';
+                    const shortAddr = `${celoAddress.slice(0, 6)}...${celoAddress.slice(-4)}`;
+                    const { data: newCeloData } = await supabase
+                        .from('users')
+                        .insert({
+                            email: null,
+                            first_name: 'Miembro Celo',
+                            last_name: `(${shortAddr})`,
+                            avatar_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${celoAddress}`,
+                            wallet_address: celoAddress,
+                            role: initialRole,
+                            points: 500
+                        })
+                        .select()
+                        .single();
+
+                    if (newCeloData) {
+                        setProfile(newCeloData as UserProfile);
+                    } else {
+                        setProfile({
+                            id: `celo-${celoAddress.toLowerCase()}`,
+                            email: null,
+                            first_name: 'Miembro Celo',
+                            last_name: `(${shortAddr})`,
+                            avatar_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${celoAddress}`,
+                            wallet_address: celoAddress,
+                            role: initialRole,
+                            birth_date: null,
+                            points: 500,
+                            updated_at: new Date().toISOString(),
+                        });
+                    }
+                } else if (testnetsOn && solConnected && solAddress) {
                     const initialRole = isSuperAdmin(null, solAddress) ? 'Admin' : 'Colaborador';
                     const shortAddr = `${solAddress.slice(0, 4)}...${solAddress.slice(-4)}`;
                     const { data: newSolData } = await supabase
@@ -198,14 +211,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             solana_address: solAddress,
                             preferred_rail: 'solana',
                             role: initialRole,
-                            points: 500 // Sandbox welcome bonus for judges & new users
+                            points: 500
                         })
                         .select()
                         .single();
 
                     if (newSolData) setProfile(newSolData as UserProfile);
-                } else if (walletAddress) {
-                    // Create new profile for standalone Stellar user
+                } else if (testnetsOn && walletAddress) {
                     const initialRole = isSuperAdmin(null, walletAddress) ? 'Admin' : 'Colaborador';
                     const shortAddr = `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
                     const { data: newStellarData } = await supabase
@@ -219,7 +231,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                             stellar_address: walletAddress,
                             preferred_rail: 'stellar',
                             role: initialRole,
-                            points: 500 // Sandbox welcome bonus for judges & new users
+                            points: 500
                         })
                         .select()
                         .single();
@@ -234,13 +246,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         };
 
         fetchProfile();
-    }, [ready, authenticated, privyUser, walletAddress, walletLoading, solAddress, solConnected]);
+    }, [ready, authenticated, privyUser, celoAddress, celoConnected, walletAddress, walletLoading, solAddress, solConnected]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
         const identifier = profile?.id;
         if (!identifier) return { error: 'No profile found' };
 
-        // Save in local state and cache immediately for fluid UX
         setProfile((prev) => (prev ? { ...prev, ...updates } : null));
         if (typeof window !== 'undefined') {
             try {
@@ -258,6 +269,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .single();
 
             if (error) {
+                if (updates.preferred_rail === 'celo') {
+                    const { preferred_rail: _omit, ...safeUpdates } = updates;
+                    if (Object.keys(safeUpdates).length > 0) {
+                        await supabase
+                            .from('users')
+                            .update({ ...safeUpdates, updated_at: new Date().toISOString() })
+                            .eq('id', identifier);
+                    }
+                }
                 console.warn('Supabase update notification (saved locally):', error.message);
                 return { data: { ...(profile || {}), ...updates } as UserProfile };
             }
@@ -266,7 +286,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 setProfile((prev) => ({ ...(prev || {}), ...(data as UserProfile), ...updates }));
             }
             return { data: { ...(profile || {}), ...updates } as UserProfile };
-        } catch (err) {
+        } catch {
             return { data: { ...(profile || {}), ...updates } as UserProfile };
         }
     };
@@ -286,7 +306,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             setProfile(data as UserProfile);
             notifyPointsEarned(amount, reason);
         } else {
-            console.error("Error adding points:", error);
+            setProfile((prev) => (prev ? { ...prev, points: newPoints } : null));
+            notifyPointsEarned(amount, reason);
         }
     };
 
