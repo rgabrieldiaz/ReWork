@@ -123,7 +123,7 @@ export default function PlanesPage() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-accent-teal shrink-0" />
-                  <span>Billeteras Celo, Solana, Stellar y Social Login</span>
+                  <span>Billetera Celo Mainnet, Web3 y Social Login con Google</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-accent-teal shrink-0" />
@@ -198,7 +198,7 @@ export default function PlanesPage() {
                 <li className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-accent-teal shrink-0" />
                   <span>
-                    <strong>Bóvedas DeFi completas</strong> (53 pools en Celo + Solana)
+                    <strong>Bóvedas DeFi en vivo</strong> (rendimientos Aave V3 en Celo Mainnet)
                   </span>
                 </li>
                 <li className="flex items-center gap-2.5">

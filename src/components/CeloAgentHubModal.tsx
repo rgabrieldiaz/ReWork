@@ -47,10 +47,12 @@ export function CeloAgentHubModal({
   isOpen,
   onClose,
   onOpenRentalEscrow,
+  initialTab,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onOpenRentalEscrow?: () => void;
+  initialTab?: "checklist" | "textile" | "usat_p2p" | "buy_catalog";
 }) {
   const {
     connected,
@@ -74,6 +76,12 @@ export function CeloAgentHubModal({
     "checklist" | "textile" | "usat_p2p" | "buy_catalog"
   >("checklist");
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Tab 1: Attribution & ERC-8004 state
   const [tagInput, setTagInput] = useState(attributionTag);

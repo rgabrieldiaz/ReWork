@@ -20,58 +20,58 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "ReWork Multichain V2.0",
-                title1: "Custodia inteligente y ",
-                title2: "objetivos de equipo.",
-                desc: "Depósitos en garantía con rendimiento compartido, misiones con pagos por hitos y liquidación en Celo, Solana y Stellar.",
+                badge: "🌱 Celo Mainnet · Agentes & Finanzas LatAm",
+                title1: "El espacio financiero para equipos y creadores, ",
+                title2: "garantizado por agentes y código.",
+                desc: "Depósitos de alquiler 50/50 con rendimiento DeFi en Celo, acuerdos por hitos y transferencias inmediatas en monedas locales (wARS, wBRL, wCOP, wMXN) o dólares digitales sin costo de gas.",
                 ctaPrimary: "Ingresar a la Plataforma",
-                ctaSecondary: "Ver Módulos"
+                ctaSecondary: "Ver Planes y Precios"
             },
             features: {
-                title: "Cómo Funciona",
-                desc: "Custodia programable y acuerdos claros para profesionales, agencias y equipos.",
-                f1Title: "Custodia Escrow Inteligente",
-                f1Desc: "Fondos bloqueados en contratos inteligentes que se liberan solo cuando el trabajo es verificado por las partes o resuelto por arbitraje.",
-                f2Title: "Reputación e Historial Verificado",
-                f2Desc: "Registro inmutable de acuerdos completados, hitos validados y reputación profesional asociada a tu cuenta.",
-                f3Title: "Liquidación Multiriel y Moneda Local",
-                f3Desc: "Pagos instantáneos con USDC, USA₮ y moneda local mediante rampas bancarias directas en Celo, Solana y Stellar."
+                title: "Pilares de Nuestra Infraestructura",
+                desc: "Finanzas agénticas no permisionadas sobre Celo Mainnet con costo sub-centavo y rampa bancaria local.",
+                f1Title: "Garantía de Alquiler 50/50 (Yield Escrow)",
+                f1Desc: "Los fondos en custodia no quedan ociosos: generan rendimiento en bóvedas DeFi de Celo y dividen el beneficio 50% inquilino / 50% propietario, con arbitraje IA (@celo/buy) si surge una controversia.",
+                f2Title: "Monedas Locales LatAm & Rampa Bancaria",
+                f2Desc: "Cobrá y pagá con QR o rampa en ARS, BRL, COP, MXN, PEN y CLP mediante wFIAT de Ripio en Celo Mainnet, conectado directamente a tu CBU, CVU, PIX o SPEI.",
+                f3Title: "Pagos Gasless x402 en USA₮",
+                f3Desc: "Micro-liquidaciones entre freelancers y agencias sin tener que comprar gas ni lidiar con comisiones de red gracias a autorizaciones off-chain EIP-3009 en Tether America."
             },
             solutions: {
                 title: "¿Para Quién es ReWork?",
-                desc: "Un entorno dual diseñado para impulsar tanto a estructuras tradicionales como a nuevas formas organizacionales.",
-                s1Title: "Corporaciones y PyMEs",
-                s1Desc: "Moderniza la retención de talento mediante un ecosistema interno (Misiones de Equipo) para incentivos, bonos garantizados por código y un mercado peer-to-peer exclusivo para tu equipo.",
-                s1Bullets: ["Retención de Talento", "Bonos Transparentes", "Marketplace Interno"],
-                s2Title: "Comunidades y Alianzas (DAOs)",
-                s2Desc: "Infraestructura perfecta para coordinar trabajo descentralizado, manejar presupuestos conjuntos (Treasury) y repartir pagos de recompensas (Bounties) de forma justa y trustless.",
-                s2Bullets: ["Gestión de Bounties", "Tesorería Conjunta", "Reputación Cross-Chain"]
+                desc: "Soluciones financieras diseñadas para los desafíos reales del trabajo y los contratos en América Latina.",
+                s1Title: "Inquilinos y Propietarios",
+                s1Desc: "Eliminá el costo de oportunidad de los depósitos de garantía. El capital genera intereses reales durante el contrato y el árbitro IA audita presupuestos y facturas en segundos si hay desacuerdo.",
+                s1Bullets: ["Rendimiento 50/50 Compartido", "Resolución IA de Controversias", "Liquidación en wARS y Dólares"],
+                s2Title: "Freelancers, Agencias y Comunidades",
+                s2Desc: "Acordá entregas con fondos custodiados en contratos por hitos. Cobrá en moneda local o en USA₮ sin costo de gas y construí una reputación profesional inmutable on-chain (AURA CV).",
+                s2Bullets: ["Cobro Seguro por Hito", "QR y Rampa CBU / PIX", "Identidad Agéntica ERC-8004"]
             },
             pricing: {
-                title: "Planes de Infraestructura",
-                desc: "Elige el plan que se adapte a la escala de tu confianza.",
+                title: "Planes Claros y Transparentes",
+                desc: "Elegí el plan que mejor se adapte al tamaño de tu equipo o proyecto.",
                 monthDesc: " / mes",
                 p1: {
-                    title: "Personal Identidad",
+                    title: "Inicial (Free)",
                     price: "Gratis",
-                    desc: "Para freelancers y profesionales independientes.",
-                    bullets: ["Perfil AURA Universal", "Acceso a Workspaces Públicos", "Wallets Multichain & Social Login"],
-                    cta: "Crear Identidad"
+                    desc: "Para profesionales independientes y primeras pruebas.",
+                    bullets: ["1 Workspace propio", "Hasta 3 Misiones de equipo activas", "Comisión estándar de Escrow (0.50%)", "Cobro con QR y Rampa Ripio wFIAT"],
+                    cta: "Comenzar Gratis"
                 },
                 p2: {
                     badge: "MÁS POPULAR",
-                    title: "Workspace Pro",
-                    price: "$99",
-                    desc: "Para PyMEs, Agencias y Comunidades DAO.",
-                    bullets: ["Entorno Workspace Privado", "Marketplace P2P Interno", "Hasta 50 usuarios (AURA)", "Smart Contracts de Trustless Work"],
-                    cta: "Comenzar Prueba"
+                    title: "Pro B2B",
+                    price: "$49 USDC",
+                    desc: "Para agencias, equipos y contratos de alquiler frecuentes.",
+                    bullets: ["Workspaces y Misiones ilimitados", "50% de descuento en Escrow (0.25% fee)", "Garantías de Alquiler 50/50 ilimitadas", "Agente DeFi Celo Mainnet completo", "Liquidación x402 en USA₮ sin gas"],
+                    cta: "Activar Plan Pro"
                 },
                 p3: {
                     title: "Enterprise",
                     price: "A Medida",
-                    desc: "Corporaciones multinacionales y grandes alianzas.",
-                    bullets: ["Usuarios ilimitados", "API de Interoperabilidad", "Soporte Dedicado 24/7", "Bóvedas Escrow Personalizadas"],
-                    cta: "Contactar Ventas"
+                    desc: "Para inmobiliarias, corporaciones y grandes alianzas.",
+                    bullets: ["Integración API dedicada", "Contratos escrow personalizados", "Soporte prioritario 24/7", "Despliegue institucional"],
+                    cta: "Hablar con el Equipo"
                 }
             }
         },
@@ -757,58 +757,58 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "ReWork Protocol V2.0 Active",
-                title1: "The value of trust, ",
-                title2: "guaranteed by code.",
-                desc: "The infrastructure where reputation is your most valuable asset and USDC payments are automatically released upon achieving goals.",
-                ctaPrimary: "Start My Identity",
-                ctaSecondary: "Explore Infrastructure"
+                badge: "🌱 Celo Mainnet · LatAm Agentic Finance",
+                title1: "The financial workspace for teams and creators, ",
+                title2: "guaranteed by agents and code.",
+                desc: "50/50 yield-bearing rental guarantees in Celo DeFi, milestone escrow agreements, and instant settlements in local Latin American currencies (wARS, wBRL) or digital dollars without gas fees.",
+                ctaPrimary: "Enter Platform",
+                ctaSecondary: "View Plans & Pricing"
             },
             features: {
-                title: "Pillars of Trust",
-                desc: "Built with cutting-edge blockchain technology to ensure absolute transparency.",
-                f1Title: "Automated Payments",
-                f1Desc: "Smart Escrow contracts (Trustless Work) that secure funds and release them instantly only when the work is validated by the community or leaders.",
-                f2Title: "Sovereign Identity (AURA)",
-                f2Desc: "Your professional reputation is immutable and belongs to you. Hoard AURA through successful collaborations and take it to any B2B ecosystem.",
-                f3Title: "Multichain USDC Settlement",
-                f3Desc: "Global settlements in seconds with near-zero fees using native USDC on Solana and Stellar, with direct local bank ramps."
+                title: "Pillars of Our Infrastructure",
+                desc: "Permissionless agentic finance on Celo Mainnet with sub-cent fees and direct local bank integration.",
+                f1Title: "50/50 Rental Escrow (Yield-Bearing)",
+                f1Desc: "Locked security deposits don't sit idle: they earn interest in Celo DeFi vaults and split profits 50/50 between tenant and landlord, with AI arbitration (@celo/buy) for disputes.",
+                f2Title: "LatAm Local Currencies & Bank Ramps",
+                f2Desc: "Collect and pay via QR or bank ramp in ARS, BRL, COP, MXN, PEN, and CLP via Ripio wFIAT on Celo Mainnet, wired directly to your local bank account.",
+                f3Title: "x402 Gasless Payments in USA₮",
+                f3Desc: "Micropayments between freelancers and agencies without paying gas fees through EIP-3009 off-chain authorizations on Tether America."
             },
             solutions: {
                 title: "Who is ReWork For?",
-                desc: "A dual environment designed to empower both traditional structures and new organizational forms.",
-                s1Title: "Corporations and SMBs",
-                s1Desc: "Modernize talent retention through an internal ecosystem (Squad Goals) for incentives, code-guaranteed bonuses, and an exclusive peer-to-peer marketplace for your team.",
-                s1Bullets: ["Talent Retention", "Transparent Bonuses", "Internal Marketplace"],
-                s2Title: "Communities and Alliances (DAOs)",
-                s2Desc: "Perfect infrastructure for coordinating decentralized work, managing joint budgets (Treasury), and distributing reward payments (Bounties) fairly and trustlessly.",
-                s2Bullets: ["Bounty Management", "Joint Treasury", "Cross-Chain Reputation"]
+                desc: "Financial solutions designed for the real-world challenges of work and housing in Latin America.",
+                s1Title: "Tenants and Landlords",
+                s1Desc: "Eliminate the opportunity cost of rental security deposits. Capital earns real yield during the lease and the AI arbitrator audits invoices in seconds during a dispute.",
+                s1Bullets: ["Shared 50/50 Yield", "AI Dispute Resolution", "Settlement in wARS and USD"],
+                s2Title: "Freelancers, Agencies, and Communities",
+                s2Desc: "Lock agreements with milestone escrow contracts. Get paid in local currency or USA₮ without gas fees and build an immutable on-chain professional reputation (AURA CV).",
+                s2Bullets: ["Milestone Escrow Security", "QR & Bank Ramp (CBU / PIX)", "ERC-8004 Agent Identity"]
             },
             pricing: {
-                title: "Infrastructure Plans",
-                desc: "Choose the plan that fits the scale of your trust.",
+                title: "Clear, Transparent Plans",
+                desc: "Choose the plan that fits the scale of your team or project.",
                 monthDesc: " / month",
                 p1: {
-                    title: "Personal Identity",
+                    title: "Initial (Free)",
                     price: "Free",
-                    desc: "For freelancers and independent professionals.",
-                    bullets: ["Universal AURA Profile", "Public Workspaces Access", "Multichain Wallets & Social Login"],
-                    cta: "Create Identity"
+                    desc: "For independent professionals and early testing.",
+                    bullets: ["1 Owned Workspace", "Up to 3 Active Squad Missions", "Standard Escrow Fee (0.50%)", "QR Payments & Ripio wFIAT Ramp"],
+                    cta: "Get Started Free"
                 },
                 p2: {
                     badge: "MOST POPULAR",
-                    title: "Workspace Pro",
-                    price: "$99",
-                    desc: "For SMBs, Agencies, and DAO Communities.",
-                    bullets: ["Private Workspace Environment", "Internal P2P Marketplace", "Up to 50 users (AURA)", "Trustless Work Smart Contracts"],
-                    cta: "Start Trial"
+                    title: "Pro B2B",
+                    price: "$49 USDC",
+                    desc: "For agencies, teams, and frequent rental escrow contracts.",
+                    bullets: ["Unlimited Workspaces & Missions", "50% Off Escrow Fees (0.25% fee)", "Unlimited 50/50 Rental Guarantees", "Full Celo Mainnet DeFi Agent", "Gasless x402 USA₮ Settlement"],
+                    cta: "Activate Pro Plan"
                 },
                 p3: {
                     title: "Enterprise",
                     price: "Custom",
-                    desc: "Multinational corporations and massive alliances.",
-                    bullets: ["Unlimited users", "Interoperability API", "24/7 Dedicated Support", "Custom Escrow Vaults"],
-                    cta: "Contact Sales"
+                    desc: "For real estate agencies, corporations, and large alliances.",
+                    bullets: ["Dedicated API Integration", "Custom Escrow Contracts", "24/7 Priority Support", "Institutional Deployment"],
+                    cta: "Talk to the Team"
                 }
             }
         },

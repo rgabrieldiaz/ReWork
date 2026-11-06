@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { JurorEvaluationHub } from "@/components/JurorEvaluationHub";
 import { useSettings } from "@/hooks/useSettings";
 import { useProfile } from "@/hooks/useProfile";
 import { useCeloWallet } from "@/hooks/useCeloWallet";
@@ -56,6 +57,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 {isAppRoute && (
                     <Header onMenuClick={() => setIsSidebarOpen(true)} />
                 )}
+                {isAppRoute && <JurorEvaluationHub />}
                 <div className={!isAppRoute ? (isDeckRoute ? "h-full" : "") : "px-4 sm:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full"}>
                     {children}
                 </div>

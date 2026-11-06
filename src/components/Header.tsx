@@ -60,6 +60,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isSolanaEscrowOpen, setIsSolanaEscrowOpen] = useState(false);
   const [isCeloAgentHubOpen, setIsCeloAgentHubOpen] = useState(false);
   const [isRentalEscrowOpen, setIsRentalEscrowOpen] = useState(false);
+  const [celoAgentHubTab, setCeloAgentHubTab] = useState<
+    "checklist" | "textile" | "usat_p2p" | "buy_catalog"
+  >("checklist");
   const [isWalletPopoverOpen, setIsWalletPopoverOpen] = useState(false);
   const [isFinanceDetailOpen, setIsFinanceDetailOpen] = useState(false);
   const [copiedAddr, setCopiedAddr] = useState(false);
@@ -95,17 +98,30 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   useEffect(() => {
     const handleOpenOps = () => setIsWalletPopoverOpen(true);
     const handleToggleOps = () => setIsWalletPopoverOpen((prev) => !prev);
-    const handleOpenAgentHub = () => setIsCeloAgentHubOpen(true);
+    const handleOpenAgentHub = (e?: any) => {
+      if (e?.detail?.tab) {
+        setCeloAgentHubTab(e.detail.tab);
+      }
+      setIsCeloAgentHubOpen(true);
+    };
     const handleOpenRental = () => setIsRentalEscrowOpen(true);
+    const handleOpenBank = () => setIsBankModalOpen(true);
+    const handleOpenQr = () => setIsQrModalOpen(true);
+
     window.addEventListener("rework:open-operations", handleOpenOps);
     window.addEventListener("rework:toggle-operations", handleToggleOps);
     window.addEventListener("rework:open-agent-hub", handleOpenAgentHub);
     window.addEventListener("rework:open-rental-escrow", handleOpenRental);
+    window.addEventListener("rework:open-bank-modal", handleOpenBank);
+    window.addEventListener("rework:open-qr-modal", handleOpenQr);
+
     return () => {
       window.removeEventListener("rework:open-operations", handleOpenOps);
       window.removeEventListener("rework:toggle-operations", handleToggleOps);
       window.removeEventListener("rework:open-agent-hub", handleOpenAgentHub);
       window.removeEventListener("rework:open-rental-escrow", handleOpenRental);
+      window.removeEventListener("rework:open-bank-modal", handleOpenBank);
+      window.removeEventListener("rework:open-qr-modal", handleOpenQr);
     };
   }, []);
 
@@ -656,6 +672,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         isOpen={isCeloAgentHubOpen}
         onClose={() => setIsCeloAgentHubOpen(false)}
         onOpenRentalEscrow={() => setIsRentalEscrowOpen(true)}
+        initialTab={celoAgentHubTab}
       />
 
       <SmartRentalEscrowModal
