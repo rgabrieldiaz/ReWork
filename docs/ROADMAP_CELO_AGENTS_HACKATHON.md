@@ -76,7 +76,7 @@ Al cruzar esa visión con las **reglas técnicas obligatorias de `tracks.txt` y 
 ### Fase 2: Operaciones Celo — Pagos QR, Envíos por Email/Wallet y Swaps con Textile FX (Track 2)
 1. **QR Celo (`QRPaymentsModal.tsx`):** Generar y escanear payloads `rework-celo-qr-v1` para cobrar en `wARS`, `wBRL`, `USA₮`, `USDC`, `USD₮`, `CELO` con firma real en Celo Mainnet.
 2. **Envíos P2P por Email o Wallet:** Resolución de usuarios registrados en ReWork por email a su wallet EVM de Celo (o envío directo a `0x...`) con recibo verificable en Celoscan.
-3. **Swaps & Agente de Tesorería Textile FX (`src/lib/celo-textile.ts`):** Cotización y swap entre `wFIAT` (`wARS`, `wBRL`, `cNGN`, `IDRX`) y dólares digitales (`USDC`, `USD₮`, `USA₮`) interactuando con `Permit2` y `LimitOrderReactor` (`0xa9AA...35b3`).
+3. **Swaps & Agente de Tesorería Textile FX (`src/lib/celo-textile.ts`):** Cotización y swap entre `wFIAT` (`wARS`, `wBRL`, `wCOP`, `wMXN`, `wPEN`, `wCLP`) y dólares digitales (`USDC`, `USD₮`, `USA₮`) interactuando con `Permit2` y `LimitOrderReactor` (`0xa9AA...35b3`).
 
 ### Fase 3: Suite Comercial Celo + Pagos Gasless `USA₮` con x402 (Track 4)
 1. **Cliente x402 Celo (`src/lib/celo-x402.ts`) + Endpoint API (`/api/celo/x402`):** Soporte de autorización gasless **EIP-3009** para `USA₮` (`0xD2ab...F771`, `"Tether America USD"`) y **Permit2** para `wARS`/`wBRL`/`wCOP` contra `https://api.x402.celo.org`.

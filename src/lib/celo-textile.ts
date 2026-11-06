@@ -9,7 +9,7 @@
  * Strategy Architecture (Track 2 Judging Criteria — Strategy P&L 40%, Volume 30%, Originality 30%):
  *  ReWork implements an Inventory-Aware Treasury & Corridor Quoting Agent:
  *  1. Dynamic Skew Pricing: Instead of static spreads, the agent computes inventory skew
- *     between local stablecoins (wARS, wBRL, cNGN, IDRX) and USD₮/USDC:
+ *     between local stablecoins (wARS, wBRL, wCOP, wMXN, wPEN, wCLP) and USD₮/USDC:
  *       skew = (localUsdValue - targetLocalUsdValue) / max(totalPortfolioUsd, 1)
  *     When overweight in local currency (e.g., high wARS balance after LatAm client collections),
  *     the agent tightens its offer price to accelerate rotation into USD₮ while charging a wider
@@ -56,7 +56,7 @@ export interface TreasuryHedgingRule {
 
 /**
  * Computes an inventory-aware Textile FX corridor quote between any two Celo assets
- * (primary corridors: wARS, wBRL, cNGN, IDRX, USDC ⇄ USD₮).
+ * (primary corridors: wARS, wBRL, wCOP, wMXN, wPEN, wCLP, USDC ⇄ USD₮).
  */
 export function computeTextileCorridorQuote(params: {
   sellToken: CeloAssetSymbol;
@@ -88,9 +88,7 @@ export function computeTextileCorridorQuote(params: {
       ? 2 // 2 bps for USDC/USD₮ tight corridor
       : sellAsset.symbol === 'wARS' || buyAsset.symbol === 'wARS'
       ? 18 // 18 bps for ARS inflation/volatility corridor
-      : sellAsset.symbol === 'cNGN' || buyAsset.symbol === 'cNGN'
-      ? 22 // 22 bps for NGN corridor
-      : 12; // 12 bps for wBRL / IDRX corridors
+      : 12; // 12 bps for other LatAm corridors (wBRL, wCOP, wMXN, wPEN, wCLP)
 
   // Inventory-aware adjustment: if user/treasury is reducing overweight local currency,
   // tighten spread by up to 6 bps to encourage rebalance flow.

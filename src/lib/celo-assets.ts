@@ -3,7 +3,7 @@
  *
  * Covers all 4 Tracks of the "Agents on Open Rails" Hackathon (Celo × Loops House):
  *  - Track 1: Ripio wFIAT Local Stablecoins (wARS, wBRL, wMXN, wCOP, wPEN, wCLP) + Ripio Ramp/Bridge
- *  - Track 2: Textile FX Open Corridors (LimitOrderReactor, Permit2, USDC, USD₮, wARS, wBRL, cNGN, IDRX)
+ *  - Track 2: Textile FX Open Corridors (LimitOrderReactor, Permit2, USDC, USD₮, wARS, wBRL, wCOP, wMXN, wPEN, wCLP)
  *  - Track 3: Build with @celo/buy (https://gateway.usebuy.ai/v1/catalog)
  *  - Track 4: USA₮ (Tether America USD by Anchorage Digital Bank) with Celo x402 Facilitator (EIP-3009)
  */
@@ -18,9 +18,7 @@ export type CeloAssetSymbol =
   | 'wMXN'
   | 'wCOP'
   | 'wPEN'
-  | 'wCLP'
-  | 'cNGN'
-  | 'IDRX';
+  | 'wCLP';
 
 export type CeloAssetCategory = 'native' | 'usd_stable' | 'wfiat_latam' | 'fx_corridor';
 
@@ -225,32 +223,6 @@ export const CELO_ASSETS: Record<CeloAssetSymbol, CeloAssetConfig> = {
     x402Mechanism: null,
     referenceUsdRate: 0.68,
     textileCorridor: false,
-  },
-  cNGN: {
-    symbol: 'cNGN',
-    displaySymbol: 'cNGN',
-    name: 'Compliant Nigerian Naira (Textile Corridor)',
-    address: '0xF6829D7393dAe24509eb1E52eE8e572e2E271a4f',
-    decimals: 6,
-    category: 'fx_corridor',
-    countryCode: 'NG',
-    flag: '🇳🇬',
-    x402Mechanism: null,
-    referenceUsdRate: 1 / 1600,
-    textileCorridor: true,
-  },
-  IDRX: {
-    symbol: 'IDRX',
-    displaySymbol: 'IDRX',
-    name: 'Indonesian Rupiah Stablecoin (Textile Corridor)',
-    address: '0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22',
-    decimals: 2,
-    category: 'fx_corridor',
-    countryCode: 'ID',
-    flag: '🇮🇩',
-    x402Mechanism: null,
-    referenceUsdRate: 1 / 15800,
-    textileCorridor: true,
   },
 };
 

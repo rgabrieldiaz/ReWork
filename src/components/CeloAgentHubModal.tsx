@@ -668,8 +668,6 @@ export function CeloAgentHubModal({
                       <option value="USDC">💵 USDC (Circle Native)</option>
                       <option value="USDT">🟢 USD₮ (Tether Native)</option>
                       <option value="CELO">🌱 CELO (Celo Native)</option>
-                      <option value="cNGN">🇳🇬 cNGN (Nigerian Naira)</option>
-                      <option value="IDRX">🇮🇩 IDRX (Indonesian Rupiah)</option>
                     </select>
                   </div>
                   <div>
@@ -704,8 +702,6 @@ export function CeloAgentHubModal({
                       <option value="wPEN">🇵🇪 wPEN (Sol Peruano)</option>
                       <option value="wCLP">🇨🇱 wCLP (Peso Chileno)</option>
                       <option value="CELO">🌱 CELO (Celo Native)</option>
-                      <option value="cNGN">🇳🇬 cNGN (Nigerian Naira)</option>
-                      <option value="IDRX">🇮🇩 IDRX (Indonesian Rupiah)</option>
                     </select>
                   </div>
                 </div>

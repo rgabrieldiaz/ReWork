@@ -98,8 +98,7 @@ ReWork está diseñado estratégicamente para competir de forma nativa y sinérg
 | **`Permit2`** | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | Aprobación unificada de tokens |
 | **`USDC` (Circle Native)** | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 decimales |
 | **`USD₮` (Tether Native)** | `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` | 6 decimales |
-| **`cNGN` (Nigeria)** | `0xF6829D7393dAe24509eb1E52eE8e572e2E271a4f` | Corredor FX emergente |
-| **`IDRX` (Indonesia)** | `0x18Bc5bcC660cf2B9cE3cd51a404aFe1a0cBD3C22` | Corredor FX emergente |
+| **`wFIAT` (LatAm Ripio)** | Corredores verificados: `wARS`, `wBRL`, `wCOP`, `wMXN`, `wPEN`, `wCLP` | 18 decimales |
 
 - **Portal y Docs Textile:** `https://app.textile.money` | `https://docs.textile.money/makers/overview`
 

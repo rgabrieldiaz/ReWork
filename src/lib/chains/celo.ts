@@ -200,7 +200,7 @@ export interface CeloTokenBalance {
 }
 
 /**
- * Reads all Celo Mainnet balances (CELO + USA₮ + USDC + USD₮ + 6 Ripio wFIAT + cNGN + IDRX)
+ * Reads all Celo Mainnet balances (CELO + USA₮ + USDC + USD₮ + 6 Ripio wFIAT)
  */
 export async function fetchAllCeloBalances(
   address: `0x${string}`
