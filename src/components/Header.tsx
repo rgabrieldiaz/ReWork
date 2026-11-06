@@ -439,7 +439,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                           <span className="text-xs font-bold text-emerald-400">
-                            🌱 Celo Mainnet · 42220
+                            Red Principal (Mainnet)
                           </span>
                         </div>
                         <span className="text-[9px] font-mono text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
@@ -624,6 +624,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                   </>
                 )}
               </div>
+
+              {/* 🧭 Guía interactiva de la plataforma */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("rework:start-tour"))}
+                className="h-10 px-3 flex items-center gap-1.5 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-muted hover:text-foreground text-xs font-medium transition-colors cursor-pointer"
+                title="Ver guía interactiva del espacio"
+              >
+                <Compass className="w-4 h-4 text-accent-teal" />
+                <span className="hidden sm:inline">Guía</span>
+              </button>
 
               {/* 🔔 Notifications */}
               <button

@@ -190,7 +190,7 @@ export function UpgradePlanModal() {
                 </h2>
                 <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal border border-accent-teal/25 uppercase">
                   {plan === "juror"
-                    ? "Modo Jurado Activo"
+                    ? "Modo Demo Activo"
                     : plan === "pro"
                     ? "Plan Pro Activo"
                     : "Plan Gratuito"}
@@ -225,23 +225,16 @@ export function UpgradePlanModal() {
             </div>
           )}
 
-          {/* ── BANNER DESTACADO: MODO JURADO / EVALUADOR (1-CLIC SIN COSTO) ── */}
-          <div className="p-4 rounded-xl bg-foreground/[0.03] border border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent-teal/15 border border-accent-teal/30 flex items-center justify-center text-accent-teal shrink-0 mt-0.5">
-                <Award className="w-4 h-4" />
-              </div>
+          {/* Modo Demo / Auditoría Técnica para evaluaciones */}
+          <div className="p-3.5 rounded-xl bg-foreground/[0.03] border border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-accent-teal shrink-0" />
               <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-xs font-bold text-foreground">
-                    ¿Sos Jurado o Evaluador de Hackathon?
-                  </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-teal/10 text-accent-teal">
-                    100% Bonificado
-                  </span>
-                </div>
-                <p className="text-xs text-muted mt-0.5 leading-relaxed">
-                  Habilitá todas las funciones Pro, creación ilimitada de workspaces y 0% de comisión sin conectar tarjeta ni gastar fondos reales.
+                <p className="text-xs font-semibold text-foreground">
+                  Modo de Prueba & Demostración
+                </p>
+                <p className="text-[11px] text-muted">
+                  Podés explorar y simular todas las funciones Pro sin requerir tarjeta ni transferencias reales.
                 </p>
               </div>
             </div>
@@ -251,7 +244,7 @@ export function UpgradePlanModal() {
                 <button
                   type="button"
                   onClick={() => setPlanForTesting("free")}
-                  className="px-3 py-2 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-xs font-medium text-muted hover:text-foreground transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border-subtle text-xs font-medium text-muted hover:text-foreground transition-colors cursor-pointer"
                 >
                   Volver a modo Free
                 </button>
@@ -259,9 +252,9 @@ export function UpgradePlanModal() {
                 <button
                   type="button"
                   onClick={handleActivateJuror}
-                  className="px-3.5 py-2 rounded-lg bg-accent-teal/15 hover:bg-accent-teal hover:text-slate-950 border border-accent-teal/35 text-accent-teal text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg bg-accent-teal/15 hover:bg-accent-teal hover:text-slate-950 border border-accent-teal/35 text-accent-teal text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
                 >
-                  Activar Pase de Jurado →
+                  Habilitar Modo Demo →
                 </button>
               )}
             </div>

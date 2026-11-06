@@ -19,6 +19,7 @@ import {
   Check,
   Scale,
   ExternalLink,
+  Compass,
 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -54,41 +55,28 @@ export default function LandingPage() {
       <main className="relative z-10 w-full">
         {/* ── HERO SECTION ── */}
         <section className="pt-14 pb-20 px-6 max-w-6xl mx-auto text-center flex flex-col items-center">
-          {/* Badges superiores */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-8">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-medium">
+          {/* Badge superior */}
+          <div className="flex items-center justify-center mb-8">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
               </span>
-              <span>🌱 Celo Mainnet (42220) • Finanzas Agénticas LatAm</span>
+              <span>{t.landing.hero.badge}</span>
             </span>
-
-            <button
-              type="button"
-              onClick={handleJurorEnter}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-mono text-amber-300 transition-all cursor-pointer"
-            >
-              <Award className="w-3.5 h-3.5 text-amber-400" />
-              <span>
-                {isJuror
-                  ? "Pase de Jurado Activo • Ir al Workspace →"
-                  : "¿Sos Jurado? Activar Pase Evaluador Gratis"}
-              </span>
-            </button>
           </div>
 
           {/* Título Principal */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 max-w-4xl text-balance leading-[1.14]">
-            El espacio financiero para equipos y creadores,{" "}
+            {t.landing.hero.title1}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-teal via-cyan-400 to-emerald-400">
-              garantizado por agentes y código.
+              {t.landing.hero.title2}
             </span>
           </h1>
 
           {/* Subtítulo descriptivo */}
           <p className="text-sm sm:text-base md:text-lg text-muted max-w-2xl text-balance mb-10 leading-relaxed">
-            Depósitos de alquiler 50/50 con rendimiento DeFi en Celo, acuerdos de trabajo por hitos y transferencias inmediatas en monedas locales (wARS, wBRL, wCOP, wMXN) o dólares digitales sin costo de gas.
+            {t.landing.hero.desc}
           </p>
 
           {/* CTAs */}
@@ -103,10 +91,10 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={handleJurorEnter}
-              className="px-6 py-3.5 bg-card border border-amber-500/40 hover:border-amber-500 text-amber-300 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="px-6 py-3.5 bg-card border border-border-subtle hover:border-accent-teal/40 text-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
-              <Award className="w-4 h-4 text-amber-400" />
-              <span>Entrar en Modo Jurado (0% Fee)</span>
+              <Compass className="w-4 h-4 text-accent-teal" />
+              <span>Explorar Demo Interactiva</span>
             </button>
             <a
               href="#pricing"
@@ -127,16 +115,16 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-                    Simulador: Garantía de Alquiler 50/50 (Yield Escrow)
+                    Simulador: Garantía de Alquiler 50/50
                   </h3>
                   <p className="text-xs text-muted">
-                    El capital en garantía no queda ocioso: genera rendimiento en bovedas DeFi de Celo Mainnet y reparte beneficios al 50%.
+                    El capital en garantía no queda ocioso: genera rendimiento en bóvedas auditadas y reparte beneficios al 50%.
                   </p>
                 </div>
               </div>
 
               <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
-                +11.4% APY en Celo Mainnet
+                +11.4% APY Estimado
               </span>
             </div>
 
@@ -156,7 +144,7 @@ export default function LandingPage() {
                       className="w-full pl-7 pr-3 py-2.5 rounded-xl bg-background border border-border-subtle text-foreground font-mono font-bold text-base outline-none focus:border-accent-teal"
                     />
                   </div>
-                  <span className="text-xs font-mono text-muted">USDC / USA₮</span>
+                  <span className="text-xs font-mono text-muted">USDC / USD</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -205,9 +193,9 @@ export default function LandingPage() {
                 <p className="text-[11px] text-muted">
                   Equivalente en moneda local:{" "}
                   <strong className="text-foreground font-mono">
-                    ${(depositAmount * warsRate).toLocaleString("es-AR")} wARS
+                    ${(depositAmount * warsRate).toLocaleString("es-AR")} ARS
                   </strong>{" "}
-                  (vía Ripio wFIAT en Celo).
+                  (vía transferencia bancaria local).
                 </p>
               </div>
             </div>
@@ -220,7 +208,7 @@ export default function LandingPage() {
                   +${totalYield.toFixed(2)} USD
                 </span>
                 <span className="text-[10px] font-mono text-muted block mt-0.5">
-                  ≈ ${(totalYield * warsRate).toLocaleString("es-AR")} wARS
+                  ≈ ${(totalYield * warsRate).toLocaleString("es-AR")} ARS
                 </span>
               </div>
 
@@ -254,7 +242,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 text-muted">
                 <Scale className="w-4 h-4 text-accent-teal shrink-0" />
                 <span>
-                  Resolución de controversias automatizada con peritaje IA (<strong>@celo/buy</strong>).
+                  Resolución de controversias automatizada con peritaje e inspección inteligente.
                 </span>
               </div>
 
@@ -262,7 +250,7 @@ export default function LandingPage() {
                 href="/auth"
                 className="inline-flex items-center gap-1.5 text-accent-teal font-semibold hover:underline"
               >
-                <span>Probar Contrato en Celo Mainnet</span>
+                <span>Probar Contrato en el Workspace</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -292,68 +280,68 @@ export default function LandingPage() {
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <h3 className="text-base font-bold mb-2 text-foreground">
-                    Garantía de Alquiler 50/50
+                    Garantía con Rendimiento 50/50
                   </h3>
                   <p className="text-xs text-muted leading-relaxed mb-4">
-                    Depósitos de garantía que rinden en bóvedas DeFi de Celo (Aave V3 / Uniswap V3) y dividen ganancias 50/50 entre inquilino y dueño.
+                    Eliminá el costo de oportunidad del dinero inmovilizado. El depósito de garantía genera rendimiento en dólares y divide los beneficios equitativamente entre inquilino y propietario.
                   </p>
                 </div>
                 <div className="pt-3 border-t border-border-subtle text-[11px] font-mono text-emerald-400">
-                  Track 3 • Arbitraje @celo/buy
+                  Rendimiento + Arbitraje Imparcial
                 </div>
               </div>
 
-              {/* Pilar 2: wFIAT y Rampa Ripio */}
+              {/* Pilar 2: Monedas Locales y Rampa Bancaria */}
               <div className="glass-card p-6 rounded-2xl border border-border-subtle hover:border-accent-teal/40 transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center mb-4 border border-accent-teal/25 text-accent-teal">
                     <Landmark className="w-5 h-5" />
                   </div>
                   <h3 className="text-base font-bold mb-2 text-foreground">
-                    Monedas Locales & Rampa Ripio
+                    Monedas Locales de Latinoamérica
                   </h3>
                   <p className="text-xs text-muted leading-relaxed mb-4">
-                    Cobrá y pagá con QR o rampa en ARS, BRL, COP, MXN, PEN y CLP mediante wFIAT respaldado 1:1 en Celo Mainnet con CBU o PIX.
+                    Operá en pesos argentinos, reales, pesos colombianos, mexicanos y dólares. Entrá y salí con tu cuenta bancaria habitual por CBU, PIX o transferencias locales.
                   </p>
                 </div>
                 <div className="pt-3 border-t border-border-subtle text-[11px] font-mono text-accent-teal">
-                  Track 1 • Ripio wFIAT & Ramp
+                  Rampa Bancaria Local (CBU / PIX)
                 </div>
               </div>
 
-              {/* Pilar 3: USA₮ Gasless x402 */}
+              {/* Pilar 3: Pagos Ágiles sin Fricción */}
               <div className="glass-card p-6 rounded-2xl border border-border-subtle hover:border-accent-teal/40 transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 border border-cyan-500/25 text-cyan-400">
                     <Zap className="w-5 h-5" />
                   </div>
                   <h3 className="text-base font-bold mb-2 text-foreground">
-                    Pagos Sin Gas en USA₮ (x402)
+                    Pagos Ágiles sin Fricción
                   </h3>
                   <p className="text-xs text-muted leading-relaxed mb-4">
-                    Micro-liquidaciones entre colaboradores y agencias sin tener que comprar gas ni lidiar con comisiones gracias a EIP-3009.
+                    Enviá y cobrá honorarios o micropagos en dólares digitales al instante, sin saldo previo de comisiones ni retenciones bancarias.
                   </p>
                 </div>
                 <div className="pt-3 border-t border-border-subtle text-[11px] font-mono text-cyan-400">
-                  Track 4 • USA₮ x402 Facilitator
+                  Liquidación Inmediata Sin Fricción
                 </div>
               </div>
 
-              {/* Pilar 4: Agentes ERC-8004 & Textile FX */}
+              {/* Pilar 4: Cotizaciones Directas FX */}
               <div className="glass-card p-6 rounded-2xl border border-border-subtle hover:border-accent-teal/40 transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 border border-purple-500/25 text-purple-400">
                     <Bot className="w-5 h-5" />
                   </div>
                   <h3 className="text-base font-bold mb-2 text-foreground">
-                    Agentes ERC-8004 & Textile FX
+                    Cotizaciones Directas y Cambio FX
                   </h3>
                   <p className="text-xs text-muted leading-relaxed mb-4">
-                    Identidad agéntica on-chain (`0x8004...`), atribución ERC-8021 y swaps RFQ para rotar tesorerías con LimitOrderReactor.
+                    Rotá tesorerías y convertí divisas al tipo de cambio real sin diferenciales bancarios abusivos ni intermediarios innecesarios.
                   </p>
                 </div>
                 <div className="pt-3 border-t border-border-subtle text-[11px] font-mono text-purple-400">
-                  Track 2 • Textile Open Corridors
+                  Cotizaciones Instantáneas
                 </div>
               </div>
             </div>
@@ -440,30 +428,6 @@ export default function LandingPage() {
               {t.landing.pricing.desc}
             </p>
 
-            {/* Juror Pass Quick Banner */}
-            <div className="max-w-3xl mx-auto mb-12 p-5 rounded-2xl bg-card border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-lg">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                  <Award className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-foreground">
-                    ¿Sos Jurado o Evaluador de Hackathon?
-                  </h4>
-                  <p className="text-xs text-muted mt-0.5">
-                    Activá el <strong>Pase de Jurado Acreditado</strong> en 1 clic para probar todas las funciones Pro, workspaces ilimitados y contratos al 0% de comisión sin tarjetas ni fondos reales.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleJurorEnter}
-                className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow"
-              >
-                {isJuror ? "Pase Activo • Ir a Workspaces →" : "Activar Pase de Jurado Gratis"}
-              </button>
-            </div>
-
             {/* 3 Tarjetas de Planes */}
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left items-stretch">
               {/* Plan 1: Free */}
@@ -526,10 +490,10 @@ export default function LandingPage() {
                   <ul className="space-y-3 mb-8">
                     {[
                       "Workspaces y Misiones ilimitados",
-                      "50% de descuento en Escrow (0.25% fee)",
+                      "50% de descuento en comisiones (0.25% fee)",
                       "Garantías de Alquiler 50/50 ilimitadas",
-                      "Agente DeFi Celo Mainnet completo",
-                      "Liquidación x402 en USA₮ sin gas",
+                      "Bóvedas DeFi de rendimiento en dólares",
+                      "Liquidación inmediata sin comisiones de gas",
                     ].map((item, i) => (
                       <li key={i} className="flex gap-2.5 text-xs text-foreground">
                         <Check className="w-4 h-4 text-accent-teal shrink-0" />
@@ -583,6 +547,18 @@ export default function LandingPage() {
                   {t.landing.pricing.p3.cta}
                 </button>
               </div>
+            </div>
+
+            {/* Nota discreta para entorno de demostración */}
+            <div className="mt-12 text-center text-xs text-muted">
+              <span>¿Querés probar todas las funciones en un entorno de demostración? </span>
+              <button
+                type="button"
+                onClick={handleJurorEnter}
+                className="text-accent-teal hover:underline font-medium cursor-pointer"
+              >
+                Habilitar acceso demo completo sin cargo →
+              </button>
             </div>
           </div>
         </section>

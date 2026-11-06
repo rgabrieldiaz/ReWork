@@ -20,22 +20,22 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "🌱 Celo Mainnet · Agentes & Finanzas LatAm",
-                title1: "El espacio financiero para equipos y creadores, ",
-                title2: "garantizado por agentes y código.",
-                desc: "Depósitos de alquiler 50/50 con rendimiento DeFi en Celo, acuerdos por hitos y transferencias inmediatas en monedas locales (wARS, wBRL, wCOP, wMXN) o dólares digitales sin costo de gas.",
+                badge: "Infraestructura Financiera Descentralizada · Producción",
+                title1: "Garantías y acuerdos de trabajo ",
+                title2: "donde los fondos nunca duermen.",
+                desc: "Depósitos en custodia con rendimiento automático en dólares, acuerdos de trabajo protegidos por hitos y cobros inmediatos en monedas locales sin burocracia bancaria.",
                 ctaPrimary: "Ingresar a la Plataforma",
                 ctaSecondary: "Ver Planes y Precios"
             },
             features: {
                 title: "Pilares de Nuestra Infraestructura",
-                desc: "Finanzas agénticas no permisionadas sobre Celo Mainnet con costo sub-centavo y rampa bancaria local.",
+                desc: "Garantías y acuerdos con liquidación inmediata, rendimientos en protocolos auditados y rampa bancaria directa.",
                 f1Title: "Garantía de Alquiler 50/50 (Yield Escrow)",
-                f1Desc: "Los fondos en custodia no quedan ociosos: generan rendimiento en bóvedas DeFi de Celo y dividen el beneficio 50% inquilino / 50% propietario, con arbitraje IA (@celo/buy) si surge una controversia.",
+                f1Desc: "Los fondos en custodia no quedan ociosos: generan rendimiento automático en protocolos auditados y dividen el beneficio 50% inquilino / 50% propietario, con arbitraje imparcial si surge una controversia.",
                 f2Title: "Monedas Locales LatAm & Rampa Bancaria",
-                f2Desc: "Cobrá y pagá con QR o rampa en ARS, BRL, COP, MXN, PEN y CLP mediante wFIAT de Ripio en Celo Mainnet, conectado directamente a tu CBU, CVU, PIX o SPEI.",
-                f3Title: "Pagos Gasless x402 en USA₮",
-                f3Desc: "Micro-liquidaciones entre freelancers y agencias sin tener que comprar gas ni lidiar con comisiones de red gracias a autorizaciones off-chain EIP-3009 en Tether America."
+                f2Desc: "Cobrá y pagá con QR o transferencia bancaria en ARS, BRL, COP, MXN, PEN y CLP directamente con tu CBU, CVU, PIX o SPEI.",
+                f3Title: "Pagos Ágiles sin Fricción",
+                f3Desc: "Micro-liquidaciones y pagos entre freelancers y agencias sin comisiones ocultas de red ni saldo previo de comisiones."
             },
             solutions: {
                 title: "¿Para Quién es ReWork?",
@@ -757,22 +757,22 @@ export const translations = {
         },
         landing: {
             hero: {
-                badge: "🌱 Celo Mainnet · LatAm Agentic Finance",
-                title1: "The financial workspace for teams and creators, ",
-                title2: "guaranteed by agents and code.",
-                desc: "50/50 yield-bearing rental guarantees in Celo DeFi, milestone escrow agreements, and instant settlements in local Latin American currencies (wARS, wBRL) or digital dollars without gas fees.",
+                badge: "Decentralized Financial Infrastructure · Live",
+                title1: "Guarantees and work agreements ",
+                title2: "where funds never sleep.",
+                desc: "Yield-bearing escrow deposits in digital dollars, milestone-backed work agreements, and instant settlements in local Latin American currencies without banking bureaucracy.",
                 ctaPrimary: "Enter Platform",
                 ctaSecondary: "View Plans & Pricing"
             },
             features: {
                 title: "Pillars of Our Infrastructure",
-                desc: "Permissionless agentic finance on Celo Mainnet with sub-cent fees and direct local bank integration.",
+                desc: "High-security agreements with instant settlement, audited yield vaults, and direct bank rails.",
                 f1Title: "50/50 Rental Escrow (Yield-Bearing)",
-                f1Desc: "Locked security deposits don't sit idle: they earn interest in Celo DeFi vaults and split profits 50/50 between tenant and landlord, with AI arbitration (@celo/buy) for disputes.",
+                f1Desc: "Locked deposits don't sit idle: they earn interest in audited yield protocols and split profits 50/50 between tenant and landlord, with fair AI arbitration for disputes.",
                 f2Title: "LatAm Local Currencies & Bank Ramps",
-                f2Desc: "Collect and pay via QR or bank ramp in ARS, BRL, COP, MXN, PEN, and CLP via Ripio wFIAT on Celo Mainnet, wired directly to your local bank account.",
-                f3Title: "x402 Gasless Payments in USA₮",
-                f3Desc: "Micropayments between freelancers and agencies without paying gas fees through EIP-3009 off-chain authorizations on Tether America."
+                f2Desc: "Collect and pay via QR or bank transfer in ARS, BRL, COP, MXN, PEN, and CLP with 1:1 backed local currencies connected directly to your local bank account.",
+                f3Title: "Instant Gasless Payments",
+                f3Desc: "Instant settlements between freelancers and agencies with zero gas fee friction or network headaches."
             },
             solutions: {
                 title: "Who is ReWork For?",

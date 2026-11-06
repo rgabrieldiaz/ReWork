@@ -44,49 +44,6 @@ export default function PlanesPage() {
           </p>
         </div>
 
-        {/* ── BANNER DE JURADO / EVALUADOR DE HACKATHON ── */}
-        <div className="max-w-4xl mx-auto mb-12 p-5 rounded-xl bg-card border border-accent-teal/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-accent-teal/15 border border-accent-teal/30 flex items-center justify-center text-accent-teal shrink-0">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm font-bold text-foreground">
-                  ¿Sos Jurado o Evaluador de Hackathon?
-                </h2>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-accent-teal/15 text-accent-teal border border-accent-teal/30">
-                  Acceso Ilimitado sin Costo
-                </span>
-              </div>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                Activá el <strong>Pase de Jurado Acreditado</strong> con un clic para probar todas las funciones Pro, creación ilimitada de espacios y contratos con 0% de comisión sin requerir tarjeta ni pagos reales.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {isJuror ? (
-              <Link
-                href="/workspaces"
-                className="px-4 py-2.5 rounded-lg bg-accent-teal text-slate-950 text-xs font-semibold flex items-center gap-1.5"
-              >
-                <span>Pase Activo • Ir a Workspaces</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={handleActivateJurorAndEnter}
-                className="px-4 py-2.5 rounded-lg bg-accent-teal hover:bg-accent-teal/90 text-slate-950 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-              >
-                <span>Activar Pase de Jurado Gratis</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* ── 3 TARJETAS DE PLANES EN PRODUCCIÓN ── */}
         <div className="grid md:grid-cols-3 gap-6 items-stretch">
           {/* Plan 1: Gratis */}
@@ -259,7 +216,7 @@ export default function PlanesPage() {
               type="button"
               onClick={() =>
                 openUpgradeModal(
-                  "Para despliegues Enterprise o DAOs podés activar el Plan Pro inmediatamente o usar el Pase de Evaluación."
+                  "Para despliegues Enterprise o DAOs podés contactarnos para configurar bóvedas dedicadas."
                 )
               }
               className="block w-full text-center py-2.5 rounded-lg border border-border-subtle text-xs font-semibold hover:bg-foreground/5 transition-colors cursor-pointer"
@@ -267,6 +224,18 @@ export default function PlanesPage() {
               Solicitar Despliegue Dedicado
             </button>
           </div>
+        </div>
+
+        {/* Nota discreta para auditorías y demos */}
+        <div className="mt-12 text-center text-xs text-muted">
+          <span>¿Realizás una auditoría institucional o evaluación técnica? </span>
+          <button
+            type="button"
+            onClick={handleActivateJurorAndEnter}
+            className="text-accent-teal hover:underline font-medium cursor-pointer"
+          >
+            Explorar entorno con acceso demo completo →
+          </button>
         </div>
       </div>
 

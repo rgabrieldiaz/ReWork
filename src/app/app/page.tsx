@@ -513,10 +513,10 @@ export default function Home() {
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/15"
                     : "bg-foreground/[0.04] text-muted border-border-subtle hover:text-foreground"
               }`}
-              title="Gestionar plan o Pase de Jurado"
+              title="Gestionar suscripción y límites"
             >
               {isJuror
-                ? "Pase Jurado • Fee 0%"
+                ? "Acceso Demo • Fee 0%"
                 : isPro
                   ? `Plan Pro • Fee ${escrowFeePercent}%`
                   : `Plan Free (${escrowFeePercent}% fee) • Subir a Pro`}
