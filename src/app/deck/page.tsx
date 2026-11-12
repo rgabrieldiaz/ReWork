@@ -29,7 +29,8 @@ import {
   Briefcase,
   Star,
   Landmark,
-  Youtube
+  Youtube,
+  Bot
 } from "lucide-react";
 import { ReWorkIcon, ReWorkLogo } from "@/components/ReWorkLogo";
 import { deckTranslations, DeckLanguage, DeckEcosystem } from "./deckTranslations";
@@ -38,14 +39,14 @@ export default function PresentationDeckPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [language, setLanguage] = useState<DeckLanguage>("en");
-  const [ecosystem, setEcosystem] = useState<DeckEcosystem>("solana");
+  const [ecosystem, setEcosystem] = useState<DeckEcosystem>("celo");
   const totalSlides = 13;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const eco = params.get("eco");
-      if (eco === "stellar" || eco === "solana") {
+      if (eco === "celo" || eco === "stellar" || eco === "solana") {
         setEcosystem(eco);
       }
     }
@@ -187,6 +188,17 @@ export default function PresentationDeckPage() {
             {/* Ecosystem Switcher */}
             <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 font-mono text-xs">
               <button
+                onClick={() => setEcosystem("celo")}
+                className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+                  ecosystem === "celo"
+                    ? "bg-emerald-500/25 text-emerald-300 font-bold border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Celo Mainnet (Agents on Open Rails Hackathon)"
+              >
+                <span>🌱 Celo</span>
+              </button>
+              <button
                 onClick={() => setEcosystem("solana")}
                 className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
                   ecosystem === "solana"
@@ -324,7 +336,13 @@ export default function PresentationDeckPage() {
           <div key={idx} className="slide-page bg-[#050c14] text-white p-12">
             <SlideRenderer slideIndex={idx} language={language} ecosystem={ecosystem} />
             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between text-xs font-mono text-slate-400">
-              <span>{ecosystem === "solana" ? "ReWork — Superteam Argentina Track · Colosseum Hackathon 2026" : "ReWork — Argentina Builder Challenge 2026 (Scale Track)"}</span>
+              <span>
+                {ecosystem === "celo"
+                  ? "ReWork — Agents on Open Rails Hackathon · Celo Mainnet (42220)"
+                  : ecosystem === "solana"
+                  ? "ReWork — Superteam Argentina Track · Colosseum Hackathon 2026"
+                  : "ReWork — Argentina Builder Challenge 2026 (Scale Track)"}
+              </span>
               <span>
                 {t.nav.slidePrefix} {idx + 1} {t.nav.of} {totalSlides}
               </span>
@@ -375,7 +393,9 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
               <p className="text-[10px] sm:text-[11px] text-slate-400">{s.badge1Sub}</p>
             </div>
             <div className="p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl text-center">
-              {ecosystem === "solana" ? (
+              {ecosystem === "celo" ? (
+                <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 mx-auto mb-1" />
+              ) : ecosystem === "solana" ? (
                 <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
               ) : (
                 <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 mx-auto mb-1" />
@@ -614,7 +634,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
             {/* Card 1 */}
             <div className="p-4 bg-white/5 border border-[#00f2ff]/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0">
-                {ecosystem === "solana" ? <ShieldCheck className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
+                {ecosystem === "celo" ? <Landmark className="w-5 h-5" /> : ecosystem === "solana" ? <ShieldCheck className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -630,7 +650,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
             {/* Card 2 */}
             <div className="p-4 bg-white/5 border border-purple-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0">
-                {ecosystem === "solana" ? <Wallet className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                {ecosystem === "celo" ? <Zap className="w-5 h-5" /> : ecosystem === "solana" ? <Wallet className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -646,7 +666,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
             {/* Card 3 */}
             <div className="p-4 bg-white/5 border border-cyan-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 flex-shrink-0">
-                {ecosystem === "solana" ? <Coins className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                {ecosystem === "celo" ? <Bot className="w-5 h-5" /> : ecosystem === "solana" ? <Coins className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -662,7 +682,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
             {/* Card 4 */}
             <div className="p-4 bg-white/5 border border-emerald-500/30 rounded-2xl flex gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                {ecosystem === "solana" ? <TrendingUp className="w-5 h-5" /> : <Star className="w-5 h-5" />}
+                {ecosystem === "celo" ? <ShieldCheck className="w-5 h-5" /> : ecosystem === "solana" ? <TrendingUp className="w-5 h-5" /> : <Star className="w-5 h-5" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -762,7 +782,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
                   {/* Quick Action Buttons */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 bg-cyan-500/15 border border-cyan-500/30 rounded-xl text-center">
-                      {ecosystem === "solana" ? (
+                      {ecosystem === "celo" || ecosystem === "solana" ? (
                         <Coins className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
                       ) : (
                         <QrCode className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
@@ -1245,7 +1265,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
               <div className="space-y-2">
                 <div className="p-3 bg-white/5 border border-[#00f2ff]/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#00f2ff]/10 flex items-center justify-center text-[#00f2ff] flex-shrink-0 mt-0.5">
-                    {ecosystem === "solana" ? (
+                    {ecosystem === "celo" || ecosystem === "solana" ? (
                       <ShieldCheck className="w-4 h-4" />
                     ) : (
                       <QrCode className="w-4 h-4" />
@@ -1259,7 +1279,9 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
 
                 <div className="p-3 bg-white/5 border border-purple-500/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
-                    {ecosystem === "solana" ? (
+                    {ecosystem === "celo" ? (
+                      <Bot className="w-4 h-4" />
+                    ) : ecosystem === "solana" ? (
                       <Coins className="w-4 h-4" />
                     ) : (
                       <ShieldCheck className="w-4 h-4" />
@@ -1273,7 +1295,7 @@ function SlideRenderer({ slideIndex, language, ecosystem }: { slideIndex: number
 
                 <div className="p-3 bg-white/5 border border-emerald-500/30 rounded-xl flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
-                    {ecosystem === "solana" ? (
+                    {ecosystem === "celo" || ecosystem === "solana" ? (
                       <TrendingUp className="w-4 h-4" />
                     ) : (
                       <Star className="w-4 h-4" />

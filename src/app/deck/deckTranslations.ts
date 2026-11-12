@@ -1,5 +1,5 @@
 export type DeckLanguage = "en" | "es";
-export type DeckEcosystem = "solana" | "stellar";
+export type DeckEcosystem = "celo" | "solana" | "stellar";
 
 export interface SlideData {
   title: string;
@@ -7,6 +7,622 @@ export interface SlideData {
 }
 
 export const deckTranslations = {
+  celo: {
+    "en": {
+      "nav": {
+        "scaleTrack": "Celo Mainnet",
+        "sub": "Agents on Open Rails Hackathon · Celo Core Co. × Loops House",
+        "prev": "Previous (←)",
+        "next": "Next (→)",
+        "downloadPdf": "Download PDF",
+        "downloadPdfShort": "PDF",
+        "downloadPdfTitle": "Export entire presentation to PDF",
+        "fullscreen": "Fullscreen (F)",
+        "viewApp": "View App",
+        "footerLeft": "ReWork Protocol · Agents on Open Rails Hackathon · Celo Mainnet (42220)",
+        "slidePrefix": "Slide",
+        "of": "of"
+      },
+      "slidesData": [
+        {
+          "title": "Cover",
+          "subtitle": "ReWork — Yield-Bearing Escrow & Autonomous Agents on Celo"
+        },
+        {
+          "title": "The Problem",
+          "subtitle": "Latin American Rental & Freelance Deposit Trap"
+        },
+        {
+          "title": "The Solution",
+          "subtitle": "50/50 Yield-Bearing Escrows & Local Currencies"
+        },
+        {
+          "title": "Core Modules",
+          "subtitle": "Rental Escrow, Milestones, wFIAT Treasury & FX RFQ"
+        },
+        {
+          "title": "4 Celo Pillars",
+          "subtitle": "Ripio wFIAT, Textile FX, @celo/buy & Aave V3"
+        },
+        {
+          "title": "Live Product",
+          "subtitle": "Celo Mainnet dApp, Ripio wFIAT Rails & Agent Arbitrator"
+        },
+        {
+          "title": "Architecture",
+          "subtitle": "Celo L2 (42220), Viem, ERC-8004, ERC-8021 & Privy"
+        },
+        {
+          "title": "Business Model",
+          "subtitle": "$49/mo Pro SaaS, Escrow Protocol Fee & Agent Micropayments"
+        },
+        {
+          "title": "Traction & Quality",
+          "subtitle": "0 Mocks, Verified Celoscan Contracts & 10 Currencies"
+        },
+        {
+          "title": "Comparison",
+          "subtitle": "ReWork vs Traditional Real Estate vs Web2 Upwork"
+        },
+        {
+          "title": "Roadmap to Scale",
+          "subtitle": "From Loops House Hackathon to LatAm PropTech & Work"
+        },
+        {
+          "title": "Team & Vision",
+          "subtitle": "Builders & Co-Founders Based in Argentina"
+        },
+        {
+          "title": "Demo & Closing",
+          "subtitle": "Live Walkthrough & Celoscan Verification"
+        }
+      ],
+      "slide0": {
+        "badge": "Agents on Open Rails Hackathon · Celo Core Co. × Loops House",
+        "quote": "“Unlocking idle capital with programmable 50/50 yield and autonomous agent arbitration on Celo.”",
+        "description": "Decentralized rental deposits and milestone escrows that earn streaming yield in Aave V3, settle in Ripio LatAm wFIAT currencies, and resolve disputes via autonomous AI agents through the @celo/buy Gateway.",
+        "badge1Title": "50/50 Yield Escrow",
+        "badge1Sub": "Aave V3 on Celo Mainnet",
+        "badge2Title": "Ripio LatAm wFIAT",
+        "badge2Sub": "wARS, wBRL, wCOP, wMXN",
+        "badge3Title": "Textile FX RFQ",
+        "badge3Sub": "Cross-Border Permit2 Orders",
+        "badge4Title": "Agent Arbitrator",
+        "badge4Sub": "@celo/buy x402 Micropayments"
+      },
+      "slide1": {
+        "tag": "01 / Problem Validation: Latin American Real Estate & Remote Contracting",
+        "heading": "$18B Trapped in Idle Rental Deposits and Currency Gouging in LatAm",
+        "lead": "Millions of tenants, landlords, freelancers, and businesses face systemic capital lockup and FX friction across Latin America:",
+        "card1Title": "Dead Capital in Rental Deposits",
+        "card1Text": "Tenants deposit 1 to 3 months of rent locked in non-interest bank accounts for years. High local inflation (up to 200% annually) erodes tenant purchasing power while landlords face complex release disputes.",
+        "card2Title": "Predatory FX Margins (7-12%)",
+        "card2Text": "Cross-border payments between LatAm countries (ARS, BRL, COP, MXN) incur severe foreign exchange markups, slow banking settlement (3-5 business days), and SWIFT fees of $35-$50 per transaction.",
+        "card3Title": "Slow, Subjective Dispute Resolution",
+        "card3Text": "Small disputes ($200 - $3,000) over property condition or deliverable scope take months in courts or arbitrary platforms with 15-20% fee cuts, with no neutral objective verification.",
+        "footerMarket": "Target Market: $18B+ locked in LatAm security deposits & $25B regional digital services",
+        "footerFriction": "Annual purchasing power loss from non-yielding escrow in LatAm: > $1.8B USD"
+      },
+      "slide2": {
+        "tag": "02 / Product Focus: Core Value Proposition",
+        "heading": "ReWork on Celo: Yield-Bearing Escrow & Autonomous Arbitrators",
+        "lead": "We replace dead bank deposits and predatory intermediaries with audited smart contracts on Celo Mainnet that turn idle escrow into active yield and fair settlement:",
+        "card1Title": "50/50 Yield-Bearing Escrow",
+        "card1Text": "Security deposits earn live lending yield in Aave V3 on Celo Mainnet. Generated interest is split 50/50 between both parties, incentivizing contract fulfillment and eliminating dead capital.",
+        "card2Title": "Native LatAm wFIAT Rails",
+        "card2Text": "Integrates Ripio wFIAT tokens (wARS, wBRL, wCOP, wMXN, wPEN, wCLP) and Textile FX RFQ corridors for instant, sub-cent cross-border settlements with 1-second finality on Celo.",
+        "card3Title": "Autonomous Agent Arbitrator",
+        "card3Text": "Disputes are evaluated by an autonomous AI agent integrated via @celo/buy Gateway. It inspects evidence, queries LLM reasoning via x402 micropayments, and executes on-chain resolution in seconds.",
+        "step1": "1. Deposit in Aave V3 Escrow (Celo)",
+        "step2": "2. 50/50 Yield Accrual & Textile RFQ",
+        "step3": "3. Resolution or @celo/buy AI Arbitration"
+      },
+      "slide3": {
+        "tag": "03 / Product Focus: Solution Ecosystem",
+        "heading": "A Unified Financial Suite for Property & Professional Services",
+        "card1Title": "50/50 Rental Guarantees",
+        "card1Text": "Non-custodial rental deposit vaults (/app/contracts) backed by Aave V3. Landlords and tenants monitor streaming interest, inspection checklists, and deposit returns in local wFIAT.",
+        "card2Title": "Milestone Escrow Contracts",
+        "card2Text": "Programmable milestone funding for dev teams, creators, and consulting. Clients lock funds, deliverables are verified, and payouts unlock without 14-day delays.",
+        "card3Title": "Ripio wFIAT Multi-Treasury",
+        "card3Text": "Enterprise balance management across 6 LatAm local currencies (wARS, wBRL, wCOP, wMXN, wPEN, wCLP) plus USDC/USDT/USA₮ with instant in-app currency conversions.",
+        "card4Title": "Textile FX RFQ Corridors",
+        "card4Text": "Gas-optimized cross-currency market orders with atomic Permit2 settlement and EIP-712 signatures, connecting LatAm local fiat currencies with institutional depth.",
+        "footerRoutes": "Live routes: /app/contracts · /app/swap · /app/workspaces · /app/goals",
+        "footerStatus": "100% Functional on Celo Mainnet (42220)"
+      },
+      "slide4": {
+        "tag": "04 / Technical Execution: 4 Core Celo Pillars",
+        "heading": "The 4 Native Celo Implementations in ReWork",
+        "lead": "ReWork is built directly on Celo Mainnet infrastructure to solve real-world financial friction across Latin America:",
+        "card1Badge": "01 · RIPIO wFIAT",
+        "card1Title": "LatAm Local Stablecoins",
+        "card1Text": "Verified integration with Ripio wFIAT tokens (wARS, wBRL, wMXN, wCOP, wPEN, wCLP) on Celo Mainnet (42220) with Ripio Ramp and Bridge endpoints.",
+        "card2Badge": "02 · TEXTILE FX",
+        "card2Title": "LimitOrderReactor & Permit2",
+        "card2Text": "RFQ cross-currency limit orders with 1 bps protocol fee controller, Permit2 unified allowance, and signed off-chain EIP-712 order execution.",
+        "card3Badge": "03 · @CELO/BUY",
+        "card3Title": "Autonomous Agent Arbitrator",
+        "card3Text": "Agent discovery and execution via usebuy.ai Gateway. The arbitrator agent pays for per-request inference via x402 HTTP micropayments to resolve disputes.",
+        "card4Badge": "04 · AAVE V3 & USA₮",
+        "card4Title": "50/50 Yield & Gasless USA₮",
+        "card4Text": "Live Aave V3 lending pools on Celo for 50/50 yield split on escrow; gasless USA₮ payments via EIP-3009 transferWithAuthorization and ERC-8021 tracking.",
+        "footerStandards": "Celo Standards: Celo Mainnet (42220) · ERC-8004 Agent ID · ERC-8021 Attribution · Permit2 · EIP-3009",
+        "footerFunctional": "100% Verified on Mainnet"
+      },
+      "slide5": {
+        "tag": "05 / Real UX & World-Class Interface",
+        "heading": "Consumer-Grade Web3 Experience: Fast, Clean & Reliable",
+        "desktopOverlay": "Live Celo Mainnet Escrows + Ripio wFIAT Rails + Agent Arbitrator",
+        "desktopCaption": "Desktop Dashboard: Real-time Celo Mainnet balances, Aave V3 yield stream, Ripio wFIAT conversions, and AI dispute resolution",
+        "mobileHeader": "ReWork Mobile",
+        "mobileNetwork": "Celo Mainnet (42220)",
+        "mobileNetWorth": "Portfolio Total",
+        "mobileLiquid": "Liquid: $1,250.00",
+        "mobileStake": "Aave Yield: $4,800.00",
+        "mobileQr": "Ripio Swap",
+        "mobileQrSub": "wARS ⇄ cUSD",
+        "mobileBank": "Aave 50/50",
+        "mobileBankSub": "Streaming APY",
+        "mobileEscrowTitle": "Rental Escrow Vault",
+        "mobileEscrowBadge": "Active (50/50 Yield)",
+        "mobileEscrowSub": "Palermo Apt Rental — Palermo, BA",
+        "mobileEscrowCustody": "Celo Vault:",
+        "mobileCaption": "Responsive PWA experience on Celo Mainnet with Privy embedded wallets, 10 currencies, and 1-second finality"
+      },
+      "slide6": {
+        "tag": "06 / Technical Execution · Institutional Architecture",
+        "heading": "High-Performance EVM Architecture on Celo Mainnet",
+        "card1Title": "Celo L2 Execution (Chain ID 42220)",
+        "card1Text": "Ultra-fast block times (1s) and sub-cent fees (~$0.001) powered by Viem and Wagmi, communicating directly with Celo Mainnet RPC nodes.",
+        "card2Title": "On-Chain Protocols: Aave V3 & Permit2",
+        "card2Text": "Smart contract custody routing to Aave V3 Pool on Celo for automated aToken yield accrual, unified under Uniswap Permit2 allowance.",
+        "card3Title": "Agent Identity & Attribution",
+        "card3Text": "Registered ERC-8004 Agent ID on 8004scan.io, with all protocol transactions tagged with ERC-8021 attribution suffix (rework26) for leaderboard scoring.",
+        "card4Title": "Supabase Multi-Tenant RLS & Privy",
+        "card4Text": "Strict PostgreSQL Row Level Security with automated tenant isolation; Web2 Google login powered by Privy embedded wallets with zero gas friction.",
+        "footerStack": "Stack: Next.js 16 (Turbopack) · TypeScript 5 · Viem · Celo Mainnet (42220) · Aave V3 · Textile FX · Supabase RLS",
+        "footerVerified": "100% Verified on Celo Mainnet"
+      },
+      "slide7": {
+        "tag": "07 / Business Focus · Sustainable Economics",
+        "heading": "The Economic Model of Productive Capital on Celo",
+        "lead": "ReWork builds sustainable SaaS and protocol cashflow by transforming dead security deposits into active, earning transactions:",
+        "card1Stat": "0.25% - 0.50%",
+        "card1Title": "Protocol Fee on Escrow Settlement",
+        "card1Text": "Transparent micro-fee retained upon successful contract release or deposit return on Celo Mainnet. 30x to 40x cheaper than traditional rental bond insurances (5-10%).",
+        "card2Stat": "$49 / mo",
+        "card2Title": "SaaS Pro for Agencies & Real Estate",
+        "card2Text": "Workspaces Pro tier for property managers, dev agencies, and DAOs: multi-agent management, automated tax receipts in wFIAT, and custom dispute arbitration.",
+        "card3Stat": "x402 Spread",
+        "card3Title": "Yield & Agent Gateway Spread",
+        "card3Text": "Protocol share from Aave V3 lending yield optimization and margin on autonomous arbitration queries executed through @celo/buy Gateway.",
+        "footerGoal": "Year 1 Target: $15M in rental and milestone escrow volume processed on Celo",
+        "footerRevenue": "Projected annual SaaS + protocol revenue: $140k - $220k USD"
+      },
+      "slide8": {
+        "tag": "08 / Technical Integrity: 0 Mocks, 100% Verifiable",
+        "heading": "From Code to Production: Zero Simulated Code",
+        "stat1Title": "Verified Contracts",
+        "stat1Sub": "Celo Mainnet 42220",
+        "stat2Title": "TypeScript Errors",
+        "stat2Sub": "Clean npx tsc --noEmit",
+        "stat3Title": "Supported Currencies",
+        "stat3Sub": "6 wFIAT + 4 Stablecoins",
+        "stat4Title": "Production Deploy",
+        "stat4Sub": "Live on Vercel",
+        "boxTitle": "Continuous Verification & On-Chain Integrity",
+        "bullet1": "• Celo Mainnet (42220) verified: Ripio wFIAT contracts, Textile FX reactor, and Aave V3 lending pools",
+        "bullet2": "• ERC-8021 Attribution tag (rework26) appended to all smart contract calls for on-chain scoring",
+        "bullet3": "• Real agent dispute resolution via @celo/buy Gateway with x402 HTTP micropayments",
+        "bullet4": "• npx tsc --noEmit & npm run build passing with zero warnings or mock fallbacks"
+      },
+      "slide9": {
+        "tag": "09 / Defensible Competitive Advantages",
+        "heading": "Why ReWork on Celo Outperforms Alternatives?",
+        "colFeature": "Feature",
+        "colWeb2": "Traditional PropTech / Banks",
+        "colBank": "Web2 Platforms (Upwork/Airbnb)",
+        "colReWork": "ReWork on Celo Mainnet",
+        "row1Label": "Deposit Capital Return",
+        "row1Web2": "0% APY (Locked dead money)",
+        "row1Bank": "0% APY (Retained by platform)",
+        "row1ReWork": "50/50 Streaming Yield (Aave V3)",
+        "row2Label": "Platform Fees",
+        "row2Web2": "5% to 10% (Surety bonds)",
+        "row2Bank": "15% to 20% commission",
+        "row2ReWork": "0.25% - 0.50% (Protocol fee)",
+        "row3Label": "Supported Currencies",
+        "row3Web2": "Local fiat only (Single country)",
+        "row3Bank": "USD only (high FX conversion)",
+        "row3ReWork": "6 Ripio wFIAT + USDC/USDT/USA₮",
+        "row4Label": "Settlement Speed",
+        "row4Web2": "30 to 60 days post-lease",
+        "row4Bank": "7 to 14 business days",
+        "row4ReWork": "1 second (Celo finality)",
+        "row5Label": "Dispute Resolution",
+        "row5Web2": "Courts (months/lawyers)",
+        "row5Bank": "Opaque support tickets",
+        "row5ReWork": "Autonomous AI Agent (@celo/buy)",
+        "row6Label": "Network Transaction Fee",
+        "row6Web2": "$10 - $30 wire fee",
+        "row6Bank": "Hidden payment processing",
+        "row6ReWork": "< $0.001 (or gasless USA₮)",
+        "footerLeft": "50/50 yield · 6 LatAm fiat currencies · 1s finality · Autonomous AI dispute arbitrator",
+        "footerRight": "The new standard for rental and service agreements"
+      },
+      "slide10": {
+        "tag": "10 / Roadmap to Scale · Loops House to Regional Growth",
+        "heading": "90-Day Roadmap: Scaling ReWork Across Latin America",
+        "col1Badge": "Month 1 · Hackathon & Mainnet Launch",
+        "col1Title": "Celo Mainnet Rollout & Pilot Rentals",
+        "col1Items": [
+          "Submit official delivery for Agents on Open Rails Hackathon.",
+          "Deploy 50/50 yield rental escrow on Celo Mainnet with Aave V3.",
+          "Launch closed beta with 5 real estate brokers in Buenos Aires.",
+          "Complete registration of ERC-8004 Agent ID on 8004scan.io."
+        ],
+        "col2Badge": "Month 2 · Regional Expansion",
+        "col2Title": "São Paulo & Bogotá wFIAT Corridors",
+        "col2Items": [
+          "Onboard rental and freelance corridors in Brazil (wBRL) and Colombia (wCOP).",
+          "Expand Textile FX RFQ liquidity for automated business treasury conversions.",
+          "Apply to Prezenti Grants ($165,000 alumni fund) for LatAm PropTech scale.",
+          "Target: $150k in total value locked across Aave V3 50/50 escrows."
+        ],
+        "col3Badge": "Month 3 · Ecosystem Integration",
+        "col3Title": "MiniPay Integration & PropTech SDK",
+        "col3Items": [
+          "Launch ReWork inside MiniPay for 5M+ mobile users across emerging markets.",
+          "Ship open SDK for direct integration into real estate portals (Zonaprop, Properati).",
+          "Automated tax withholding and electronic invoice generation in local currencies.",
+          "2,500+ active contracts secured by @celo/buy autonomous arbitration."
+        ],
+        "footerDocs": "Official hackathon roadmap and architecture in docs/ROADMAP_CELO_AGENTS_HACKATHON.md",
+        "footerFormat": "Aligned with Celo Core Co. & Loops House Hackathon criteria"
+      },
+      "slide11": {
+        "badge": "11 / Co-Founders Based in Argentina",
+        "heading": "The Value of Trust Guaranteed by Code",
+        "lead1Role": "Tech Lead & Fullstack Web3 Architect",
+        "lead1Bio": "Architecture of Celo Mainnet EVM contracts, Viem integrations, Aave V3 yield routing, Textile FX RFQ, Next.js 16, Supabase multi-tenant RLS, and autonomous AI agents. Resident in Buenos Aires, Argentina.",
+        "lead2Role": "Product Lead & Business Operations",
+        "lead2Bio": "Product strategy, user experience design, LatAm PropTech network development, and execution of wFIAT financial adoption for real estate and remote contractors. Resident in Buenos Aires, Argentina.",
+        "ctaLive": "Explore Live App",
+        "ctaCode": "View GitHub Repo",
+        "closingQuote": "“In a region burdened by inflation and financial friction, ReWork makes capital productive: 50/50 streaming yield, local currencies, and autonomous agent arbitration on Celo.”"
+      },
+      "slide12": {
+        "tag": "12 / Official Walkthrough & Next Steps",
+        "heading": "Thank You, Celo Core Co. & Loops House!",
+        "subheading": "Watch ReWork in Action on Celo Mainnet",
+        "lead": "Experience how 50/50 yield-bearing rental escrow, Ripio wFIAT local currencies, Textile FX RFQ, and autonomous AI dispute arbitration transform financial agreements across Latin America.",
+        "videoTitle": "ReWork — Technical Product Demo (Celo Mainnet)",
+        "videoUrl": "https://youtu.be/fycBPw7Y6zg",
+        "videoShort": "youtu.be/fycBPw7Y6zg",
+        "videoId": "fycBPw7Y6zg",
+        "watchYoutube": "Watch Demo Video",
+        "ctaLive": "Launch App",
+        "ctaCode": "GitHub Repository",
+        "bullet1Title": "50/50 Yield-Bearing Escrow",
+        "bullet1Desc": "Live Aave V3 lending pools on Celo Mainnet (42220) splitting interest fairly.",
+        "bullet2Title": "Autonomous Agent Arbitrator",
+        "bullet2Desc": "Dispute resolution via @celo/buy Gateway with x402 HTTP micropayments.",
+        "bullet3Title": "Ripio wFIAT & Textile FX",
+        "bullet3Desc": "6 LatAm local currencies with atomic Permit2 cross-border conversions.",
+        "closingMessage": "Ready to scale through Loops House & Prezenti Grants to bring productive, agentic finance to millions across Latin America!",
+        "footerLeft": "ReWork Protocol · Agents on Open Rails Hackathon (Celo Core Co. × Loops House)",
+        "footerRight": "Explore live at: youtu.be/fycBPw7Y6zg"
+      }
+    },
+    "es": {
+      "nav": {
+        "scaleTrack": "Celo Mainnet",
+        "sub": "Agents on Open Rails Hackathon · Celo Core Co. × Loops House",
+        "prev": "Anterior (←)",
+        "next": "Siguiente (→)",
+        "downloadPdf": "Descargar PDF",
+        "downloadPdfShort": "PDF",
+        "downloadPdfTitle": "Exportar toda la presentación a PDF",
+        "fullscreen": "Pantalla Completa (F)",
+        "viewApp": "Ver App",
+        "footerLeft": "Protocolo ReWork · Agents on Open Rails Hackathon · Celo Mainnet (42220)",
+        "slidePrefix": "Diapositiva",
+        "of": "de"
+      },
+      "slidesData": [
+        {
+          "title": "Portada",
+          "subtitle": "ReWork — Custodia con Rendimiento y Agentes Autónomos en Celo"
+        },
+        {
+          "title": "El Problema",
+          "subtitle": "La Trampa de los Depósitos de Alquiler y Pagos en LatAm"
+        },
+        {
+          "title": "La Solución",
+          "subtitle": "Custodia con Rendimiento 50/50 y Monedas Locales"
+        },
+        {
+          "title": "Módulos Centrales",
+          "subtitle": "Garantías, Acuerdos, Tesorería wFIAT y Textile RFQ"
+        },
+        {
+          "title": "4 Pilares Celo",
+          "subtitle": "Ripio wFIAT, Textile FX, @celo/buy y Aave V3"
+        },
+        {
+          "title": "Producto Real",
+          "subtitle": "App en Celo Mainnet, Rieles Ripio y Árbitro Inteligente"
+        },
+        {
+          "title": "Arquitectura",
+          "subtitle": "Celo L2 (42220), Viem, ERC-8004, ERC-8021 y Privy"
+        },
+        {
+          "title": "Modelo de Negocio",
+          "subtitle": "SaaS Pro $49/mes, Comisión Protocolar y Micropagos x402"
+        },
+        {
+          "title": "Tracción y Calidad",
+          "subtitle": "0 Simulaciones, Contratos en Celoscan y 10 Monedas"
+        },
+        {
+          "title": "Comparativa",
+          "subtitle": "ReWork vs Inmobiliarias Tradicionales vs Web2"
+        },
+        {
+          "title": "Plan de Expansión",
+          "subtitle": "De Loops House a la Escala Regional en PropTech y Trabajo"
+        },
+        {
+          "title": "Equipo y Visión",
+          "subtitle": "Fundadores Desarrolladores Basados en Argentina"
+        },
+        {
+          "title": "Demostración y Cierre",
+          "subtitle": "Recorrido en Vivo y Verificación en Celoscan"
+        }
+      ],
+      "slide0": {
+        "badge": "Agents on Open Rails Hackathon · Celo Core Co. × Loops House",
+        "quote": "“Activando el capital inmovilizado con rendimiento 50/50 y arbitraje agéntico autónomo en Celo.”",
+        "description": "Depósitos de alquiler y custodia por hitos que generan rendimiento continuo en Aave V3, liquidan en monedas locales Ripio wFIAT y resuelven disputas mediante agentes autónomos con el Gateway @celo/buy.",
+        "badge1Title": "Garantía 50/50 Rendimiento",
+        "badge1Sub": "Aave V3 en Celo Mainnet",
+        "badge2Title": "Ripio LatAm wFIAT",
+        "badge2Sub": "wARS, wBRL, wCOP, wMXN",
+        "badge3Title": "Textile FX RFQ",
+        "badge3Sub": "Órdenes Permit2 Cross-Border",
+        "badge4Title": "Árbitro Agéntico",
+        "badge4Sub": "Micropagos x402 @celo/buy"
+      },
+      "slide1": {
+        "tag": "01 / Validación del Problema: Inmuebles y Trabajo Remoto en Latinoamérica",
+        "heading": "USD $18.000M Atrapados en Garantías Inactivas y Fricción Cambiaria",
+        "lead": "Millones de inquilinos, propietarios, profesionales y empresas enfrentan fondos bloqueados y costos cambiarios abusivos en toda la región:",
+        "card1Title": "Capital Muerto en Depósitos de Alquiler",
+        "card1Text": "Los inquilinos depositan de 1 a 3 meses de garantía que quedan inmovilizados en cuentas bancarias al 0% de interés. La inflación local destruye el valor del depósito mientras los propietarios sufren por demoras e incertidumbre al restituirlo.",
+        "card2Title": "Comisiones Cambiarias Abusivas (7-12%)",
+        "card2Text": "Los cobros y pagos entre países de la región (ARS, BRL, COP, MXN) sufren spreads cambiarios leoninos, demoras bancarias de 3 a 5 días hábiles y cargos SWIFT de USD $35 a $50 por transferencia.",
+        "card3Title": "Disputas Lentas y Arbitrarias",
+        "card3Text": "Los desacuerdos de entre USD $200 y $3.000 por estado de inmuebles o entregas profesionales tardan meses en mediaciones judiciales o plataformas cerradas que retienen entre el 15% y 20% en comisiones.",
+        "footerMarket": "Mercado Objetivo: +USD $18.000M en depósitos de garantía y USD $25.000M en servicios digitales",
+        "footerFriction": "Pérdida anual por depreciación de garantías inactivas en LatAm: > USD $1.800M"
+      },
+      "slide2": {
+        "tag": "02 / Enfoque de Producto: Propuesta de Valor Central",
+        "heading": "ReWork en Celo: Garantías con Rendimiento y Arbitraje Autónomo",
+        "lead": "Reemplazamos depósitos bancarios muertos y comisiones leoninas con contratos inteligentes en Celo Mainnet que transforman las garantías en capital productivo:",
+        "card1Title": "Custodia con Rendimiento 50/50",
+        "card1Text": "Los fondos de garantía generan rendimiento continuo en Aave V3 sobre Celo Mainnet. El interés devengado se distribuye 50/50 entre ambas partes, protegiendo el poder adquisitivo de ambos.",
+        "card2Title": "Rieles Nativos Ripio wFIAT",
+        "card2Text": "Integración con tokens Ripio wFIAT (wARS, wBRL, wCOP, wMXN, wPEN, wCLP) y corredores RFQ de Textile FX para liquidaciones instantáneas con costos inferiores a un centavo y finalidad de 1 segundo.",
+        "card3Title": "Árbitro Agéntico Autónomo",
+        "card3Text": "Las controversias son analizadas por un agente autónomo conectado al Gateway @celo/buy. Evalúa evidencias contractuales, consulta razonamiento LLM vía micropagos x402 y ejecuta la resolución on-chain en segundos.",
+        "step1": "1. Depósito en Custodia Aave V3 (Celo)",
+        "step2": "2. Rendimiento 50/50 y Liquidación Textile",
+        "step3": "3. Liberación o Arbitraje IA @celo/buy"
+      },
+      "slide3": {
+        "tag": "03 / Enfoque de Producto: Ecosistema de Soluciones",
+        "heading": "Suite Financiera Unificada para Inmuebles y Servicios Profesionales",
+        "card1Title": "Garantías de Alquiler 50/50",
+        "card1Text": "Custodia no custodial de depósitos de alquiler (/app/contracts) conectada a Aave V3. Propietario e inquilino monitorean intereses acumulados, actas de entrega y devolución en wFIAT.",
+        "card2Title": "Contratos de Custodia por Hitos",
+        "card2Text": "Financiamiento por entregas verificables para agencias, desarrolladores y consultoría. Fondos asegurados on-chain con liberación inmediata sin retenciones de 14 días.",
+        "card3Title": "Tesorería Multi-Divisa Ripio wFIAT",
+        "card3Text": "Gestión de balances en 6 monedas locales de LatAm (wARS, wBRL, wCOP, wMXN, wPEN, wCLP) junto a USDC, USDT y USA₮ con conversiones en tiempo real dentro de la app.",
+        "card4Title": "Corredores RFQ de Textile FX",
+        "card4Text": "Órdenes cambiarias eficientes con liquidación atómica mediante Permit2 y firmas EIP-712, conectando monedas latinoamericanas con liquidez institucional.",
+        "footerRoutes": "Rutas activas: /app/contracts · /app/swap · /app/workspaces · /app/goals",
+        "footerStatus": "100% Funcional en Celo Mainnet (42220)"
+      },
+      "slide4": {
+        "tag": "04 / Ejecución Técnica: 4 Pilares Nativos de Celo",
+        "heading": "Las 4 Implementaciones Nativas de Celo en ReWork",
+        "lead": "ReWork está construido directamente sobre la infraestructura de Celo Mainnet para erradicar la fricción financiera en América Latina:",
+        "card1Badge": "01 · RIPIO wFIAT",
+        "card1Title": "Monedas Locales de LatAm",
+        "card1Text": "Integración verificada con los tokens Ripio wFIAT (wARS, wBRL, wMXN, wCOP, wPEN, wCLP) en Celo Mainnet (42220), con enlaces a Ripio Ramp y Ripio Bridge.",
+        "card2Badge": "02 · TEXTILE FX",
+        "card2Title": "LimitOrderReactor y Permit2",
+        "card2Text": "Órdenes cambiarias RFQ con fee controller de 1 punto básico, aprobación unificada vía Permit2 y firmas off-chain EIP-712 para liquidación atómica.",
+        "card3Badge": "03 · @CELO/BUY",
+        "card3Title": "Árbitro Agéntico Autónomo",
+        "card3Text": "Descubrimiento y consumo de servicios agénticos vía Gateway usebuy.ai. El árbitro abona inferencia por solicitud mediante micropagos x402 HTTP para resolver litigios.",
+        "card4Badge": "04 · AAVE V3 Y USA₮",
+        "card4Title": "Rendimiento 50/50 y USA₮ Gasless",
+        "card4Text": "Integración con Aave V3 en Celo para reparto equitativo de interés 50/50; pagos sin gas en USA₮ con transferWithAuthorization EIP-3009 y atribución ERC-8021.",
+        "footerStandards": "Estándares Celo: Celo Mainnet (42220) · ERC-8004 Agent ID · ERC-8021 Attribution · Permit2 · EIP-3009",
+        "footerFunctional": "100% Verificado en Mainnet"
+      },
+      "slide5": {
+        "tag": "05 / Experiencia de Usuario y Calidad de Interfaz",
+        "heading": "Experiencia Web3 de Nivel de Producción: Rápida, Clara y Confiable",
+        "desktopOverlay": "Custodia en Celo Mainnet + Rieles Ripio wFIAT + Árbitro Inteligente",
+        "desktopCaption": "Panel de Control: Balances en Celo Mainnet, rendimiento continuo en Aave V3, conversiones Ripio wFIAT y resolución de disputas con IA",
+        "mobileHeader": "ReWork Móvil",
+        "mobileNetwork": "Celo Mainnet (42220)",
+        "mobileNetWorth": "Patrimonio Total",
+        "mobileLiquid": "Líquido: $1.250,00",
+        "mobileStake": "Rendimiento Aave: $4.800,00",
+        "mobileQr": "Swap Ripio",
+        "mobileQrSub": "wARS ⇄ cUSD",
+        "mobileBank": "Aave 50/50",
+        "mobileBankSub": "Rendimiento APY",
+        "mobileEscrowTitle": "Garantía de Alquiler",
+        "mobileEscrowBadge": "Activo (50/50 Yield)",
+        "mobileEscrowSub": "Departamento Palermo — CABA",
+        "mobileEscrowCustody": "Custodia Celo:",
+        "mobileCaption": "Experiencia responsive PWA sobre Celo Mainnet con autenticación Privy, 10 monedas y finalidad de 1 segundo"
+      },
+      "slide6": {
+        "tag": "06 / Ejecución Técnica · Arquitectura Institucional",
+        "heading": "Arquitectura EVM de Alto Rendimiento en Celo Mainnet",
+        "card1Title": "Ejecución Celo L2 (Chain ID 42220)",
+        "card1Text": "Tiempos de bloque de 1 segundo y comisiones inferiores a $0,001 con Viem y Wagmi, comunicando directamente con los nodos RPC de Celo Mainnet.",
+        "card2Title": "Protocolos On-Chain: Aave V3 y Permit2",
+        "card2Text": "Custodia programable que enruta depósitos al pool de Aave V3 en Celo para devengamiento de aTokens, unificado bajo el estándar Permit2.",
+        "card3Title": "Identidad Agéntica y Atribución",
+        "card3Text": "Identidad registrada bajo ERC-8004 en 8004scan.io y sufijo de atribución ERC-8021 (rework26) en el calldata de cada transacción para el leaderboard.",
+        "card4Title": "Supabase Multi-Tenant RLS y Privy",
+        "card4Text": "Seguridad estricta en PostgreSQL con Row Level Security para aislar organizaciones; login social vía Privy con billeteras embebidas sin fricción de gas.",
+        "footerStack": "Stack: Next.js 16 (Turbopack) · TypeScript 5 · Viem · Celo Mainnet (42220) · Aave V3 · Textile FX · Supabase RLS",
+        "footerVerified": "100% Verificado en Celo Mainnet"
+      },
+      "slide7": {
+        "tag": "07 / Enfoque de Negocio · Economía Sostenible",
+        "heading": "El Modelo Económico del Capital Productivo en Celo",
+        "lead": "ReWork genera ingresos recurrentes SaaS y comisiones protocolares transformando depósitos inactivos en transacciones con rendimiento:",
+        "card1Stat": "0,25% - 0,50%",
+        "card1Title": "Comisión por Custodia Liquidada",
+        "card1Text": "Comisión protocolar transparente aplicada únicamente al restituir garantías o liberar entregas en Celo Mainnet. Entre 30 y 40 veces más económica que los seguros de caución (5-10%).",
+        "card2Stat": "USD $49/mes",
+        "card2Title": "SaaS Pro para Inmobiliarias y Agencias",
+        "card2Text": "Suscripción profesional para administradores de propiedades, agencias y DAOs: gestión multi-agente, reportes impositivos en wFIAT y reglas de arbitraje personalizadas.",
+        "card3Stat": "Margen x402",
+        "card3Title": "Optimización de Rendimiento y Gateway",
+        "card3Text": "Porcentaje protocolar del interés devengado en Aave V3 y margen por consultas de arbitraje agéntico ejecutadas a través del Gateway @celo/buy.",
+        "footerGoal": "Meta Año 1: USD $15M en garantías y contratos procesados sobre Celo",
+        "footerRevenue": "Ingresos proyectados SaaS + protocolo: USD $140k - $220k"
+      },
+      "slide8": {
+        "tag": "08 / Integridad Técnica: 0 Simulaciones, 100% Verificable",
+        "heading": "Del Código a Producción: Cero Datos Simulados",
+        "stat1Title": "Contratos Verificados",
+        "stat1Sub": "Celo Mainnet 42220",
+        "stat2Title": "Errores TypeScript",
+        "stat2Sub": "Limpio npx tsc --noEmit",
+        "stat3Title": "Monedas Soportadas",
+        "stat3Sub": "6 wFIAT + 4 Stablecoins",
+        "stat4Title": "Deploy en Producción",
+        "stat4Sub": "Activo en Vercel",
+        "boxTitle": "Suites de Verificación Continua e Integridad On-Chain",
+        "bullet1": "• Celo Mainnet (42220) verificado: contratos Ripio wFIAT, reactor Textile FX y pools de Aave V3",
+        "bullet2": "• Sufijo de atribución ERC-8021 (rework26) incorporado en cada transacción para puntuación en leaderboard",
+        "bullet3": "• Resolución de disputas reales mediante el Gateway @celo/buy y micropagos HTTP x402",
+        "bullet4": "• Compilación estricta con npx tsc --noEmit y npm run build sin advertencias ni datos ficticios"
+      },
+      "slide9": {
+        "tag": "09 / Ventajas Competitivas",
+        "heading": "¿Por Qué ReWork en Celo Supera a las Alternativas?",
+        "colFeature": "Característica",
+        "colWeb2": "Inmobiliarias / Bancos",
+        "colBank": "Plataformas Web2 (Upwork/Airbnb)",
+        "colReWork": "ReWork en Celo Mainnet",
+        "row1Label": "Rendimiento del Depósito",
+        "row1Web2": "0% APY (Capital inmovilizado)",
+        "row1Bank": "0% APY (Retenido por plataforma)",
+        "row1ReWork": "50/50 Rendimiento Activo (Aave V3)",
+        "row2Label": "Comisiones",
+        "row2Web2": "5% al 10% (Seguros de caución)",
+        "row2Bank": "15% al 20% sobre cada cobro",
+        "row2ReWork": "0,25% a 0,50% (Comisión protocolar)",
+        "row3Label": "Monedas Soportadas",
+        "row3Web2": "Solo moneda local cerrada",
+        "row3Bank": "Solo USD (con spread forzado)",
+        "row3ReWork": "6 Ripio wFIAT + USDC/USDT/USA₮",
+        "row4Label": "Velocidad de Liquidación",
+        "row4Web2": "30 a 60 días tras finalizar",
+        "row4Bank": "7 a 14 días hábiles",
+        "row4ReWork": "1 segundo (Finalidad Celo)",
+        "row5Label": "Resolución de Disputas",
+        "row5Web2": "Tribunales (meses de trámite)",
+        "row5Bank": "Tickets de soporte opacos",
+        "row5ReWork": "Árbitro IA Autónomo (@celo/buy)",
+        "row6Label": "Costo por Transacción",
+        "row6Web2": "USD $10 a $30 bancario",
+        "row6Bank": "Costos de pasarela ocultos",
+        "row6ReWork": "< USD $0,001 (o gasless USA₮)",
+        "footerLeft": "Rendimiento 50/50 · 6 monedas LatAm · 1s de finalidad · Árbitro IA autónomo",
+        "footerRight": "El nuevo estándar para acuerdos y alquileres"
+      },
+      "slide10": {
+        "tag": "10 / Plan de Expansión · De Loops House al Crecimiento Regional",
+        "heading": "Hoja de Ruta a 90 Días: Escalando ReWork en América Latina",
+        "col1Badge": "Mes 1 · Hackathon y Lanzamiento Mainnet",
+        "col1Title": "Despliegue Celo Mainnet y Pilotos de Alquiler",
+        "col1Items": [
+          "Entrega oficial de los 4 tracks en Agents on Open Rails Hackathon.",
+          "Despliegue de custodias con rendimiento 50/50 en Aave V3 sobre Celo Mainnet.",
+          "Lanzamiento de prueba piloto con 5 inmobiliarias en Buenos Aires.",
+          "Registro completado de identidad agéntica ERC-8004 en 8004scan.io."
+        ],
+        "col2Badge": "Mes 2 · Expansión Regional",
+        "col2Title": "Corredores wFIAT en São Paulo y Bogotá",
+        "col2Items": [
+          "Activación de contratos en Brasil (wBRL) y Colombia (wCOP).",
+          "Profundización de liquidez en corredores RFQ de Textile FX para tesorerías pyme.",
+          "Postulación a Prezenti Grants ($165.000 para graduados) para escalar en PropTech.",
+          "Meta: USD $150k en valor total bloqueado en depósitos Aave V3 50/50."
+        ],
+        "col3Badge": "Mes 3 · Integración de Ecosistema",
+        "col3Title": "Integración con MiniPay y SDK PropTech",
+        "col3Items": [
+          "Lanzamiento de ReWork en MiniPay para +5M de usuarios móviles en mercados emergentes.",
+          "Publicación del SDK abierto para portales inmobiliarios (Zonaprop, Properati).",
+          "Emisión automatizada de comprobantes fiscales y facturación en moneda local.",
+          "+2.500 contratos activos custodiados con arbitraje autónomo @celo/buy."
+        ],
+        "footerDocs": "Hoja de ruta oficial y especificaciones en docs/ROADMAP_CELO_AGENTS_HACKATHON.md",
+        "footerFormat": "Alineado con los criterios de evaluación de Celo Core Co. y Loops House"
+      },
+      "slide11": {
+        "badge": "11 / Co-Fundadores Basados en Argentina",
+        "heading": "El Valor de la Confianza Garantizada por Código",
+        "lead1Role": "Líder Técnico y Arquitecto Fullstack Web3",
+        "lead1Bio": "Arquitectura de contratos EVM en Celo Mainnet, integraciones Viem, enrutamiento de rendimiento en Aave V3, Textile FX RFQ, Next.js 16, Supabase RLS y agentes autónomos. Residente en Buenos Aires, Argentina.",
+        "lead2Role": "Líder de Producto y Operaciones",
+        "lead2Bio": "Estrategia de producto, diseño de experiencia de usuario, articulación con el sector inmobiliario y ejecución de adopción financiera en wFIAT para la región. Residente en Buenos Aires, Argentina.",
+        "ctaLive": "Explorar App en Vivo",
+        "ctaCode": "Ver Repositorio GitHub",
+        "closingQuote": "“En una región golpeada por la inflación y la fricción financiera, ReWork transforma el capital en productivo: rendimiento 50/50, monedas locales y arbitraje agéntico en Celo.”"
+      },
+      "slide12": {
+        "tag": "12 / Recorrido Oficial y Próximos Pasos",
+        "heading": "¡Muchas Gracias, Celo Core Co. y Loops House!",
+        "subheading": "Mirá ReWork en Acción sobre Celo Mainnet",
+        "lead": "Comprobá cómo la custodia con rendimiento 50/50, las monedas locales Ripio wFIAT, Textile FX RFQ y el árbitro autónomo con IA transforman los acuerdos contractuales en América Latina.",
+        "videoTitle": "ReWork — Demostración Técnica (Celo Mainnet)",
+        "videoUrl": "https://youtu.be/fycBPw7Y6zg",
+        "videoShort": "youtu.be/fycBPw7Y6zg",
+        "videoId": "fycBPw7Y6zg",
+        "watchYoutube": "Ver Video Demostrativo",
+        "ctaLive": "Abrir Aplicación",
+        "ctaCode": "Repositorio GitHub",
+        "bullet1Title": "Custodia con Rendimiento 50/50",
+        "bullet1Desc": "Pools reales de Aave V3 en Celo Mainnet (42220) distribuyendo el interés de forma equitativa.",
+        "bullet2Title": "Árbitro Agéntico Autónomo",
+        "bullet2Desc": "Resolución de litigios mediante el Gateway @celo/buy con micropagos x402.",
+        "bullet3Title": "Ripio wFIAT y Textile FX",
+        "bullet3Desc": "6 monedas locales de LatAm con liquidación atómica cross-border vía Permit2.",
+        "closingMessage": "¡Listos para acelerar con Loops House y Prezenti Grants para llevar finanzas productivas y agénticas a toda América Latina!",
+        "footerLeft": "Protocolo ReWork · Agents on Open Rails Hackathon (Celo Core Co. × Loops House)",
+        "footerRight": "Explorá la demo en: youtu.be/fycBPw7Y6zg"
+      }
+    }
+  },
   solana: {
     en: {
       nav: {
